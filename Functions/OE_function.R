@@ -1,8 +1,15 @@
 # 8th March 2021
-# Goal: function to calculate observed and expected ratio of competing
+# Goal: function to calculate observed and expected (OE) ratio of competing
 # risk models 
 # Author: Daniele Giardiello
 
+# Input:
+# fit: FG model or CSC model a riskRegression::FGR() or riskRegression:CSC() object
+# newdata: validation data
+# cause: code for event of interest. if the event of interest is 1 then cause=1. More details are in the help of riskRegression::predictRisk();
+# thorizon: the fixed time horizon for prediction to calculate the OE ratio at the fixed time horizon t;
+# obs_cif: the cumulative incidence at time horizon;
+# obs_events: number of events of interest in the data (useful to calculate the confidence intervals of OE ratio);
 
 OE_function<-function(fit,newdata,cause,thorizon,obs_cif,obs_events) {
   F_t<-predictRisk(fit,newdata=newdata,cause=cause,times=thorizon)
