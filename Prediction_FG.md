@@ -23,10 +23,10 @@ models: a guide through modern methods - Fine and Gray model
         measures](#21-overall-performance-measures)
     -   [2.2 Discrimination measures](#22-discrimination-measures)
     -   [2.3 Calibration](#23-calibration)
-        -   [2.3.1 Observed and Expected ratio, ICI, E50, E90,
-            Emax](#231-observed-and-expected-ratio--ici--e50--e90--emax)
+        -   [2.3.1 Observed and Expected ratio ICI E50 E90
+            Emax](#231-observed-and-expected-ratio-ici-e50-e90-emax)
         -   [2.3.2 Calibration plot](#232-calibration-plot)
--   [Goal 3: Clinical utility](#goal-3--clinical-utility)
+-   [Goal 3 - Clinical utility](#goal-3----clinical-utility)
 -   [References](#references)
 
 ## Goals
@@ -1192,7 +1192,7 @@ Calibration is measured by:
 
 -   Calibration plot as a graphical representation of calibration.
 
-#### 2.3.1 Observed and Expected ratio, ICI, E50, E90, Emax
+#### 2.3.1 Observed and Expected ratio ICI E50 E90 Emax
 
 We calculate the observed/ expected ratio (OE) , ICI, E50, E90 and Emax
 at 5 years in the development and validation data.
@@ -1377,7 +1377,7 @@ Calibration plot suggests that the prediction model seems to
 overestimate the actual risk, especially in the lowest and highest
 values of the actual risk.
 
-## Goal 3: Clinical utility
+## Goal 3 - Clinical utility
 
 Discrimination and calibration measures are essential to assess the
 prediction performance but insufficient to evaluate the potential
