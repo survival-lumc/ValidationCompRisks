@@ -105,7 +105,7 @@ tab1<-table1(~ age + size + ncat + hr_status| dt, data=cdata, overall=FALSE, top
 rm(cdata,vsel,rsel)
 ```
 
-<img src="Prediction_FG_files/figure-gfm/tab1_FG.png" style="display: block; margin: auto;" />
+<img src="Prediction_FG_files/figure-gfm/Tab1_FG.png" style="display: block; margin: auto;" />
 
 ## Goal 1: develop a risk prediction model with a time-to-event outcome
 
