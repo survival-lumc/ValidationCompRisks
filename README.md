@@ -10,7 +10,7 @@ The repository (will) contain the following code:
 Data are available [here](https://github.com/survival-lumc/ValidationCompRisks/tree/main/Data).  
 Additional functions useful to develop and validate competing risks predition models are available [here](https://github.com/survival-lumc/ValidationCompRisks/tree/main/Functions).
 
-R/Rstudio and packages version information used to generate the documentation and code are available [here]().
+R/Rstudio and packages version information used to generate the documentation and code are available [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/sessionInfo.md).
 
 
 
