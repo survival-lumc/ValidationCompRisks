@@ -17,8 +17,8 @@ models: a guide through modern methods - Fine and Gray model
         assumption](#13-model-development--first-check---the-proportional-subdistribution-hazard-assumption)
     -   [1.4 Model development: fit the risk prediction
         models](#14-model-development--fit-the-risk-prediction-models)
--   [Goal 2: Assessing performance in survival prediction
-    models](#goal-2--assessing-performance-in-survival-prediction-models)
+-   [Goal 2: Assessing performance of a competing risk prediction
+    model](#goal-2--assessing-performance-of-a-competing-risk-prediction-model)
     -   [2.1 Overall performance
         measures](#21-overall-performance-measures)
     -   [2.2 Discrimination measures](#22-discrimination-measures)
@@ -732,7 +732,7 @@ The coefficients of the models indicated that higher size, positive
 nodal status and ER- and/or PR- were associated with higher risk to
 develop a breast cancer recurrence.
 
-## Goal 2: Assessing performance in survival prediction models
+## Goal 2: Assessing performance of a competing risk prediction model
 
 The performance of a risk prediction models may be evaluated through:
 
