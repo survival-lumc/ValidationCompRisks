@@ -6,8 +6,8 @@ models: a guide through modern methods - Fine and Gray model
     -   [Install/load packages and import
         data](#install-load-packages-and-import-data)
     -   [Descriptive statistics](#descriptive-statistics)
--   [Goal 1: develop a risk prediction model with a time-to-event
-    outcome](#goal-1--develop-a-risk-prediction-model-with-a-time-to-event-outcome)
+-   [Goal 1: develop a risk prediction model with competing
+    risks](#goal-1--develop-a-risk-prediction-model-with-competing-risks)
     -   [1.1 Primary investigation: cumulative incidence
         curves](#11-primary-investigation--cumulative-incidence-curves)
     -   [1.2 Secondary investigation: check non-linearity of continuous
@@ -28,32 +28,6 @@ models: a guide through modern methods - Fine and Gray model
         -   [2.3.2 Calibration plot](#232-calibration-plot)
 -   [Goal 3: Clinical utility](#goal-3--clinical-utility)
 -   [References](#references)
--   [Goals](#goals-1)
-    -   [Install/load packages and import
-        data](#install-load-packages-and-import-data-1)
-    -   [Descriptive statistics](#descriptive-statistics-1)
--   [Goal 1: develop a risk prediction model with competing
-    risks](#goal-1--develop-a-risk-prediction-model-with-competing-risks)
-    -   [1.1 Primary investigation: cumulative incidence
-        curves](#11-primary-investigation--cumulative-incidence-curves-1)
-    -   [1.2 Secondary investigation: check non-linearity of continuous
-        predictors](#12-secondary-investigation--check-non-linearity-of-continuous-predictors-1)
-    -   [1.3 Model development: first check - the proportional
-        subdistribution hazard
-        assumption](#13-model-development--first-check---the-proportional-subdistribution-hazard-assumption-1)
-    -   [1.4 Model development: fit the risk prediction
-        models](#14-model-development--fit-the-risk-prediction-models-1)
--   [Goal 2: Assessing performance of a competing risk prediction
-    model](#goal-2--assessing-performance-of-a-competing-risk-prediction-model-1)
-    -   [2.1 Overall performance
-        measures](#21-overall-performance-measures-1)
-    -   [2.2 Discrimination measures](#22-discrimination-measures-1)
-    -   [2.3 Calibration](#23-calibration-1)
-        -   [2.3.1 Observed/Expected ratio, ICI, E50, E90,
-            Emax](#231-observed-expected-ratio--ici--e50--e90--emax-1)
-        -   [2.3.2 Calibration plot](#232-calibration-plot-1)
--   [Goal 3: Clinical utility](#goal-3--clinical-utility-1)
--   [References](#references-1)
 
 ## Goals
 
