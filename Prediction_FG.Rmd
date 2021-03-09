@@ -21,10 +21,11 @@ output:
   * [2.1 Overall performance measures](#21-overall-performance-measures)
   * [2.2 Discrimination measures](#22-discrimination-measures)
   * [2.3 Calibration](#23-calibration)
-    + [2.3.1 Observed and Expected ratio, ICI, E50, E90, Emax](#231-observed-and-expected-ratio--ici--e50--e90--emax)
+    + [2.3.1 Observed and Expected ratio ICI E50 E90 Emax](#231-observed-and-expected-ratio-ici-e50-e90-emax)
     + [2.3.2 Calibration plot](#232-calibration-plot)
-- [Goal 3: Clinical utility](#goal-3--clinical-utility)
+- [Goal 3 -  Clinical utility](#goal-3----clinical-utility)
 - [References](#references)
+
 
 
 ## Goals
@@ -564,7 +565,7 @@ in which observations are weighted by the empirical density function of the pred
 + Calibration plot as a graphical representation of calibration.  
   
   
-#### 2.3.1 Observed and Expected ratio, ICI, E50, E90, Emax
+#### 2.3.1 Observed and Expected ratio ICI E50 E90 Emax
 
 We calculate the observed/ expected ratio (OE) , ICI, E50, E90 and Emax at 5 years in the development and validation data.
 
@@ -649,7 +650,7 @@ par(oldpar)
 Calibration plot suggests that the prediction model seems to overestimate the actual risk, especially in the lowest and highest values of the actual risk.
 
 
-## Goal 3: Clinical utility
+## Goal 3 -  Clinical utility
 Discrimination and calibration measures are essential to assess the prediction performance but insufficient to evaluate the potential clinical utility of a risk prediction model for decision making.  
 Clinical utility is measured by the net benefit that includes the number of true positives and the number of false positives. For example, in time-to-event models, the true positives reflect the benefit of being event free for a given time horizon using additional interventions such as additional treatments, personalized follow-up or additional surgeries. The false positives represent the harms of unnecessary interventions.   
 Generally, in medicine, clinicians accepts to treat a certain number of patients for which interventions are unnecessary to be event free for a given time horizon. So, false negatives (the harm of not being event free for a given time horizon) are more important than false positives (the harm of unnecessary interventions). Thus, net benefit is the number of true positives classifications minus the false positives classifications weighted by a factor related to the harm of not preventing the event versus unnecessary interventions. The weighting is derived from the threshold probability to death (one minus survival probability) using a defined time horizon (for example 5 years since diagnosis). For example, a threshold of 10% implies that additional interventions for 10 patients of whom one would have experience the event in 5 years if untreated is acceptable (thus treating 9 unnecessary patients). This strategy is compared with the strategies of treat all and treat none patients. If overtreatment is harmful, a higher threshold should be used.  
