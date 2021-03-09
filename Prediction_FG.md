@@ -3,28 +3,28 @@ models: a guide through modern methods - Fine and Gray model
 ================
 
 -   [Goals](#goals)
-    -   [Install/load packages and import
-        data](#install-load-packages-and-import-data)
+    -   [Installing and loading packages and import
+        data](#installing-and-loading-packages-and-import-data)
     -   [Descriptive statistics](#descriptive-statistics)
--   [Goal 1: develop a risk prediction model with competing
-    risks](#goal-1--develop-a-risk-prediction-model-with-competing-risks)
-    -   [1.1 Primary investigation: cumulative incidence
-        curves](#11-primary-investigation--cumulative-incidence-curves)
-    -   [1.2 Secondary investigation: check non-linearity of continuous
-        predictors](#12-secondary-investigation--check-non-linearity-of-continuous-predictors)
-    -   [1.3 Model development: first check - the proportional
+-   [Goal 1 - develop a risk prediction model with competing
+    risks](#goal-1---develop-a-risk-prediction-model-with-competing-risks)
+    -   [1.1 Primary investigation - cumulative incidence
+        curves](#11-primary-investigation---cumulative-incidence-curves)
+    -   [1.2 Secondary investigation - check non-linearity of continuous
+        predictors](#12-secondary-investigation----check-non-linearity-of-continuous-predictors)
+    -   [1.3 Model development - first check - the proportional
         subdistribution hazard
-        assumption](#13-model-development--first-check---the-proportional-subdistribution-hazard-assumption)
-    -   [1.4 Model development: fit the risk prediction
-        models](#14-model-development--fit-the-risk-prediction-models)
--   [Goal 2: Assessing performance of a competing risk prediction
-    model](#goal-2--assessing-performance-of-a-competing-risk-prediction-model)
+        assumption](#13-model-development---first-check---the-proportional-subdistribution-hazard-assumption)
+    -   [1.4 Model development - fit the risk prediction
+        models](#14-model-development---fit-the-risk-prediction-models)
+-   [Goal 2 - Assessing performance of a competing risk prediction
+    model](#goal-2---assessing-performance-of-a-competing-risk-prediction-model)
     -   [2.1 Overall performance
         measures](#21-overall-performance-measures)
     -   [2.2 Discrimination measures](#22-discrimination-measures)
     -   [2.3 Calibration](#23-calibration)
-        -   [2.3.1 Observed/Expected ratio, ICI, E50, E90,
-            Emax](#231-observed-expected-ratio--ici--e50--e90--emax)
+        -   [2.3.1 Observed and Expected ratio, ICI, E50, E90,
+            Emax](#231-observed-and-expected-ratio--ici--e50--e90--emax)
         -   [2.3.2 Calibration plot](#232-calibration-plot)
 -   [Goal 3: Clinical utility](#goal-3--clinical-utility)
 -   [References](#references)
@@ -37,7 +37,7 @@ The goals are:
 3. To assess the potential clinical utility of a competing risk
 prediction model;
 
-### Install/load packages and import data
+### Installing and loading packages and import data
 
 We following libraries are needed to achieve the following goals, if you
 have not them installed, please use install.packages(’‘)
@@ -107,9 +107,9 @@ rm(cdata,vsel,rsel)
 
 <img src="Prediction_FG_files/figure-gfm/Tab1_FG.png" style="display: block; margin: auto;" />
 
-## Goal 1: develop a risk prediction model with competing risks
+## Goal 1 - develop a risk prediction model with competing risks
 
-### 1.1 Primary investigation: cumulative incidence curves
+### 1.1 Primary investigation - cumulative incidence curves
 
 First, we draw the cumulative incidence curves of breast cancer
 recurrence.
@@ -375,7 +375,7 @@ The median follow-up of the development and validation data was 5 years.
 The 5-year cumulative incidence of breast cancer recurrence was 14% (95%
 CI: 11-16%), and 10% (95%CI: 8-12%)
 
-### 1.2 Secondary investigation: check non-linearity of continuous predictors
+### 1.2 Secondary investigation - check non-linearity of continuous predictors
 
 The potential non-linear relation between continuous predictors
 (i.e. age and size) and the outcome should be investigated before
@@ -492,7 +492,7 @@ The AIC and the graphical check suggested a potential linear relation
 between the continuous predictors (age and size) and the event of
 interest (breast cancer recurrence).
 
-### 1.3 Model development: first check - the proportional subdistribution hazard assumption
+### 1.3 Model development - first check - the proportional subdistribution hazard assumption
 
 We now examine the fits in a more careful way by checking the
 proportionality of the subdistribution hazards of the Fine and Gray
@@ -618,7 +618,7 @@ with the risk of breast cancer recurrence in the first years. Since the
 follow-up is short we assume, the subdistribution proportional hazard
 was not violated.
 
-### 1.4 Model development: fit the risk prediction models
+### 1.4 Model development - fit the risk prediction models
 
 We develop and show the results of the Fine and Gray subdistribution
 hazard regression model.
@@ -732,7 +732,7 @@ The coefficients of the models indicated that higher size, positive
 nodal status and ER- and/or PR- were associated with higher risk to
 develop a breast cancer recurrence.
 
-## Goal 2: Assessing performance of a competing risk prediction model
+## Goal 2 - Assessing performance of a competing risk prediction model
 
 The performance of a risk prediction models may be evaluated through:
 
@@ -1192,7 +1192,7 @@ Calibration is measured by:
 
 -   Calibration plot as a graphical representation of calibration.
 
-#### 2.3.1 Observed/Expected ratio, ICI, E50, E90, Emax
+#### 2.3.1 Observed and Expected ratio, ICI, E50, E90, Emax
 
 We calculate the observed/ expected ratio (OE) , ICI, E50, E90 and Emax
 at 5 years in the development and validation data.
