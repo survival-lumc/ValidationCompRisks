@@ -1742,13 +1742,8 @@ vdata<-as.data.frame(vdata)
 # Development data
 # Model without PGR
 dca_vdata_1<-stdca(data=vdata,outcome='status_num',ttoutcome = "time",
-                    timepoint=5,predictors='pred5',xstop=0.50,
+                    timepoint=5,predictors='pred5',xstop=0.45,
                     ymin=-0.01, graph=FALSE, cmprsk = TRUE)
-```
-
-    ## [1] "pred5: No observations with risk greater than 48% that have followup through the timepoint selected, and therefore net benefit not calculable in this range."
-
-``` r
 # Decision curves plot
 oldpar<-par(xaxs='i',yaxs='i',las=1,mar=c(6.1,5.8,4.1,2.1),mgp=c(4.25,1,0))
 plot(dca_vdata_1$net.benefit$threshold,
