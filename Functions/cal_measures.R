@@ -9,7 +9,7 @@
 # cause: number indicating the event of interest. See ?riskRegression::predictRisk()
 
 cal_measures<-function(data,thorizon,fit,Tstop,status,cause) {
-  valid.df <- data
+  valid.df <- data.frame(data)
   pred <- predictRisk(fit,cause=cause,newdata=data,times=thorizon)
   cll.pred <- log(-log(1-pred))
   
