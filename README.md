@@ -12,6 +12,6 @@ Additional functions useful to develop and validate competing risks predition mo
 
 R/Rstudio and packages version information used to generate the documentation and code are available [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/sessionInfo.md).
 
-Authors: [Daniele Giardiello](https://github.com/danielegiardiello/) and [Edouard Bonneville](https://github.com/edbonneville)
+Authors and maintainers: [Daniele Giardiello](https://github.com/danielegiardiello/) and [Edouard Bonneville](https://github.com/edbonneville)
 
 
