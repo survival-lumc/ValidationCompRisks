@@ -9,14 +9,17 @@
 # cause: code for event of interest. if the event of interest is 1 then cause=1. More details are in the help of riskRegression::predictRisk();
 # thorizon: the fixed time horizon for prediction to calculate the OE ratio at the fixed time horizon t;
 # obs_cif: the cumulative incidence at time horizon;
-# obs_events: number of events of interest in the data (useful to calculate the confidence intervals of OE ratio);
+# std.error: standard error at time horizon to calculate the confidence intervals 
+#            using Summary(survfit()...)$std.err. 
 
-OE_function<-function(fit,newdata,cause,thorizon,obs_cif,obs_events) {
+
+OE_function<-function(fit,newdata,cause,thorizon,obs_cif,
+                      std.error) {
   F_t<-predictRisk(fit,newdata=newdata,cause=cause,times=thorizon)
   E_t<-mean(F_t)
   OE<-obs_cif/E_t
-  OE_lower<-OE*exp(-qnorm(0.975)*sqrt(1/obs_events))
-  OE_upper<-OE*exp(qnorm(0.975)*sqrt(1/obs_events))
+  OE_lower<-exp(log(OE-qnorm(0.975)*((std.error)/obs_cif)))
+  OE_upper<-exp(log(OE+qnorm(0.975)*((std.error)/obs_cif)))
   res<-c(OE,OE_lower,OE_upper)
   res<-round(res,2)
   names(res)<-c('Estimate','Lower.95','Upper.95')
