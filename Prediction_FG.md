@@ -1204,16 +1204,16 @@ source('C:\\Users\\danie\\Documents\\GitHub\\ValidationCompRisks\\Functions\\OE_
 # O = estimated cumulative incidence at 5 years
 # E = mean of the predicted cumulative incidence at 5 years
 
-obs_vdata<-1-summary(
-  survfit(Surv(Tstart,Tstop,status==1)~1,
-          data=vdata.w,weights=weight.cens),times=5)$surv
-n_events_vdata<-sum(vdata$status_num==1)
+Po_t<-summary(
+          survfit(Surv(Tstart,Tstop,status==1)~1,
+          data=vdata.w,weights=weight.cens),times=5)
+obs_vdata<-1-Po_t$surv
+obs_stderror<-Po_t$std.err
 
 # Observed/Expected ratio
 OE_vdata<-OE_function(fit=fit_fgr,newdata=vdata,cause=1,
             thorizon=5,obs_cif=obs_vdata,
-            obs_events=n_events_vdata)
-
+            std.error=obs_stderror)
 
 res_OE<-matrix(OE_vdata,ncol=3,nrow=1,byrow=T,
                dimnames = list(c('O/E ratio'),
@@ -1247,10 +1247,10 @@ O/E ratio
 0.81
 </td>
 <td style="text-align:right;">
-0.67
+0.63
 </td>
 <td style="text-align:right;">
-0.98
+0.99
 </td>
 </tr>
 </tbody>
