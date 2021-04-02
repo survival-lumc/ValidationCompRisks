@@ -51,6 +51,7 @@ pacman::p_load(
   knitr,
   table1,
   kableExtra,
+  gtsummary,
   boot,
   tidyverse,
   rsample,
@@ -101,20 +102,19 @@ tab1 <- table1(
 )
 ```
 
-```{r tab1_bis, echo=FALSE, fig.align='center'}
+```{r tab1_bis, echo=FALSE}
 gtsummary::tbl_summary(
   data = cdata %>% select(-id),
-  label = list(
-    age ~ "Age (years)",
-    size ~ "Size (cm)"
+  label = list(age ~ "Age (years)", size ~ "Size (cm)"),
+  by = "dt", 
+  type = all_continuous() ~ "continuous2",
+  statistic = all_continuous() ~ c(
+    "{mean} ({sd})",
+    "{median} ({min}, {max})"
   ),
-  by = "dt"
 ) %>% 
-  gtsummary::as_gt() %>% 
-  gt::opt_row_striping()  %>% 
-  gt::gtsave(filename = "imgs/Prediction_FG/table1.png")
-
-knitr::include_graphics("imgs/Prediction_FG/table1.png")
+  gtsummary::as_kable_extra() %>% 
+  kableExtra::kable_styling("striped") 
 ```
 
 

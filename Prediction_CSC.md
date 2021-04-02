@@ -40,10 +40,10 @@ prediction model;
 
 ### Installing and loading packages and import data
 
-We following libraries are needed to achieve the following goals, if you
-have not them installed, please use install.packages(’‘)
-(e.g. install.packages(’survival’)) or use the user-friendly approach if
-you are using RStudio.
+The following libraries are needed to achieve the outlined goals, the
+code chunk below will a) check whether you already have them installed,
+b) install them for you if not already present, and c) load the packages
+into the session.
 
 ``` r
 # Use pacman to check whether packages are installed, if not load
@@ -66,6 +66,7 @@ pacman::p_load(
   knitr,
   table1,
   kableExtra,
+  gtsummary,
   boot,
   tidyverse,
   rsample,
@@ -107,14 +108,154 @@ label(cdata$hr_status) <- "Hormon receptor status"
 units(cdata$age) <- "years"
 units(cdata$size) <- "cm"
 options(prType = "html")
-tab1 <- table1(~ age + size + ncat + hr_status | dt, data = cdata, overall = FALSE, topclass = "Rtable1-zebra")
-# print(tab1)
-rm(cdata, vsel, rsel)
-
-tab1
+tab1 <- table1(
+  ~ age + size + ncat + hr_status | dt, data = cdata, 
+  overall = FALSE, 
+  topclass = "Rtable1-zebra", 
+)
 ```
 
-    ## [1] "<table class=\"Rtable1-zebra\">\n<thead>\n<tr>\n<th class='rowlabel firstrow lastrow'></th>\n<th class='firstrow lastrow'><span class='stratlabel'>Development data<br><span class='stratn'>(N=1000)</span></span></th>\n<th class='firstrow lastrow'><span class='stratlabel'>Validation data<br><span class='stratn'>(N=1000)</span></span></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td class='rowlabel firstrow'><span class='varlabel'>Age<span class='varunits'> (years)</span></span></td>\n<td class='firstrow'></td>\n<td class='firstrow'></td>\n</tr>\n<tr>\n<td class='rowlabel'>Mean (SD)</td>\n<td>75.3 (6.96)</td>\n<td>77.2 (5.58)</td>\n</tr>\n<tr>\n<td class='rowlabel lastrow'>Median [Min, Max]</td>\n<td class='lastrow'>74.0 [65.0, 95.0]</td>\n<td class='lastrow'>76.0 [70.0, 96.0]</td>\n</tr>\n<tr>\n<td class='rowlabel firstrow'><span class='varlabel'>Size<span class='varunits'> (cm)</span></span></td>\n<td class='firstrow'></td>\n<td class='firstrow'></td>\n</tr>\n<tr>\n<td class='rowlabel'>Mean (SD)</td>\n<td>2.29 (1.31)</td>\n<td>2.13 (1.32)</td>\n</tr>\n<tr>\n<td class='rowlabel lastrow'>Median [Min, Max]</td>\n<td class='lastrow'>2.00 [0.100, 8.50]</td>\n<td class='lastrow'>1.80 [0.0900, 11.0]</td>\n</tr>\n<tr>\n<td class='rowlabel firstrow'><span class='varlabel'>Nodal status</span></td>\n<td class='firstrow'></td>\n<td class='firstrow'></td>\n</tr>\n<tr>\n<td class='rowlabel'>negative</td>\n<td>642 (64.2%)</td>\n<td>688 (68.8%)</td>\n</tr>\n<tr>\n<td class='rowlabel lastrow'>positive</td>\n<td class='lastrow'>358 (35.8%)</td>\n<td class='lastrow'>312 (31.2%)</td>\n</tr>\n<tr>\n<td class='rowlabel firstrow'><span class='varlabel'>Hormon receptor status</span></td>\n<td class='firstrow'></td>\n<td class='firstrow'></td>\n</tr>\n<tr>\n<td class='rowlabel'>ER and/or PR +</td>\n<td>822 (82.2%)</td>\n<td>857 (85.7%)</td>\n</tr>\n<tr>\n<td class='rowlabel lastrow'>ER-/PR-</td>\n<td class='lastrow'>178 (17.8%)</td>\n<td class='lastrow'>143 (14.3%)</td>\n</tr>\n</tbody>\n</table>\n"
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Characteristic
+</th>
+<th style="text-align:left;">
+Development data, N = 1,000
+</th>
+<th style="text-align:left;">
+Validation data, N = 1,000
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Age (years)
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Mean (SD)
+</td>
+<td style="text-align:left;">
+75 (7)
+</td>
+<td style="text-align:left;">
+77 (6)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Median (Range)
+</td>
+<td style="text-align:left;">
+74 (65, 95)
+</td>
+<td style="text-align:left;">
+76 (70, 96)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Size (cm)
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Mean (SD)
+</td>
+<td style="text-align:left;">
+2.29 (1.31)
+</td>
+<td style="text-align:left;">
+2.13 (1.32)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+Median (Range)
+</td>
+<td style="text-align:left;">
+2.00 (0.10, 8.50)
+</td>
+<td style="text-align:left;">
+1.80 (0.09, 11.00)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nodal status
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+negative
+</td>
+<td style="text-align:left;">
+642 (64%)
+</td>
+<td style="text-align:left;">
+688 (69%)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+positive
+</td>
+<td style="text-align:left;">
+358 (36%)
+</td>
+<td style="text-align:left;">
+312 (31%)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Hormon receptor status
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+ER and/or PR +
+</td>
+<td style="text-align:left;">
+822 (82%)
+</td>
+<td style="text-align:left;">
+857 (86%)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+ER-/PR-
+</td>
+<td style="text-align:left;">
+178 (18%)
+</td>
+<td style="text-align:left;">
+143 (14%)
+</td>
+</tr>
+</tbody>
+</table>
 
 ## Goal 1 - develop a risk prediction model with competing risks
 
@@ -1972,6 +2113,7 @@ sessioninfo::session_info()
     ##  blob             1.2.1      2020-01-20 [1] CRAN (R 4.0.2)
     ##  boot           * 1.3-27     2021-02-12 [1] CRAN (R 4.0.4)
     ##  broom            0.7.5      2021-02-19 [1] CRAN (R 4.0.4)
+    ##  broom.helpers    1.2.1      2021-02-26 [1] CRAN (R 4.0.4)
     ##  cachem           1.0.4      2021-02-13 [1] CRAN (R 4.0.3)
     ##  cellranger       1.1.0      2016-07-27 [1] CRAN (R 4.0.2)
     ##  checkmate        2.0.0      2020-02-06 [1] CRAN (R 4.0.2)
@@ -2006,7 +2148,9 @@ sessioninfo::session_info()
     ##  glue             1.4.2      2020-08-27 [1] CRAN (R 4.0.2)
     ##  gridExtra      * 2.3        2017-09-09 [1] CRAN (R 4.0.2)
     ##  gsubfn         * 0.7        2018-03-16 [1] CRAN (R 4.0.4)
+    ##  gt               0.2.2      2020-08-05 [1] CRAN (R 4.0.2)
     ##  gtable           0.3.0      2019-03-25 [1] CRAN (R 4.0.2)
+    ##  gtsummary      * 1.3.7      2021-02-26 [1] CRAN (R 4.0.4)
     ##  haven            2.3.1      2020-06-01 [1] CRAN (R 4.0.2)
     ##  here             1.0.1      2020-12-13 [1] CRAN (R 4.0.3)
     ##  highr            0.8        2019-03-20 [1] CRAN (R 4.0.2)
@@ -2093,6 +2237,7 @@ sessioninfo::session_info()
     ##  tidyverse      * 1.3.0      2019-11-21 [1] CRAN (R 4.0.2)
     ##  timereg          1.9.8      2020-10-05 [1] CRAN (R 4.0.2)
     ##  timeROC        * 0.4        2019-12-18 [1] CRAN (R 4.0.2)
+    ##  usethis          2.0.1      2021-02-10 [1] CRAN (R 4.0.3)
     ##  utf8             1.2.1      2021-03-12 [1] CRAN (R 4.0.4)
     ##  vctrs            0.3.6      2020-12-17 [1] CRAN (R 4.0.4)
     ##  viridisLite      0.3.0      2018-02-01 [1] CRAN (R 4.0.2)

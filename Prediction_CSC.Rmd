@@ -17,8 +17,9 @@ The goals are:
 3. To assess the potential clinical utility of a competing risk prediction model;
 
 ### Installing and loading packages and import data
-We following libraries are needed to achieve the following goals, if you have not them installed, please use
-install.packages('') (e.g. install.packages('survival')) or use the user-friendly approach if you are using RStudio.
+
+The following libraries are needed to achieve the outlined goals, the code chunk below will a) check whether you already have them installed, b) install them for you if not already present, and c) load the packages into the session.
+
 
 ```{r setup, include=FALSE}
 # Knitr options
@@ -49,6 +50,7 @@ pacman::p_load(
   knitr,
   table1,
   kableExtra,
+  gtsummary,
   boot,
   tidyverse,
   rsample,
@@ -89,13 +91,27 @@ label(cdata$hr_status) <- "Hormon receptor status"
 units(cdata$age) <- "years"
 units(cdata$size) <- "cm"
 options(prType = "html")
-tab1 <- table1(~ age + size + ncat + hr_status | dt, data = cdata, overall = FALSE, topclass = "Rtable1-zebra")
-# print(tab1)
-rm(cdata, vsel, rsel)
-
-tab1
+tab1 <- table1(
+  ~ age + size + ncat + hr_status | dt, data = cdata, 
+  overall = FALSE, 
+  topclass = "Rtable1-zebra", 
+)
 ```
 
+```{r tab1_bis, echo=FALSE}
+gtsummary::tbl_summary(
+  data = cdata %>% select(-id),
+  label = list(age ~ "Age (years)", size ~ "Size (cm)"),
+  by = "dt", 
+  type = all_continuous() ~ "continuous2",
+  statistic = all_continuous() ~ c(
+    "{mean} ({sd})",
+    "{median} ({min}, {max})"
+  ),
+) %>% 
+  gtsummary::as_kable_extra() %>% 
+  kableExtra::kable_styling("striped") 
+```
 
 ## Goal 1 - develop a risk prediction model with competing risks
   
