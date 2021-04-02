@@ -1,13 +1,18 @@
-# 8th March 2021
-# Goal: function to calculate calibration measures (ICI, E50, E90, Emax)
-# Author: Daniele Giardiello
-# Input
-# data: validation data
-# thorizon: time horizon for prediction
-# Tstop: observed time
-# status: variable status
-# cause: number indicating the event of interest. See ?riskRegression::predictRisk()
-
+#' Calculate calibration measures (ICI, E50, E90, Emax)
+#'
+#' @param data Validation data
+#' @param thorizon time horizon for prediction
+#' @param fit Model fit
+#' @param Tstop observed time
+#' @param status variable status
+#' @param cause number indicating the event of interest. See ?riskRegression::predictRisk()
+#'
+#' @return
+#' 
+#' @author Daniele Giardiello
+#' 
+#' @examples
+#' 
 cal_measures<-function(data,thorizon,fit,Tstop,status,cause) {
   valid.df <- data.frame(data)
   pred <- predictRisk(fit,cause=cause,newdata=data,times=thorizon)
