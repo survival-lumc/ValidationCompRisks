@@ -25,20 +25,22 @@
 #' @examples
 #' 
 stdca <- function(data, 
-                  outcome, 
-                  ttoutcome,
-                  timepoint,
+                  outcome,
+                  ttoutcome, 
+                  timepoint, 
                   predictors, 
-                  xstart = 0.01, 
-                  xstop = 0.99, 
-                  xby = 0.01,
-                  ymin = -0.05,
-                  probability = NULL,
-                  harm = NULL,
-                  graph = TRUE,
-                  intervention = FALSE, 
-                  interventionper = 100,
-                  cmprsk = FALSE) {
+                  xstart=0.01, 
+                  xstop=0.99, 
+                  xby=0.01, 
+                  ymin=-0.05, 
+                  probability=NULL, 
+                  harm=NULL,
+                  graph=TRUE, 
+                  intervention=FALSE, 
+                  interventionper=100, 
+                  smooth=FALSE,
+                  loess.span=0.10,
+                  cmprsk=FALSE) {
   
   #ONLY KEEPING COMPLETE CASES
   data=data[complete.cases(data[c(outcome,ttoutcome,predictors)]),c(outcome,ttoutcome,predictors)]

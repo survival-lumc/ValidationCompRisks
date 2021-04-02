@@ -44,32 +44,35 @@ have not them installed, please use install.packages(’‘)
 you are using RStudio.
 
 ``` r
-# Libraries needed
-library(rio)
-library(survival)
-library(rms)
-library(mstate)
-library(sqldf)
-library(pec)
-library(riskRegression)
-library(survAUC)
-library(survivalROC)
-library(timeROC)
-library(plotrix)
-library(splines)
-library(knitr)
-library(table1)
-library(kableExtra)
-library(boot)
-library(tidyverse)
-library(rsample)
-library(gridExtra)
-library(webshot)
+# Use pacman to check whether packages are installed, if not load
+if (!require("pacman")) install.packages("pacman"); library(pacman)
+
+pacman::p_load(
+  rio,
+  survival,
+  rms,
+  mstate,
+  sqldf,
+  pec,
+  riskRegression,
+  survAUC,
+  survivalROC,
+  timeROC,
+  plotrix,
+  splines,
+  knitr,
+  table1,
+  kableExtra,
+  boot, 
+  tidyverse,
+  rsample,
+  gridExtra,
+  webshot
+)
 # webshot::install_phantomjs()
 
-rdata<-readRDS('C:\\Users\\danie\\Documents\\GitHub\\ValidationCompRisks\\Data\\rdata.rds')
-
-vdata<-readRDS('C:\\Users\\danie\\Documents\\GitHub\\ValidationCompRisks\\Data\\vdata.rds')
+rdata<-readRDS(here::here("Data/rdata.rds"))
+vdata<-readRDS(here::here("Data/vdata.rds"))
 
 rdata$hr_status<-relevel(rdata$hr_status, ref='ER and/or PR +')
 vdata$hr_status<-relevel(vdata$hr_status, ref='ER and/or PR +')
@@ -102,9 +105,11 @@ options(prType='html')
 tab1<-table1(~ age + size + ncat + hr_status| dt, data=cdata, overall=FALSE, topclass="Rtable1-zebra")
 # print(tab1)
 rm(cdata,vsel,rsel)
+
+tab1
 ```
 
-<img src="Prediction_FG_files/figure-gfm/Tab1_FG.png" style="display: block; margin: auto;" />
+    ## [1] "<table class=\"Rtable1-zebra\">\n<thead>\n<tr>\n<th class='rowlabel firstrow lastrow'></th>\n<th class='firstrow lastrow'><span class='stratlabel'>Development data<br><span class='stratn'>(N=1000)</span></span></th>\n<th class='firstrow lastrow'><span class='stratlabel'>Validation data<br><span class='stratn'>(N=1000)</span></span></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td class='rowlabel firstrow'><span class='varlabel'>Age<span class='varunits'> (years)</span></span></td>\n<td class='firstrow'></td>\n<td class='firstrow'></td>\n</tr>\n<tr>\n<td class='rowlabel'>Mean (SD)</td>\n<td>75.3 (6.96)</td>\n<td>77.2 (5.58)</td>\n</tr>\n<tr>\n<td class='rowlabel lastrow'>Median [Min, Max]</td>\n<td class='lastrow'>74.0 [65.0, 95.0]</td>\n<td class='lastrow'>76.0 [70.0, 96.0]</td>\n</tr>\n<tr>\n<td class='rowlabel firstrow'><span class='varlabel'>Size<span class='varunits'> (cm)</span></span></td>\n<td class='firstrow'></td>\n<td class='firstrow'></td>\n</tr>\n<tr>\n<td class='rowlabel'>Mean (SD)</td>\n<td>2.29 (1.31)</td>\n<td>2.13 (1.32)</td>\n</tr>\n<tr>\n<td class='rowlabel lastrow'>Median [Min, Max]</td>\n<td class='lastrow'>2.00 [0.100, 8.50]</td>\n<td class='lastrow'>1.80 [0.0900, 11.0]</td>\n</tr>\n<tr>\n<td class='rowlabel firstrow'><span class='varlabel'>Nodal status</span></td>\n<td class='firstrow'></td>\n<td class='firstrow'></td>\n</tr>\n<tr>\n<td class='rowlabel'>negative</td>\n<td>642 (64.2%)</td>\n<td>688 (68.8%)</td>\n</tr>\n<tr>\n<td class='rowlabel lastrow'>positive</td>\n<td class='lastrow'>358 (35.8%)</td>\n<td class='lastrow'>312 (31.2%)</td>\n</tr>\n<tr>\n<td class='rowlabel firstrow'><span class='varlabel'>Hormon receptor status</span></td>\n<td class='firstrow'></td>\n<td class='firstrow'></td>\n</tr>\n<tr>\n<td class='rowlabel'>ER and/or PR +</td>\n<td>822 (82.2%)</td>\n<td>857 (85.7%)</td>\n</tr>\n<tr>\n<td class='rowlabel lastrow'>ER-/PR-</td>\n<td class='lastrow'>178 (17.8%)</td>\n<td class='lastrow'>143 (14.3%)</td>\n</tr>\n</tbody>\n</table>\n"
 
 ## Goal 1 - develop a risk prediction model with competing risks
 
@@ -181,7 +186,7 @@ plot(mfit4,col=1,lwd=2,
 title('Validation data')
 ```
 
-<img src="Prediction_CSC_files/figure-gfm/cuminc-1.png" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_CSC/cuminc-1.svg" width="672" style="display: block; margin: auto;" />
 
 ``` r
 par(oldpar)
@@ -494,7 +499,7 @@ plot(P_csc2_size_rcs$size,P_csc2_size_rcs$yhat,
 title('Non recurrence mortality')
 ```
 
-<img src="Prediction_CSC_files/figure-gfm/ff-1.png" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_CSC/ff-1.svg" width="672" style="display: block; margin: auto;" />
 
 ``` r
 options(datadist=NULL)
@@ -576,7 +581,7 @@ for (i in 1:4) {
 mtext("Recurrence", side = 3, line = -1, outer = TRUE, font=2)
 ```
 
-<img src="Prediction_CSC_files/figure-gfm/ph_csc1-1.png" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_CSC/ph_csc1-1.svg" width="672" style="display: block; margin: auto;" />
 
 ``` r
 par(oldpar)
@@ -690,7 +695,7 @@ for (i in 1:4) {
 mtext("Non recurrence mortality", side = 3, line = -1, outer = TRUE, font=2)
 ```
 
-<img src="Prediction_CSC_files/figure-gfm/ph_csc2-1.png" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_CSC/ph_csc2-1.svg" width="672" style="display: block; margin: auto;" />
 
 ``` r
 par(oldpar)
@@ -1483,7 +1488,7 @@ at 5 years in the development and validation data.
 
 ``` r
 # Load the function to calculate the OE ratio
-source('C:\\Users\\danie\\Documents\\GitHub\\ValidationCompRisks\\Functions\\OE_function.R',local = knitr::knit_global())
+source(here::here("R/OE_function.R"))
 
 # O = estimated cumulative incidence at 5 years
 # E = mean of the predicted cumulative incidence at 5 years
@@ -1545,7 +1550,7 @@ develop breast cancer recurrence in the validation data.
 
 ``` r
 # Calibration measures: ICI, E50, E90, Emax
-source('C:\\Users\\danie\\Documents\\GitHub\\ValidationCompRisks\\Functions\\cal_measures.R',local = knitr::knit_global())
+source(here::here("R/cal_measures.R"))
 
 calmeas_vdata<-cal_measures(vdata,5,fit_csh,
                             Tstop='time',status='status_num',cause=1)
@@ -1651,7 +1656,7 @@ plotCalibration(x,
 title('Cause-specific hazards models')
 ```
 
-<img src="Prediction_CSC_files/figure-gfm/cal_rcs-1.png" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_CSC/cal_rcs-1.svg" width="672" style="display: block; margin: auto;" />
 
 ``` r
 par(oldpar)
@@ -1695,7 +1700,7 @@ manuscript (see also the appendix).
 
 ``` r
 # Run the function to calculate the net benefit and the elements needed to develop decision curve analysis
-source('C:\\Users\\danie\\Documents\\GitHub\\ValidationCompRisks\\Functions\\stdca.R',local = knitr::knit_global())
+source(here::here("R/stdca.R"))
 
 # Development data
 # Predicted probability calculation
@@ -1726,7 +1731,7 @@ mtext('Harm to benefit ratio',1,line=5)
 title("Development data")
 ```
 
-<img src="Prediction_CSC_files/figure-gfm/dca-1.png" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_CSC/dca-1.svg" width="672" style="display: block; margin: auto;" />
 
 ``` r
 par(oldpar)
@@ -1765,7 +1770,7 @@ mtext('Harm to benefit ratio',1,line=5)
 title("Validation data")
 ```
 
-<img src="Prediction_CSC_files/figure-gfm/dca-2.png" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_CSC/dca-2.svg" width="672" style="display: block; margin: auto;" />
 
 ``` r
 par(oldpar)

@@ -1,6 +1,5 @@
 ---
 title: "External validation of the performance of competing risks prediction models: a guide through modern methods -  Fine and Gray model"
-
 always_allow_html: true
 output: 
     github_document:
