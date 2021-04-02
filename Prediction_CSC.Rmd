@@ -71,7 +71,8 @@ More details about development and validation data are provided in the manuscrip
  
 
 ### Descriptive statistics
-```{r, import,fig.align='center'}
+
+```{r, import,echo=FALSE}
 rsel <- rdata[, c("id", "age", "size", "ncat", "hr_status")]
 vsel <- vdata[, c("id", "age", "size", "ncat", "hr_status")]
 rsel$dt <- 1

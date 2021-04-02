@@ -59,9 +59,6 @@ pacman::p_load(
   webshot
 )
 
-#webshot::install_phantomjs()
-
-
 rdata <- readRDS(here::here("Data/rdata.rds"))
 vdata <- readRDS(here::here("Data/vdata.rds"))
 
@@ -74,7 +71,7 @@ More details about development and validation data are provided in the manuscrip
  
 
 ### Descriptive statistics
-```{r, import}
+```{r, import,echo=FALSE}
 rsel <- rdata[, c("id", "age", "size", "ncat", "hr_status")]
 vsel <- vdata[, c("id", "age", "size", "ncat", "hr_status")]
 rsel$dt <- 1

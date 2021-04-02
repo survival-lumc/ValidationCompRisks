@@ -2,10 +2,19 @@
 #'
 #' Short description of data.
 #'
-#' @format A data frame with x rows and y variables
+#' @format A data frame with 1000 rows and 11 variables
 #' \describe{
-#'  \item{Variable 1 name}{Variable 1 description}
-#'  \item{Variable 2 name}{Variable 2 description}
+#'  \item{id}{Unique patient identifier}
+#'  \item{surv}{...}
+#'  \item{tsurv}{...}
+#'  \item{pro}{...}
+#'  \item{tpro}{...}
+#'  \item{status}{...}
+#'  \item{time}{}
+#'  \item{age}{Patient age (years)}
+#'  \item{size}{Size of ... (cm)}
+#'  \item{ncat}{Nodal status}
+#'  \item{hr_status}{Hormon receptor status}
 #' }
 #'
 NULL
@@ -14,10 +23,19 @@ NULL
 #'
 #' Short description of data.
 #'
-#' @format A data frame with x rows and y variables
+#' @format A data frame with 1000 rows and 11 variables
 #' \describe{
-#'  \item{Variable 1 name}{Variable 1 description}
-#'  \item{Variable 2 name}{Variable 2 description}
+#'  \item{id}{Unique patient identifier}
+#'  \item{surv}{...}
+#'  \item{tsurv}{...}
+#'  \item{pro}{...}
+#'  \item{tpro}{...}
+#'  \item{status}{...}
+#'  \item{time}{}
+#'  \item{age}{Patient age (years)}
+#'  \item{size}{Size of ... (cm)}
+#'  \item{ncat}{Nodal status}
+#'  \item{hr_status}{Hormon receptor status}
 #' }
 #'
 NULL
