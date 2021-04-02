@@ -861,4 +861,8 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6728752/ \
 https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7100774/ \
 
 
+## Reproducibility ticket
 
+```{r repro_ticket, echo=TRUE}
+sessioninfo::session_info()
+```
