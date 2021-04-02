@@ -236,7 +236,7 @@ The 5-year cumulative incidence of breast cancer recurrence was 14% (95% CI: 11-
 
 ### 1.2 Secondary investigation -  check non-linearity of continuous predictors
 The potential non-linear relation between continuous predictors (i.e. age and size) and the outcome should be investigated before developing a competing risk prediction model. Non-linearity of continuous predictors can be checked using three-knot restricted cubic splines using rms::rcs() function. More details are given in Frank Harrell's book 'Regression Model Strategies' on page 27 (second edition).
-We developed the competing risks prediction models using the Fine and Gray model.
+We developed the competing risks prediction models using the cause-specific Cox model.
 
 ```{r,ff, warning=FALSE, fig.align='center'}
 
@@ -381,8 +381,8 @@ kable(res_AIC,
 
 The AIC and the graphical check suggested a potential linear relation between the continuous predictors (age and size) and the cause-specific hazards (breast cancer recurrence and non recurrence mortality).  
 
-
 ### 1.3 Model development - first check - the proportional subdistribution hazard assumption
+
 We now examine the fits in a more careful way by checking the proportionality of the cause-specific hazards of the Cox proportional hazard regression models.
 
 ```{r,ph_csc1, message=FALSE, warning=FALSE,fig.align='center'}
@@ -461,13 +461,14 @@ print(fit_csc2_cph)
 # print(summary(fit_csc2_cph))
 options(datadist = NULL)
 ```
+
 The coefficients of the models indicated that larger size, positive nodal status and ER- and/or PR- were associated with higher risk to develop a breast cancer recurrence, while older patients and larger tumors are associated with higher risk of non recurrence mortality.
 
 
 ## Goal 2 - Assessing performance of a competing risk prediction model
 The performance of a risk prediction models may be evaluated through: 
 
-  + discrimination:  the ability of the model to identify patients with and without the outcome and it requires the coefficients (or the log of the subdistribution hazard ratios) of the developed risk prediction model to be evaluated.   
++ discrimination:  the ability of the model to identify patients with and without the outcome and it requires the coefficients (or the log of the subdistribution hazard ratios) of the developed risk prediction model to be evaluated.   
 
 + calibration: the agreement between observed and predicted probabilities.
 
@@ -475,6 +476,7 @@ The performance of a risk prediction models may be evaluated through:
 
 
 ### 2.1 Overall performance measures
+
 We calculate the Brier Score and the Index of Prediction Accuracy (IPA, the scaled Brier) as a overall performance measure.  
 
 Some confidence intervals are calculates using the bootstrap percentile method. So we use bootstrapping the development and validation data.
