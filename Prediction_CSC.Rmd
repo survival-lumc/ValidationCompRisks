@@ -38,29 +38,41 @@ The goals are:
 We following libraries are needed to achieve the following goals, if you have not them installed, please use
 install.packages('') (e.g. install.packages('survival')) or use the user-friendly approach if you are using RStudio.
 
-```{r, wdlib, message=FALSE,warning=FALSE}
+```{r setup, include=FALSE}
+# Knitr options
+knitr::opts_chunk$set(
+  fig.retina = 2,
+  fig.ext = "svg",
+  fig.path = "imgs/Prediction_CSC/"
+)
+```
 
-# Libraries needed
-library(rio)
-library(survival)
-library(rms)
-library(mstate)
-library(sqldf)
-library(pec)
-library(riskRegression)
-library(survAUC)
-library(survivalROC)
-library(timeROC)
-library(plotrix)
-library(splines)
-library(knitr)
-library(table1)
-library(kableExtra)
-library(boot)
-library(tidyverse)
-library(rsample)
-library(gridExtra)
-library(webshot)
+```{r, wdlib, message=FALSE,warning=FALSE}
+# Use pacman to check whether packages are installed, if not load
+if (!require("pacman")) install.packages("pacman"); library(pacman)
+
+pacman::p_load(
+  rio,
+  survival,
+  rms,
+  mstate,
+  sqldf,
+  pec,
+  riskRegression,
+  survAUC,
+  survivalROC,
+  timeROC,
+  plotrix,
+  splines,
+  knitr,
+  table1,
+  kableExtra,
+  boot, 
+  tidyverse,
+  rsample,
+  gridExtra,
+  webshot
+)
 # webshot::install_phantomjs()
 
 rdata<-readRDS('C:\\Users\\danie\\Documents\\GitHub\\ValidationCompRisks\\Data\\rdata.rds')
@@ -98,9 +110,8 @@ tab1<-table1(~ age + size + ncat + hr_status| dt, data=cdata, overall=FALSE, top
 # print(tab1)
 rm(cdata,vsel,rsel)
 
+tab1
 ```
-
-<img src="Prediction_FG_files/figure-gfm/Tab1_FG.png" style="display: block; margin: auto;" />
 
 
 ## Goal 1 - develop a risk prediction model with competing risks
