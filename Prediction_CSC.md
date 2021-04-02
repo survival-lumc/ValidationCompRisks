@@ -45,7 +45,8 @@ you are using RStudio.
 
 ``` r
 # Use pacman to check whether packages are installed, if not load
-if (!require("pacman")) install.packages("pacman"); library(pacman)
+if (!require("pacman")) install.packages("pacman")
+library(pacman)
 
 pacman::p_load(
   rio,
@@ -63,7 +64,7 @@ pacman::p_load(
   knitr,
   table1,
   kableExtra,
-  boot, 
+  boot,
   tidyverse,
   rsample,
   gridExtra,
@@ -71,11 +72,11 @@ pacman::p_load(
 )
 # webshot::install_phantomjs()
 
-rdata<-readRDS(here::here("Data/rdata.rds"))
-vdata<-readRDS(here::here("Data/vdata.rds"))
+rdata <- readRDS(here::here("Data/rdata.rds"))
+vdata <- readRDS(here::here("Data/vdata.rds"))
 
-rdata$hr_status<-relevel(rdata$hr_status, ref='ER and/or PR +')
-vdata$hr_status<-relevel(vdata$hr_status, ref='ER and/or PR +')
+rdata$hr_status <- relevel(rdata$hr_status, ref = "ER and/or PR +")
+vdata$hr_status <- relevel(vdata$hr_status, ref = "ER and/or PR +")
 ```
 
 We loaded the development (rdata) and the validation data (vdata). More
@@ -85,26 +86,28 @@ manuscript.
 ### Descriptive statistics
 
 ``` r
-rsel<-rdata[,c('id', 'age', 'size', 'ncat', 'hr_status')]
-vsel<-vdata[,c('id', 'age', 'size', 'ncat', 'hr_status')]
-rsel$dt<-1
-vsel$dt<-2
-cdata<-rbind(rsel,vsel)
-cdata$dt<-factor(cdata$dt,levels=c(1,2),
-                 labels=c('Development data','Validation data'))
+rsel <- rdata[, c("id", "age", "size", "ncat", "hr_status")]
+vsel <- vdata[, c("id", "age", "size", "ncat", "hr_status")]
+rsel$dt <- 1
+vsel$dt <- 2
+cdata <- rbind(rsel, vsel)
+cdata$dt <- factor(cdata$dt,
+  levels = c(1, 2),
+  labels = c("Development data", "Validation data")
+)
 
-label(cdata$age)<-'Age'
-label(cdata$size)<-'Size'
-label(cdata$ncat)<-'Nodal status'
-label(cdata$hr_status)<-'Hormon receptor status'
+label(cdata$age) <- "Age"
+label(cdata$size) <- "Size"
+label(cdata$ncat) <- "Nodal status"
+label(cdata$hr_status) <- "Hormon receptor status"
 
 # Units
-units(cdata$age)<-'years'
-units(cdata$size)<-'cm'
-options(prType='html')
-tab1<-table1(~ age + size + ncat + hr_status| dt, data=cdata, overall=FALSE, topclass="Rtable1-zebra")
+units(cdata$age) <- "years"
+units(cdata$size) <- "cm"
+options(prType = "html")
+tab1 <- table1(~ age + size + ncat + hr_status | dt, data = cdata, overall = FALSE, topclass = "Rtable1-zebra")
 # print(tab1)
-rm(cdata,vsel,rsel)
+rm(cdata, vsel, rsel)
 
 tab1
 ```
@@ -119,20 +122,20 @@ First, we draw the cumulative incidence curves of breast cancer
 recurrence.
 
 ``` r
-# Expand datasets 
+# Expand datasets
 # Create indicator variables for the outcome
-rdata$status_num<-as.numeric(rdata$status)-1
-rdata$status1[rdata$status_num==1]<-1
-rdata$status1[rdata$status_num!=1]<-0
-rdata$status2[rdata$status_num==2]<-2
-rdata$status2[rdata$status_num!=2]<-0
+rdata$status_num <- as.numeric(rdata$status) - 1
+rdata$status1[rdata$status_num == 1] <- 1
+rdata$status1[rdata$status_num != 1] <- 0
+rdata$status2[rdata$status_num == 2] <- 2
+rdata$status2[rdata$status_num != 2] <- 0
 
 # Create indicator variables for the outcome
-vdata$status_num<-as.numeric(vdata$status)-1
-vdata$status1[vdata$status_num==1]<-1
-vdata$status1[vdata$status_num!=1]<-0
-vdata$status2[vdata$status_num==2]<-2
-vdata$status2[vdata$status_num!=2]<-0
+vdata$status_num <- as.numeric(vdata$status) - 1
+vdata$status1[vdata$status_num == 1] <- 1
+vdata$status1[vdata$status_num != 1] <- 0
+vdata$status2[vdata$status_num == 2] <- 2
+vdata$status2[vdata$status_num != 2] <- 0
 
 # Median follow-up
 # Reverse KM method censoring also competing events (so median follow-up at first event?)
@@ -140,50 +143,60 @@ vdata$status2[vdata$status_num!=2]<-0
 # survfit(coxph(Surv(time,status_num==0)~1,data=rdata)) # 5 years
 
 # Expand data
-rdata.w<-crprep(Tstop='time',
-                status='status_num',
-                trans=c(1,2),
-                id='id',
-                keep=c('age','size','ncat','hr_status'),
-                data=rdata)
+rdata.w <- crprep(
+  Tstop = "time",
+  status = "status_num",
+  trans = c(1, 2),
+  id = "id",
+  keep = c("age", "size", "ncat", "hr_status"),
+  data = rdata
+)
 
 # Save extended data with weights for recurrence (failcode=1)
 # and non recurrence mortality (failcode=2)
-rdata.w1 <- rdata.w %>% filter(failcode==1)
-rdata.w2 <- rdata.w %>% filter(failcode==2)
+rdata.w1 <- rdata.w %>% filter(failcode == 1)
+rdata.w2 <- rdata.w %>% filter(failcode == 2)
 
-vdata.w<-crprep(Tstop='time',
-                status='status_num',
-                trans=c(1,2),
-                id='id',
-                keep=c('age','size','ncat','hr_status'),
-                data=vdata)
+vdata.w <- crprep(
+  Tstop = "time",
+  status = "status_num",
+  trans = c(1, 2),
+  id = "id",
+  keep = c("age", "size", "ncat", "hr_status"),
+  data = vdata
+)
 
-vdata.w1 <- vdata.w %>% filter(failcode==1)
-vdata.w2 <- vdata.w %>% filter(failcode==2)
+vdata.w1 <- vdata.w %>% filter(failcode == 1)
+vdata.w2 <- vdata.w %>% filter(failcode == 2)
 
 # Development set
 mfit3 <- survfit(
-  Surv(Tstart,Tstop,status==1)~1, 
-  data=rdata.w1,weights=weight.cens)
+  Surv(Tstart, Tstop, status == 1) ~ 1,
+  data = rdata.w1, weights = weight.cens
+)
 
 mfit4 <- survfit(
-  Surv(Tstart,Tstop,status==1)~1, 
-  data=vdata.w1,weights=weight.cens) 
+  Surv(Tstart, Tstop, status == 1) ~ 1,
+  data = vdata.w1, weights = weight.cens
+)
 
-par(xaxs='i',yaxs='i',las=1)
-oldpar <- par(mfrow=c(1,2), mar=c(5,5,1,1))
-plot(mfit3,col=1,lwd=2,
-     xlab='Years since BC diagnosis',
-     ylab='Cumulative incidence',bty='n',
-     ylim=c(0,0.25),xlim=c(0,5),fun='event',conf.int = TRUE)
-title('Development data')
+par(xaxs = "i", yaxs = "i", las = 1)
+oldpar <- par(mfrow = c(1, 2), mar = c(5, 5, 1, 1))
+plot(mfit3,
+  col = 1, lwd = 2,
+  xlab = "Years since BC diagnosis",
+  ylab = "Cumulative incidence", bty = "n",
+  ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
+)
+title("Development data")
 
-plot(mfit4,col=1,lwd=2,
-     xlab='Years since BC diagnosis',
-     ylab='Cumulative incidence',bty='n',
-     ylim=c(0,0.25),xlim=c(0,5),fun='event',conf.int = TRUE)
-title('Validation data')
+plot(mfit4,
+  col = 1, lwd = 2,
+  xlab = "Years since BC diagnosis",
+  ylab = "Cumulative incidence", bty = "n",
+  ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
+)
+title("Validation data")
 ```
 
 <img src="imgs/Prediction_CSC/cuminc-1.png" width="672" style="display: block; margin: auto;" />
@@ -193,28 +206,35 @@ par(oldpar)
 
 # Cumulative incidences
 # Cumulative incidences
-smfit3<-summary(mfit3,times=c(1,2,3,4,5))
-smfit4<-summary(mfit4,times=c(1,2,3,4,5))
+smfit3 <- summary(mfit3, times = c(1, 2, 3, 4, 5))
+smfit4 <- summary(mfit4, times = c(1, 2, 3, 4, 5))
 
-res_ci<-cbind(1-smfit3$surv,
-              1-smfit3$upper,
-              1-smfit3$lower,
-              1-smfit4$surv,
-              1-smfit4$upper,
-              1-smfit4$lower)
+res_ci <- cbind(
+  1 - smfit3$surv,
+  1 - smfit3$upper,
+  1 - smfit3$lower,
+  1 - smfit4$surv,
+  1 - smfit4$upper,
+  1 - smfit4$lower
+)
 
-res_ci<-round(res_ci,2)
+res_ci <- round(res_ci, 2)
 
-rownames(res_ci)<-c('1-year','2-year',
-                    '3-year', '4-year',
-                    '5-year')
-colnames(res_ci)<-rep(c('Estimate','Lower .95',
-                        'Upper .95'),2)
+rownames(res_ci) <- c(
+  "1-year", "2-year",
+  "3-year", "4-year",
+  "5-year"
+)
+colnames(res_ci) <- rep(c(
+  "Estimate", "Lower .95",
+  "Upper .95"
+), 2)
 
 kable(res_ci,
-      row.names = TRUE) %>% 
-  kable_styling('striped', position ='center') %>%
-  add_header_above(c(' '=1, 'Development data'=3, 'Validation data'=3))
+  row.names = TRUE
+) %>%
+  kable_styling("striped", position = "center") %>%
+  add_header_above(c(" " = 1, "Development data" = 3, "Validation data" = 3))
 ```
 
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
@@ -400,121 +420,147 @@ Fine and Gray model.
 
 ``` r
 # CSC models without splines
-fit_csh<-CSC(Hist(time,status_num)~age+size+
-               ncat+hr_status,data=rdata,fitter='cph')
+fit_csh <- CSC(Hist(time, status_num) ~ age + size +
+  ncat + hr_status, data = rdata, fitter = "cph")
 
-fit_csc1<-fit_csh$models$`Cause 1`
-fit_csc2<-fit_csh$models$`Cause 2`
+fit_csc1 <- fit_csh$models$`Cause 1`
+fit_csc2 <- fit_csh$models$`Cause 2`
 
 # CSC models
 # CS models
 # Recurrence
-dd<-datadist(rdata)
-options(datadist='dd')
-fit_csc1_rcs<-cph(Surv(time,status_num==1)~rcs(age,3)+rcs(size,3)+
-                    ncat+hr_status,x=T,y=T,surv=T,data=rdata)
+dd <- datadist(rdata)
+options(datadist = "dd")
+fit_csc1_rcs <- cph(Surv(time, status_num == 1) ~ rcs(age, 3) + rcs(size, 3) +
+  ncat + hr_status, x = T, y = T, surv = T, data = rdata)
 # print(fit_csc1_rcs)
 # print(summary(fit_csc1_rcs))
 # print(anova(fit_csc1_rcs))
-P_csc1_age_rcs<-Predict(fit_csc1_rcs,'age')
-P_csc1_size_rcs<-Predict(fit_csc1_rcs,'size')
-options(datadist=NULL)
+P_csc1_age_rcs <- Predict(fit_csc1_rcs, "age")
+P_csc1_size_rcs <- Predict(fit_csc1_rcs, "size")
+options(datadist = NULL)
 
 # Non-mortality recurrence
-dd<-datadist(rdata)
-options(datadist='dd')
-fit_csc2_rcs<-cph(Surv(time,status_num==2)~rcs(age,3)+rcs(size,3)+
-                    ncat+hr_status,x=T,y=T,surv=T,data=rdata)
+dd <- datadist(rdata)
+options(datadist = "dd")
+fit_csc2_rcs <- cph(Surv(time, status_num == 2) ~ rcs(age, 3) + rcs(size, 3) +
+  ncat + hr_status, x = T, y = T, surv = T, data = rdata)
 # print(fit_csc2_rcs)
 # print(summary(fit_csc2_rcs))
 # print(anova(fit_csc2_rcs))
-P_csc2_age_rcs<-Predict(fit_csc2_rcs,'age')
-P_csc2_size_rcs<-Predict(fit_csc2_rcs,'size')
-options(datadist=NULL)
+P_csc2_age_rcs <- Predict(fit_csc2_rcs, "age")
+P_csc2_size_rcs <- Predict(fit_csc2_rcs, "size")
+options(datadist = NULL)
 
 
-oldpar <- par(mfrow=c(2,2), mar=c(5,5,1,1))
-par(xaxs='i',yaxs='i',las=1)
-plot(P_csc1_age_rcs$age,P_csc1_age_rcs$yhat,
-     type='l',lwd=2,col='blue',bty='n',
-     xlab='Age at breast cancer diagnosis',ylab='log Relative Hazard',ylim=c(-2,2),
-     xlim=c(65,95))
-polygon(c(P_csc1_age_rcs$age,rev(P_csc1_age_rcs$age)),
-        c(P_csc1_age_rcs$lower,rev(P_csc1_age_rcs$upper)),col = "grey75", 
-        border = FALSE)
-par(new=TRUE)
-plot(P_csc1_age_rcs$age,P_csc1_age_rcs$yhat,
-     type='l',lwd=2,col='blue',bty='n',
-     xlab='Age at breast cancer diagnosis',ylab='log Relative Hazard',
-     ylim=c(-2,2),xlim=c(65,95))
-title('Recurrence')
+oldpar <- par(mfrow = c(2, 2), mar = c(5, 5, 1, 1))
+par(xaxs = "i", yaxs = "i", las = 1)
+plot(P_csc1_age_rcs$age, P_csc1_age_rcs$yhat,
+  type = "l", lwd = 2, col = "blue", bty = "n",
+  xlab = "Age at breast cancer diagnosis", ylab = "log Relative Hazard", ylim = c(-2, 2),
+  xlim = c(65, 95)
+)
+polygon(c(P_csc1_age_rcs$age, rev(P_csc1_age_rcs$age)),
+  c(P_csc1_age_rcs$lower, rev(P_csc1_age_rcs$upper)),
+  col = "grey75",
+  border = FALSE
+)
+par(new = TRUE)
+plot(P_csc1_age_rcs$age, P_csc1_age_rcs$yhat,
+  type = "l", lwd = 2, col = "blue", bty = "n",
+  xlab = "Age at breast cancer diagnosis", ylab = "log Relative Hazard",
+  ylim = c(-2, 2), xlim = c(65, 95)
+)
+title("Recurrence")
 
 # CSC 1- size
-par(xaxs='i',yaxs='i',las=1)
-plot(P_csc1_size_rcs$size,P_csc1_size_rcs$yhat,
-     type='l',lwd=2,col='blue',bty='n',
-     xlab='Size of breast cancer',ylab='log Relative Hazard',ylim=c(-2,2),
-     xlim=c(0,7))
-polygon(c(P_csc1_size_rcs$size,rev(P_csc1_size_rcs$size)),
-        c(P_csc1_size_rcs$lower,rev(P_csc1_size_rcs$upper)),col = "grey75", 
-        border = FALSE)
-par(new=TRUE)
-plot(P_csc1_size_rcs$size,P_csc1_size_rcs$yhat,
-     type='l',lwd=2,col='blue',bty='n',
-     xlab='Size of breast cancer',ylab='log Relative Hazard',
-     ylim=c(-2,2),xlim=c(0,7))
-title('Recurrence')
-par(xaxs='i',yaxs='i',las=1)
-options(datadist=NULL)
+par(xaxs = "i", yaxs = "i", las = 1)
+plot(P_csc1_size_rcs$size, P_csc1_size_rcs$yhat,
+  type = "l", lwd = 2, col = "blue", bty = "n",
+  xlab = "Size of breast cancer", ylab = "log Relative Hazard", ylim = c(-2, 2),
+  xlim = c(0, 7)
+)
+polygon(c(P_csc1_size_rcs$size, rev(P_csc1_size_rcs$size)),
+  c(P_csc1_size_rcs$lower, rev(P_csc1_size_rcs$upper)),
+  col = "grey75",
+  border = FALSE
+)
+par(new = TRUE)
+plot(P_csc1_size_rcs$size, P_csc1_size_rcs$yhat,
+  type = "l", lwd = 2, col = "blue", bty = "n",
+  xlab = "Size of breast cancer", ylab = "log Relative Hazard",
+  ylim = c(-2, 2), xlim = c(0, 7)
+)
+title("Recurrence")
+par(xaxs = "i", yaxs = "i", las = 1)
+options(datadist = NULL)
 
 # CSC 2- age
-plot(P_csc2_age_rcs$age,P_csc2_age_rcs$yhat,
-     type='l',lwd=2,col='blue',bty='n',
-     xlab='Age at breast cancer diagnosis',ylab='log Relative Hazard',ylim=c(-2,2),
-     xlim=c(65,95))
-polygon(c(P_csc2_age_rcs$age,rev(P_csc2_age_rcs$age)),
-        c(P_csc2_age_rcs$lower,rev(P_csc2_age_rcs$upper)),col = "grey75", 
-        border = FALSE)
-par(new=TRUE)
-plot(P_csc2_age_rcs$age,P_csc2_age_rcs$yhat,
-     type='l',lwd=2,col='blue',bty='n',
-     xlab='Age at breast cancer diagnosis',ylab='log Relative Hazard',
-     ylim=c(-2,2),xlim=c(65,95))
-title('Non recurrence mortality')
+plot(P_csc2_age_rcs$age, P_csc2_age_rcs$yhat,
+  type = "l", lwd = 2, col = "blue", bty = "n",
+  xlab = "Age at breast cancer diagnosis", ylab = "log Relative Hazard", ylim = c(-2, 2),
+  xlim = c(65, 95)
+)
+polygon(c(P_csc2_age_rcs$age, rev(P_csc2_age_rcs$age)),
+  c(P_csc2_age_rcs$lower, rev(P_csc2_age_rcs$upper)),
+  col = "grey75",
+  border = FALSE
+)
+par(new = TRUE)
+plot(P_csc2_age_rcs$age, P_csc2_age_rcs$yhat,
+  type = "l", lwd = 2, col = "blue", bty = "n",
+  xlab = "Age at breast cancer diagnosis", ylab = "log Relative Hazard",
+  ylim = c(-2, 2), xlim = c(65, 95)
+)
+title("Non recurrence mortality")
 
 # CSC 2 - size
-par(xaxs='i',yaxs='i',las=1)
-plot(P_csc2_size_rcs$size,P_csc2_size_rcs$yhat,
-     type='l',lwd=2,col='blue',bty='n',
-     xlab='Size of breast cancer',ylab='log Relative Hazard',ylim=c(-2,2),
-     xlim=c(0,7))
-polygon(c(P_csc2_size_rcs$size,rev(P_csc2_size_rcs$size)),
-        c(P_csc2_size_rcs$lower,rev(P_csc2_size_rcs$upper)),col = "grey75", 
-        border = FALSE)
-par(new=TRUE)
-plot(P_csc2_size_rcs$size,P_csc2_size_rcs$yhat,
-     type='l',lwd=2,col='blue',bty='n',
-     xlab='Size of breast cancer',ylab='log Relative Hazard',
-     ylim=c(-2,2),xlim=c(0,7))
-title('Non recurrence mortality')
+par(xaxs = "i", yaxs = "i", las = 1)
+plot(P_csc2_size_rcs$size, P_csc2_size_rcs$yhat,
+  type = "l", lwd = 2, col = "blue", bty = "n",
+  xlab = "Size of breast cancer", ylab = "log Relative Hazard", ylim = c(-2, 2),
+  xlim = c(0, 7)
+)
+polygon(c(P_csc2_size_rcs$size, rev(P_csc2_size_rcs$size)),
+  c(P_csc2_size_rcs$lower, rev(P_csc2_size_rcs$upper)),
+  col = "grey75",
+  border = FALSE
+)
+par(new = TRUE)
+plot(P_csc2_size_rcs$size, P_csc2_size_rcs$yhat,
+  type = "l", lwd = 2, col = "blue", bty = "n",
+  xlab = "Size of breast cancer", ylab = "log Relative Hazard",
+  ylim = c(-2, 2), xlim = c(0, 7)
+)
+title("Non recurrence mortality")
 ```
 
 <img src="imgs/Prediction_CSC/ff-1.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
-options(datadist=NULL)
+options(datadist = NULL)
 par(oldpar)
 
-res_AIC<-matrix(c(AIC(fit_csc1),AIC(fit_csc1_rcs),
-                  AIC(fit_csc2),AIC(fit_csc2_rcs)),
-                  byrow=T,ncol=2,nrow=2,
-                  dimnames = list(c('Recurrence specific hazard',
-                                    'Non recurrence mortality'),
-                                  c('AIC without splines',
-                                    'AIC with splines')))
+res_AIC <- matrix(c(
+  AIC(fit_csc1), AIC(fit_csc1_rcs),
+  AIC(fit_csc2), AIC(fit_csc2_rcs)
+),
+byrow = T, ncol = 2, nrow = 2,
+dimnames = list(
+  c(
+    "Recurrence specific hazard",
+    "Non recurrence mortality"
+  ),
+  c(
+    "AIC without splines",
+    "AIC with splines"
+  )
+)
+)
 kable(res_AIC,
-      row.names = TRUE) %>% 
-      kable_styling('striped', position ='center')
+  row.names = TRUE
+) %>%
+  kable_styling("striped", position = "center")
 ```
 
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
@@ -567,18 +613,18 @@ proportionality of the cause-specific hazards of the Cox proportional
 hazard regression models.
 
 ``` r
-zp_csc1 <- cox.zph(fit_csc1, transform='identity')
+zp_csc1 <- cox.zph(fit_csc1, transform = "identity")
 
-par(las=1,xaxs='i',yaxs='i')
+par(las = 1, xaxs = "i", yaxs = "i")
 # c(bottom, left, top, right)
-oldpar <- par(mfrow=c(2,2), mar=c(5,6.1,3.1,1))
-sub_title<-c("Age","Size","Lymph node status","HR status")
+oldpar <- par(mfrow = c(2, 2), mar = c(5, 6.1, 3.1, 1))
+sub_title <- c("Age", "Size", "Lymph node status", "HR status")
 for (i in 1:4) {
-  plot(zp_csc1[i], resid=F,bty='n',xlim=c(0,5))
-  abline(0,0, lty=3)
+  plot(zp_csc1[i], resid = F, bty = "n", xlim = c(0, 5))
+  abline(0, 0, lty = 3)
   title(sub_title[i])
-} 
-mtext("Recurrence", side = 3, line = -1, outer = TRUE, font=2)
+}
+mtext("Recurrence", side = 3, line = -1, outer = TRUE, font = 2)
 ```
 
 <img src="imgs/Prediction_CSC/ph_csc1-1.png" width="672" style="display: block; margin: auto;" />
@@ -586,8 +632,8 @@ mtext("Recurrence", side = 3, line = -1, outer = TRUE, font=2)
 ``` r
 par(oldpar)
 
-kable(round(zp_csc1$table,3)) %>% 
-  kable_styling('striped',position = 'center')
+kable(round(zp_csc1$table, 3)) %>%
+  kable_styling("striped", position = "center")
 ```
 
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
@@ -681,18 +727,18 @@ GLOBAL
 </table>
 
 ``` r
-zp_csc2 <- cox.zph(fit_csc2, transform='identity')
+zp_csc2 <- cox.zph(fit_csc2, transform = "identity")
 
-par(las=1,xaxs='i',yaxs='i')
+par(las = 1, xaxs = "i", yaxs = "i")
 # c(bottom, left, top, right)
-oldpar <- par(mfrow=c(2,2), mar=c(5,6.1,3.1,1))
-sub_title<-c("Age","Size","Lymph node status","HR status")
+oldpar <- par(mfrow = c(2, 2), mar = c(5, 6.1, 3.1, 1))
+sub_title <- c("Age", "Size", "Lymph node status", "HR status")
 for (i in 1:4) {
-  plot(zp_csc2[i], resid=F,bty='n',xlim=c(0,5))
-  abline(0,0, lty=3)
+  plot(zp_csc2[i], resid = F, bty = "n", xlim = c(0, 5))
+  abline(0, 0, lty = 3)
   title(sub_title[i])
-} 
-mtext("Non recurrence mortality", side = 3, line = -1, outer = TRUE, font=2)
+}
+mtext("Non recurrence mortality", side = 3, line = -1, outer = TRUE, font = 2)
 ```
 
 <img src="imgs/Prediction_CSC/ph_csc2-1.png" width="672" style="display: block; margin: auto;" />
@@ -700,8 +746,8 @@ mtext("Non recurrence mortality", side = 3, line = -1, outer = TRUE, font=2)
 ``` r
 par(oldpar)
 
-kable(round(zp_csc2$table,3)) %>% 
-  kable_styling('striped',position = 'center')
+kable(round(zp_csc2$table, 3)) %>%
+  kable_styling("striped", position = "center")
 ```
 
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
@@ -806,12 +852,13 @@ hazards regression models
 -   Cox proportional recurrence-specific hazard model
 
 ``` r
-dd<-datadist(rdata)
-options(datadist='dd')
-options(prType="html")
-fit_csc1_cph<-cph(Surv(time,status_num==1)~age+size+
-                    ncat+hr_status,
-                    x=T,y=T,surv=T,data=rdata)
+dd <- datadist(rdata)
+options(datadist = "dd")
+options(prType = "html")
+fit_csc1_cph <- cph(Surv(time, status_num == 1) ~ age + size +
+  ncat + hr_status,
+x = T, y = T, surv = T, data = rdata
+)
 print(fit_csc1_cph)
 ```
 
@@ -903,18 +950,19 @@ print(fit_csc1_cph)
 
 ``` r
 # print(summary(fit_csc1_cph))
-options(datadist=NULL)
+options(datadist = NULL)
 ```
 
 -   Cox proportional non recurrence mortality-specific hazard model
 
 ``` r
-dd<-datadist(rdata)
-options(datadist='dd')
-options(prType="html")
-fit_csc2_cph<-cph(Surv(time,status_num==2)~age+size+
-                    ncat+hr_status,
-                    x=T,y=T,surv=T,data=rdata)
+dd <- datadist(rdata)
+options(datadist = "dd")
+options(prType = "html")
+fit_csc2_cph <- cph(Surv(time, status_num == 2) ~ age + size +
+  ncat + hr_status,
+x = T, y = T, surv = T, data = rdata
+)
 print(fit_csc2_cph)
 ```
 
@@ -1006,7 +1054,7 @@ print(fit_csc2_cph)
 
 ``` r
 # print(summary(fit_csc2_cph))
-options(datadist=NULL)
+options(datadist = NULL)
 ```
 
 The coefficients of the models indicated that larger size, positive
@@ -1040,8 +1088,8 @@ method. So we use bootstrapping the development and validation data.
 ``` r
 # Bootstrapping data
 set.seed(20201214)
-rboot<-bootstraps(rdata,times=10)
-vboot<-bootstraps(vdata,times=10)
+rboot <- bootstraps(rdata, times = 10)
+vboot <- bootstraps(vdata, times = 10)
 # NOTE: B=10 to speed up the procedure for now
 ```
 
@@ -1056,87 +1104,98 @@ corresponding confidence intervals.
 # - IPA
 
 # Development set - apparent validation
-score_rdata1<-Score(list("CSH development"=fit_csh),
-                    formula=Hist(time,status_num)~1,
-                    data=rdata,conf.int=TRUE,times=4.99,
-                    cens.model = 'km', metrics='brier',
-                    summary='ipa', cause=1) 
+score_rdata1 <- Score(list("CSH development" = fit_csh),
+  formula = Hist(time, status_num) ~ 1,
+  data = rdata, conf.int = TRUE, times = 4.99,
+  cens.model = "km", metrics = "brier",
+  summary = "ipa", cause = 1
+)
 
 # Validation set - external validation
-score_vdata1<-
-  Score(list("CSH validation"=fit_csh),
-        formula=Hist(time,status_num)~1,
-        data=vdata,conf.int=TRUE,times=4.99,
-        cens.model = 'km', metrics='brier',
-        summary='ipa',cause=1) 
+score_vdata1 <-
+  Score(list("CSH validation" = fit_csh),
+    formula = Hist(time, status_num) ~ 1,
+    data = vdata, conf.int = TRUE, times = 4.99,
+    cens.model = "km", metrics = "brier",
+    summary = "ipa", cause = 1
+  )
 
 # Development set - internal validation (bootstrap)
 # mstate::crprep() for every bootstrap sample
-crprep_boot<-function(split) {
-  crprep(Tstop='time', status='status_num',
-         trans=1, data=analysis(split),
-         keep=c('status_num','age','size',
-                'ncat','hr_status'))
+crprep_boot <- function(split) {
+  crprep(
+    Tstop = "time", status = "status_num",
+    trans = 1, data = analysis(split),
+    keep = c(
+      "status_num", "age", "size",
+      "ncat", "hr_status"
+    )
+  )
 }
 
 # riskRegression::Score() to calculate Brier and IPA for every bootstrap sample
-score_boot_1<-function(split) {
-  Score(list("CSH"=fit_csh),
-        formula=Hist(time,status_num)~1,
-        data=analysis(split),conf.int=FALSE,times=4.99,
-        cens.model = 'km', metrics='brier',cause=1,
-        summary='ipa')$Brier[[1]]$IPA[2] 
+score_boot_1 <- function(split) {
+  Score(list("CSH" = fit_csh),
+    formula = Hist(time, status_num) ~ 1,
+    data = analysis(split), conf.int = FALSE, times = 4.99,
+    cens.model = "km", metrics = "brier", cause = 1,
+    summary = "ipa"
+  )$Brier[[1]]$IPA[2]
 }
 
 
 # Development data
 rboot <- rboot %>% mutate(
-  cr.prep=map(splits,crprep_boot),
-  IPA1=map_dbl(splits,score_boot_1))
+  cr.prep = map(splits, crprep_boot),
+  IPA1 = map_dbl(splits, score_boot_1)
+)
 
 
 # Validation data
 vboot <- vboot %>% mutate(
-  cr.prep=map(splits,crprep_boot),
-  IPA1=map_dbl(splits,score_boot_1),
+  cr.prep = map(splits, crprep_boot),
+  IPA1 = map_dbl(splits, score_boot_1),
 )
 
 # Table overall measures
-alpha<-.05
-k<-2 # number of digits
-res_ov_csh<-matrix(unlist(c(score_rdata1$Brier$score$Brier[2], 
-                            # Brier apparent validation 
-                            score_rdata1$Brier$score[2,6],
-                            score_rdata1$Brier$score[2,7],
-                            
-                            score_vdata1$Brier$score$Brier[2], 
-                            # Brier external validation
-                            score_vdata1$Brier$score[2,6],
-                            score_vdata1$Brier$score[2,7],
-                            
-                            score_rdata1$Brier$score$IPA[2],  
-                            # IPA apparent validation
-                            quantile(rboot$IPA1,probs=alpha/2),
-                            quantile(rboot$IPA1,probs=1-alpha/2),
-                            
-                            score_vdata1$Brier$score$IPA[2],  
-                            # IPA external validation 
-                            quantile(vboot$IPA1,probs=alpha/2),
-                            quantile(vboot$IPA1,probs=1-alpha/2))),
-                  
-                   nrow=2,ncol=6, 
-                   byrow=T, 
-                   dimnames = 
-                     list(c('Brier','IPA'),
-                          rep(c('Estimate','Lower .95 ','Upper .95'),2)))
+alpha <- .05
+k <- 2 # number of digits
+res_ov_csh <- matrix(unlist(c(
+  score_rdata1$Brier$score$Brier[2],
+  # Brier apparent validation
+  score_rdata1$Brier$score[2, 6],
+  score_rdata1$Brier$score[2, 7],
+  score_vdata1$Brier$score$Brier[2],
+  # Brier external validation
+  score_vdata1$Brier$score[2, 6],
+  score_vdata1$Brier$score[2, 7],
+  score_rdata1$Brier$score$IPA[2],
+  # IPA apparent validation
+  quantile(rboot$IPA1, probs = alpha / 2),
+  quantile(rboot$IPA1, probs = 1 - alpha / 2),
+  score_vdata1$Brier$score$IPA[2],
+  # IPA external validation
+  quantile(vboot$IPA1, probs = alpha / 2),
+  quantile(vboot$IPA1, probs = 1 - alpha / 2)
+)),
+nrow = 2, ncol = 6,
+byrow = T,
+dimnames =
+  list(
+    c("Brier", "IPA"),
+    rep(c("Estimate", "Lower .95 ", "Upper .95"), 2)
+  )
+)
 
 
-res_ov<-round(res_ov_csh,2) # Digits
-kable(res_ov) %>% 
-  kable_styling('striped', position ="center") %>%
-  add_header_above(c(' '=1,
-                     'Development data'=3, 
-                     'Validation data'=3))
+res_ov <- round(res_ov_csh, 2) # Digits
+kable(res_ov) %>%
+  kable_styling("striped", position = "center") %>%
+  add_header_above(c(
+    " " = 1,
+    "Development data" = 3,
+    "Validation data" = 3
+  ))
 ```
 
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
@@ -1267,12 +1326,16 @@ hazards.
 
 # Wolbers' C-index
 # Apparent
-C_rdata1_cph1<-unlist(pec::cindex(fit_csh,cause=1,
-                                  eval.times = 4.99)$AppCindex)
+C_rdata1_cph1 <- unlist(pec::cindex(fit_csh,
+  cause = 1,
+  eval.times = 4.99
+)$AppCindex)
 
 # External validation
-C_vdata1_cph1<-unlist(pec::cindex(fit_csh,data=vdata,
-                                  cause=1,eval.times = 4.99)$AppCindex)
+C_vdata1_cph1 <- unlist(pec::cindex(fit_csh,
+  data = vdata,
+  cause = 1, eval.times = 4.99
+)$AppCindex)
 
 # Time dependent AUC
 # Time-dependent AUC (in Table 3 called Uno's TD AUC at 5 years) ###
@@ -1280,19 +1343,23 @@ C_vdata1_cph1<-unlist(pec::cindex(fit_csh,data=vdata,
 # NOTE: no discrimination measures considers data with left-truncation.
 
 # All CSC models using absolute risk as a marker
-Uno_rdata1_CSC<-
-  timeROC(T=rdata$time, delta=rdata$status1,
-          marker=predictRisk(fit_csh,newdata=rdata,cause=1,times=5),
-          cause=1,weighting='marginal',times=4.99,
-          iid=TRUE)
+Uno_rdata1_CSC <-
+  timeROC(
+    T = rdata$time, delta = rdata$status1,
+    marker = predictRisk(fit_csh, newdata = rdata, cause = 1, times = 5),
+    cause = 1, weighting = "marginal", times = 4.99,
+    iid = TRUE
+  )
 
 # External validation
 # All CSC models using absolute risk as a marker
-Uno_vdata1_CSC<-
-  timeROC(T=vdata$time, delta=vdata$status1,
-          marker=predictRisk(fit_csh,newdata=vdata,cause=1,times=5),
-          cause=1,weighting='marginal',times=4.99,
-          iid=TRUE)
+Uno_vdata1_CSC <-
+  timeROC(
+    T = vdata$time, delta = vdata$status1,
+    marker = predictRisk(fit_csh, newdata = vdata, cause = 1, times = 5),
+    cause = 1, weighting = "marginal", times = 4.99,
+    iid = TRUE
+  )
 
 # NOTE: if you have a lot of data n > 2000, standard error computation may be really long.
 # In that case, please use bootstrap percentile to calculate confidence intervals.
@@ -1301,60 +1368,77 @@ Uno_vdata1_CSC<-
 # NOTE: I used AUC_2 for now (to be discussed)
 
 # Bootstraping Wolbers' C-index to calculate the bootstrap percentile confidence intervals
-C_boot1_cph1<-function(split) {unlist(pec::cindex(fit_csh,data=analysis(split),
-        cause=1,eval.times = 4.99)$AppCindex)}
+C_boot1_cph1 <- function(split) {
+  unlist(pec::cindex(fit_csh,
+    data = analysis(split),
+    cause = 1, eval.times = 4.99
+  )$AppCindex)
+}
 
-C_boot1_cph2<-function(split) {unlist(pec::cindex(fit_csh,data=analysis(split),
-        cause=2,eval.times = 4.99)$AppCindex)}
+C_boot1_cph2 <- function(split) {
+  unlist(pec::cindex(fit_csh,
+    data = analysis(split),
+    cause = 2, eval.times = 4.99
+  )$AppCindex)
+}
 
 # Run time-dependent AUC in the bootstrapped development and validation data
 # to calculate the non-parametric CI through percentile bootstrap
-rboot <- rboot %>% mutate(C1=map_dbl(splits,C_boot1_cph1),
-                          C2=map_dbl(splits,C_boot1_cph2))
-vboot <-vboot %>% mutate(C1=map_dbl(splits,C_boot1_cph1),
-                         C2=map_dbl(splits,C_boot1_cph2))
+rboot <- rboot %>% mutate(
+  C1 = map_dbl(splits, C_boot1_cph1),
+  C2 = map_dbl(splits, C_boot1_cph2)
+)
+vboot <- vboot %>% mutate(
+  C1 = map_dbl(splits, C_boot1_cph1),
+  C2 = map_dbl(splits, C_boot1_cph2)
+)
 
 
-alpha<-.05
-k<-2
-res_discr_csh<-matrix(c(
-  
+alpha <- .05
+k <- 2
+res_discr_csh <- matrix(c(
+
   ## C-index
   # Development CSH1
   C_rdata1_cph1,
-  quantile(rboot$C1,probs=alpha/2),
-  quantile(rboot$C1,probs=1-alpha/2),
-  
+  quantile(rboot$C1, probs = alpha / 2),
+  quantile(rboot$C1, probs = 1 - alpha / 2),
+
   # Validation CSH1
   C_vdata1_cph1,
-  quantile(vboot$C1,probs=alpha/2),
-  quantile(vboot$C1,probs=1-alpha/2),
-  
+  quantile(vboot$C1, probs = alpha / 2),
+  quantile(vboot$C1, probs = 1 - alpha / 2),
+
   ## time-dependent AUC
   # Development CSH1
-  Uno_rdata1_CSC$AUC['t=4.99'],
-  Uno_rdata1_CSC$AUC['t=4.99']-
-    qnorm(1-alpha/2)*Uno_rdata1_CSC$inference$vect_sd_1['t=4.99'],
-  Uno_rdata1_CSC$AUC['t=4.99']+
-    qnorm(1-alpha/2)*Uno_rdata1_CSC$inference$vect_sd_1['t=4.99'],
-  
+  Uno_rdata1_CSC$AUC["t=4.99"],
+  Uno_rdata1_CSC$AUC["t=4.99"] -
+    qnorm(1 - alpha / 2) * Uno_rdata1_CSC$inference$vect_sd_1["t=4.99"],
+  Uno_rdata1_CSC$AUC["t=4.99"] +
+    qnorm(1 - alpha / 2) * Uno_rdata1_CSC$inference$vect_sd_1["t=4.99"],
+
   # Validation CSH1
-  Uno_vdata1_CSC$AUC['t=4.99'],
-  Uno_vdata1_CSC$AUC['t=4.99']-
-    qnorm(1-alpha/2)*Uno_vdata1_CSC$inference$vect_sd_1['t=4.99'],
-  Uno_vdata1_CSC$AUC['t=4.99']+
-    qnorm(1-alpha/2)*Uno_vdata1_CSC$inference$vect_sd_1['t=4.99']),
-  
-    nrow=2,ncol=6, byrow=T, 
-    dimnames = list(c('Wolbers C','Uno AUC'),
-                rep(c('Estimate','Lower .95 ','Upper .95'),2)))
+  Uno_vdata1_CSC$AUC["t=4.99"],
+  Uno_vdata1_CSC$AUC["t=4.99"] -
+    qnorm(1 - alpha / 2) * Uno_vdata1_CSC$inference$vect_sd_1["t=4.99"],
+  Uno_vdata1_CSC$AUC["t=4.99"] +
+    qnorm(1 - alpha / 2) * Uno_vdata1_CSC$inference$vect_sd_1["t=4.99"]
+),
+nrow = 2, ncol = 6, byrow = T,
+dimnames = list(
+  c("Wolbers C", "Uno AUC"),
+  rep(c("Estimate", "Lower .95 ", "Upper .95"), 2)
+)
+)
 
-res_discr_csh<-round(res_discr_csh,k)
+res_discr_csh <- round(res_discr_csh, k)
 
-kable(res_discr_csh) %>% 
-  kable_styling('striped', position ="center") %>%
-  add_header_above(c(' '=1,'Development data'=3,
-                     'Validation data'=3))
+kable(res_discr_csh) %>%
+  kable_styling("striped", position = "center") %>%
+  add_header_above(c(
+    " " = 1, "Development data" = 3,
+    "Validation data" = 3
+  ))
 ```
 
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
@@ -1493,22 +1577,31 @@ source(here::here("R/OE_function.R"))
 # O = estimated cumulative incidence at 5 years
 # E = mean of the predicted cumulative incidence at 5 years
 
-Po_t<-summary(
-          survfit(Surv(Tstart,Tstop,status==1)~1,
-          data=vdata.w1,weights=weight.cens),times=5)
-obs_vdata<-1-Po_t$surv
-obs_stderror<-Po_t$std.err
+Po_t <- summary(
+  survfit(Surv(Tstart, Tstop, status == 1) ~ 1,
+    data = vdata.w1, weights = weight.cens
+  ),
+  times = 5
+)
+obs_vdata <- 1 - Po_t$surv
+obs_stderror <- Po_t$std.err
 
 # Observed/Expected ratio
-OE_vdata<-OE_function(fit=fit_csh,newdata=vdata,cause=1,
-            thorizon=5,obs_cif=obs_vdata,
-            std.error=obs_stderror)
+OE_vdata <- OE_function(
+  fit = fit_csh, newdata = vdata, cause = 1,
+  thorizon = 5, obs_cif = obs_vdata,
+  std.error = obs_stderror
+)
 
-res_OE<-matrix(OE_vdata,ncol=3,nrow=1,byrow=T,
-               dimnames = list(c('O/E ratio'),
-                               c('Estimate','Lower.95','Upper.95')))
-kable(res_OE) %>% 
-  kable_styling('striped', position ='center')
+res_OE <- matrix(OE_vdata,
+  ncol = 3, nrow = 1, byrow = T,
+  dimnames = list(
+    c("O/E ratio"),
+    c("Estimate", "Lower.95", "Upper.95")
+  )
+)
+kable(res_OE) %>%
+  kable_styling("striped", position = "center")
 ```
 
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
@@ -1552,20 +1645,23 @@ develop breast cancer recurrence in the validation data.
 # Calibration measures: ICI, E50, E90, Emax
 source(here::here("R/cal_measures.R"))
 
-calmeas_vdata<-cal_measures(vdata,5,fit_csh,
-                            Tstop='time',status='status_num',cause=1)
+calmeas_vdata <- cal_measures(vdata, 5, fit_csh,
+  Tstop = "time", status = "status_num", cause = 1
+)
 
 # Squared bias
-avg_sqbias_CSC<-mean((predictRisk(fit_csh,newdata=vdata,cause=1,times=5)
-                      -obs_vdata)**2)
-res_calmeas<-matrix(c(avg_sqbias_CSC,calmeas_vdata),
-                    ncol=1,nrow=5,byrow=T,
-                    dimnames = list(
-                      c('Average squared bias','ICI','E50','E90','Emax'),
-                      c('Estimate')))
-res_calmeas<-round(res_calmeas,2)
-kable(res_calmeas) %>% 
-  kable_styling('striped', position ='center')
+avg_sqbias_CSC <- mean((predictRisk(fit_csh, newdata = vdata, cause = 1, times = 5)
+- obs_vdata)**2)
+res_calmeas <- matrix(c(avg_sqbias_CSC, calmeas_vdata),
+  ncol = 1, nrow = 5, byrow = T,
+  dimnames = list(
+    c("Average squared bias", "ICI", "E50", "E90", "Emax"),
+    c("Estimate")
+  )
+)
+res_calmeas <- round(res_calmeas, 2)
+kable(res_calmeas) %>%
+  kable_styling("striped", position = "center")
 ```
 
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
@@ -1645,15 +1741,20 @@ Calibration plots reports:
         risk.
 
 ``` r
-x <- Score(list(model1=fit_csh),Hist(time,status_num)~1,data=vdata,
-           cause= 1,times=5, plots="cal")
-oldpar<-par(mar=c(5.1,5.8,4.1,2.1),mgp=c(4.25,1,0),
-            xaxs='i',yaxs='i',las=1)
+x <- Score(list(model1 = fit_csh), Hist(time, status_num) ~ 1,
+  data = vdata,
+  cause = 1, times = 5, plots = "cal"
+)
+oldpar <- par(
+  mar = c(5.1, 5.8, 4.1, 2.1), mgp = c(4.25, 1, 0),
+  xaxs = "i", yaxs = "i", las = 1
+)
 plotCalibration(x,
-                brier.in.legend = FALSE,
-                auc.in.legend = FALSE, cens.method = 'pseudo',
-                cex=1,xlim=c(0,0.5),ylim=c(0,0.5))
-title('Cause-specific hazards models')
+  brier.in.legend = FALSE,
+  auc.in.legend = FALSE, cens.method = "pseudo",
+  cex = 1, xlim = c(0, 0.5), ylim = c(0, 0.5)
+)
+title("Cause-specific hazards models")
 ```
 
 <img src="imgs/Prediction_CSC/cal_rcs-1.png" width="672" style="display: block; margin: auto;" />
@@ -1704,30 +1805,39 @@ source(here::here("R/stdca.R"))
 
 # Development data
 # Predicted probability calculation
-rdata$pred5<-predictRisk(fit_csh,newdata=rdata,times=5)
-rdata<-as.data.frame(rdata)
+rdata$pred5 <- predictRisk(fit_csh, newdata = rdata, times = 5)
+rdata <- as.data.frame(rdata)
 # Development data
-dca_rdata_1<-stdca(data=rdata,outcome="status_num",ttoutcome = "time",
-                    timepoint=5,predictors="pred5",xstop=0.35,
-                    ymin=-0.01, graph=FALSE, cmprsk = TRUE)
+dca_rdata_1 <- stdca(
+  data = rdata, outcome = "status_num", ttoutcome = "time",
+  timepoint = 5, predictors = "pred5", xstop = 0.35,
+  ymin = -0.01, graph = FALSE, cmprsk = TRUE
+)
 
 # Decision curves plot
-oldpar<-par(xaxs='i',yaxs='i',las=1,mar=c(6.1,5.8,4.1,2.1),mgp=c(4.25,1,0))
+oldpar <- par(xaxs = "i", yaxs = "i", las = 1, mar = c(6.1, 5.8, 4.1, 2.1), mgp = c(4.25, 1, 0))
 plot(dca_rdata_1$net.benefit$threshold,
-     dca_rdata_1$net.benefit$pred5,type='l',lwd=2,lty=1,
-     xlab='', ylab='Net Benefit',
-     xlim=c(0,0.5),ylim=c(-0.10,0.10),bty='n',xaxt='n')
-legend('topright',c('Treat all','Treat none','Prediction model'),
-       lwd=c(2,2,2),lty=c(1,2,1),col=c('darkgray','black','black'),bty='n')
-lines(dca_rdata_1$net.benefit$threshold,dca_rdata_1$net.benefit$none,
-      type='l',lwd=2, lty=4)
-lines(dca_rdata_1$net.benefit$threshold,dca_rdata_1$net.benefit$all,
-      type='l',lwd=2,col='darkgray')
-axis(1,at=c(0,0.1,0.2,0.3,0.4,0.5))
-axis(1,pos=-0.145,at=c(0.1,0.2,0.3,0.4,0.5),
-     labels=c('1:9','1:4','1:3','1:2','1:1'))
-mtext('Threshold probability',1,line=2)
-mtext('Harm to benefit ratio',1,line=5)
+  dca_rdata_1$net.benefit$pred5,
+  type = "l", lwd = 2, lty = 1,
+  xlab = "", ylab = "Net Benefit",
+  xlim = c(0, 0.5), ylim = c(-0.10, 0.10), bty = "n", xaxt = "n"
+)
+legend("topright", c("Treat all", "Treat none", "Prediction model"),
+  lwd = c(2, 2, 2), lty = c(1, 2, 1), col = c("darkgray", "black", "black"), bty = "n"
+)
+lines(dca_rdata_1$net.benefit$threshold, dca_rdata_1$net.benefit$none,
+  type = "l", lwd = 2, lty = 4
+)
+lines(dca_rdata_1$net.benefit$threshold, dca_rdata_1$net.benefit$all,
+  type = "l", lwd = 2, col = "darkgray"
+)
+axis(1, at = c(0, 0.1, 0.2, 0.3, 0.4, 0.5))
+axis(1,
+  pos = -0.145, at = c(0.1, 0.2, 0.3, 0.4, 0.5),
+  labels = c("1:9", "1:4", "1:3", "1:2", "1:1")
+)
+mtext("Threshold probability", 1, line = 2)
+mtext("Harm to benefit ratio", 1, line = 5)
 title("Development data")
 ```
 
@@ -1740,33 +1850,43 @@ par(oldpar)
 # External data
 # Validation data
 # Predicted probability calculation
-vdata$pred5<-predictRisk(fit_csh,newdata=vdata,times=5)
-vdata<-as.data.frame(vdata)
+vdata$pred5 <- predictRisk(fit_csh, newdata = vdata, times = 5)
+vdata <- as.data.frame(vdata)
 # Run decision curve analysis
 
 # Development data
 # Model without PGR
-dca_vdata_1<-stdca(data=vdata,outcome='status_num',ttoutcome = "time",
-                    timepoint=5,predictors='pred5',xstop=0.45,
-                    ymin=-0.01, graph=FALSE, cmprsk = TRUE)
+dca_vdata_1 <- stdca(
+  data = vdata, outcome = "status_num", ttoutcome = "time",
+  timepoint = 5, predictors = "pred5", xstop = 0.45,
+  ymin = -0.01, graph = FALSE, cmprsk = TRUE
+)
 # Decision curves plot
-oldpar<-par(xaxs='i',yaxs='i',las=1,mar=c(6.1,5.8,4.1,2.1),mgp=c(4.25,1,0))
+oldpar <- par(xaxs = "i", yaxs = "i", las = 1, mar = c(6.1, 5.8, 4.1, 2.1), mgp = c(4.25, 1, 0))
 plot(dca_vdata_1$net.benefit$threshold,
-     dca_vdata_1$net.benefit$pred5,type='l',lwd=2,lty=1,
-     xlab='', ylab='Net Benefit',
-     xlim=c(0,0.5),ylim=c(-0.10,0.10),bty='n',xaxt='n')
+  dca_vdata_1$net.benefit$pred5,
+  type = "l", lwd = 2, lty = 1,
+  xlab = "", ylab = "Net Benefit",
+  xlim = c(0, 0.5), ylim = c(-0.10, 0.10), bty = "n", xaxt = "n"
+)
 lines(dca_vdata_1$net.benefit$threshold,
-      dca_vdata_1$net.benefit$none,
-      type='l',lwd=2, lty=4)
+  dca_vdata_1$net.benefit$none,
+  type = "l", lwd = 2, lty = 4
+)
 lines(dca_vdata_1$net.benefit$threshold,
-      dca_vdata_1$net.benefit$all,type='l',lwd=2,col='darkgray')
-legend('topright',c('Treat all','Treat none','Prediction model'),
-       lwd=c(2,2,2),lty=c(1,2,1),col=c('darkgray','black','black'),bty='n')
-axis(1,at=c(0,0.1,0.2,0.3,0.4,0.5))
-axis(1,pos=-0.145,at=c(0.1,0.2,0.3,0.4,0.5),
-     labels=c('1:9','1:4','1:3','1:2','1:1'))
-mtext('Threshold probability',1,line=2)
-mtext('Harm to benefit ratio',1,line=5)
+  dca_vdata_1$net.benefit$all,
+  type = "l", lwd = 2, col = "darkgray"
+)
+legend("topright", c("Treat all", "Treat none", "Prediction model"),
+  lwd = c(2, 2, 2), lty = c(1, 2, 1), col = c("darkgray", "black", "black"), bty = "n"
+)
+axis(1, at = c(0, 0.1, 0.2, 0.3, 0.4, 0.5))
+axis(1,
+  pos = -0.145, at = c(0.1, 0.2, 0.3, 0.4, 0.5),
+  labels = c("1:9", "1:4", "1:3", "1:2", "1:1")
+)
+mtext("Threshold probability", 1, line = 2)
+mtext("Harm to benefit ratio", 1, line = 5)
 title("Validation data")
 ```
 
