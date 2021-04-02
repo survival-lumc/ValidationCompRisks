@@ -7,6 +7,8 @@ output:
     toc_depth: 4
   keep_text: true
   pandoc_args: --webtex
+editor_options: 
+  chunk_output_type: console
 ---
 
 ## Goals
@@ -17,8 +19,8 @@ The goals are:
 3. To assess the potential clinical utility of a competing risk prediction model;
 
 ### Installing and loading packages and import data
-We following libraries are needed to achieve the following goals, if you have not them installed, please use
-install.packages('') (e.g. install.packages('survival')) or use the user-friendly approach if you are using RStudio.
+
+The following libraries are needed to achieve the outlined goals, the code chunk below will a) check whether you already have them installed, b) install them for you if not already present, and c) load the packages into the session.
 
 ```{r setup, include=FALSE}
 # Knitr options
@@ -56,7 +58,7 @@ pacman::p_load(
   webshot
 )
 
-# webshot::install_phantomjs()
+#webshot::install_phantomjs()
 
 
 rdata <- readRDS(here::here("Data/rdata.rds"))
@@ -71,7 +73,7 @@ More details about development and validation data are provided in the manuscrip
  
 
 ### Descriptive statistics
-```{r, import,fig.align='center'}
+```{r, import}
 rsel <- rdata[, c("id", "age", "size", "ncat", "hr_status")]
 vsel <- vdata[, c("id", "age", "size", "ncat", "hr_status")]
 rsel$dt <- 1
@@ -91,11 +93,28 @@ label(cdata$hr_status) <- "Hormon receptor status"
 units(cdata$age) <- "years"
 units(cdata$size) <- "cm"
 options(prType = "html")
-tab1 <- table1(~ age + size + ncat + hr_status | dt, data = cdata, overall = FALSE, topclass = "Rtable1-zebra")
-# print(tab1)
-rm(cdata, vsel, rsel)
 
-tab1
+tab1 <- table1(
+  ~ age + size + ncat + hr_status | dt, data = cdata, 
+  overall = FALSE, 
+  topclass = "Rtable1-zebra", 
+)
+```
+
+```{r tab1_bis, echo=FALSE, fig.align='center'}
+gtsummary::tbl_summary(
+  data = cdata %>% select(-id),
+  label = list(
+    age ~ "Age (years)",
+    size ~ "Size (cm)"
+  ),
+  by = "dt"
+) %>% 
+  gtsummary::as_gt() %>% 
+  gt::opt_row_striping()  %>% 
+  gt::gtsave(filename = "imgs/Prediction_FG/table1.png")
+
+knitr::include_graphics("imgs/Prediction_FG/table1.png")
 ```
 
 
