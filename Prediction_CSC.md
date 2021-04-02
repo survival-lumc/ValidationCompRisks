@@ -186,7 +186,7 @@ plot(mfit4,col=1,lwd=2,
 title('Validation data')
 ```
 
-<img src="imgs/Prediction_CSC/cuminc-1.svg" width="672" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_CSC/cuminc-1.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
 par(oldpar)
@@ -499,7 +499,7 @@ plot(P_csc2_size_rcs$size,P_csc2_size_rcs$yhat,
 title('Non recurrence mortality')
 ```
 
-<img src="imgs/Prediction_CSC/ff-1.svg" width="672" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_CSC/ff-1.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
 options(datadist=NULL)
@@ -581,7 +581,7 @@ for (i in 1:4) {
 mtext("Recurrence", side = 3, line = -1, outer = TRUE, font=2)
 ```
 
-<img src="imgs/Prediction_CSC/ph_csc1-1.svg" width="672" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_CSC/ph_csc1-1.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
 par(oldpar)
@@ -695,7 +695,7 @@ for (i in 1:4) {
 mtext("Non recurrence mortality", side = 3, line = -1, outer = TRUE, font=2)
 ```
 
-<img src="imgs/Prediction_CSC/ph_csc2-1.svg" width="672" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_CSC/ph_csc2-1.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
 par(oldpar)
@@ -1656,7 +1656,7 @@ plotCalibration(x,
 title('Cause-specific hazards models')
 ```
 
-<img src="imgs/Prediction_CSC/cal_rcs-1.svg" width="672" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_CSC/cal_rcs-1.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
 par(oldpar)
@@ -1731,7 +1731,7 @@ mtext('Harm to benefit ratio',1,line=5)
 title("Development data")
 ```
 
-<img src="imgs/Prediction_CSC/dca-1.svg" width="672" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_CSC/dca-1.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
 par(oldpar)
@@ -1770,7 +1770,7 @@ mtext('Harm to benefit ratio',1,line=5)
 title("Validation data")
 ```
 
-<img src="imgs/Prediction_CSC/dca-2.svg" width="672" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_CSC/dca-2.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
 par(oldpar)

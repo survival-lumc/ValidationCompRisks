@@ -40,8 +40,7 @@ install.packages('') (e.g. install.packages('survival')) or use the user-friendl
 ```{r setup, include=FALSE}
 # Knitr options
 knitr::opts_chunk$set(
-  fig.retina = 2,
-  fig.ext = "svg",
+  fig.retina = 3,
   fig.path = "imgs/Prediction_CSC/"
 )
 ```
