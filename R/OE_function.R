@@ -20,9 +20,13 @@
 #'
 #' @examples
 #' 
-OE_function<-function(fit,newdata,cause,thorizon,obs_cif,
+OE_function<-function(fit,
+                      newdata,
+                      cause,
+                      thorizon,
+                      obs_cif,
                       std.error) {
-  F_t<-predictRisk(fit,newdata=newdata,cause=cause,times=thorizon)
+  F_t<-riskRegression::predictRisk(fit,newdata=newdata,cause=cause,times=thorizon)
   E_t<-mean(F_t)
   OE<-obs_cif/E_t
   OE_lower<-exp(log(OE-qnorm(0.975)*((std.error)/obs_cif)))
