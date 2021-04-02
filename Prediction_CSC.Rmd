@@ -75,9 +75,8 @@ pacman::p_load(
 )
 # webshot::install_phantomjs()
 
-rdata<-readRDS('C:\\Users\\danie\\Documents\\GitHub\\ValidationCompRisks\\Data\\rdata.rds')
-
-vdata<-readRDS('C:\\Users\\danie\\Documents\\GitHub\\ValidationCompRisks\\Data\\vdata.rds')
+rdata<-readRDS(here::here("Data/rdata.rds"))
+vdata<-readRDS(here::here("Data/vdata.rds"))
 
 rdata$hr_status<-relevel(rdata$hr_status, ref='ER and/or PR +')
 vdata$hr_status<-relevel(vdata$hr_status, ref='ER and/or PR +')
@@ -674,7 +673,7 @@ We calculate the observed/ expected ratio (OE) , ICI, E50, E90 and Emax at 5 yea
 
 ```{r, OE, fig.align='center',warning=FALSE,message=FALSE}
 # Load the function to calculate the OE ratio
-source('C:\\Users\\danie\\Documents\\GitHub\\ValidationCompRisks\\Functions\\OE_function.R',local = knitr::knit_global())
+source(here::here("R/OE_function.R"))
 
 # O = estimated cumulative incidence at 5 years
 # E = mean of the predicted cumulative incidence at 5 years
@@ -702,7 +701,7 @@ The competing risks prediction model slightly overestimates the risk to develop 
 
 ```{r, calmeasures, fig.align='center',warning=FALSE,message=FALSE}
 # Calibration measures: ICI, E50, E90, Emax
-source('C:\\Users\\danie\\Documents\\GitHub\\ValidationCompRisks\\Functions\\cal_measures.R',local = knitr::knit_global())
+source(here::here("R/cal_measures.R"))
 
 calmeas_vdata<-cal_measures(vdata,5,fit_csh,
                             Tstop='time',status='status_num',cause=1)
@@ -762,7 +761,7 @@ Detailed information about net benefit, decision curve calculation and interpret
 
 ```{r, dca, message=FALSE,warning=FALSE, fig.align='center'}
 # Run the function to calculate the net benefit and the elements needed to develop decision curve analysis
-source('C:\\Users\\danie\\Documents\\GitHub\\ValidationCompRisks\\Functions\\stdca.R',local = knitr::knit_global())
+source(here::here("R/stdca.R"))
 
 # Development data
 # Predicted probability calculation
