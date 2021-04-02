@@ -11,7 +11,7 @@ models: a guide through modern methods - Fine and Gray model
     -   [1.1 Primary investigation - cumulative incidence
         curves](#11-primary-investigation---cumulative-incidence-curves)
     -   [1.2 Secondary investigation - check non-linearity of continuous
-        predictors](#12-secondary-investigation----check-non-linearity-of-continuous-predictors)
+        predictors](#12-secondary-investigation---check-non-linearity-of-continuous-predictors)
     -   [1.3 Model development - first check - the proportional
         subdistribution hazard
         assumption](#13-model-development---first-check---the-proportional-subdistribution-hazard-assumption)
@@ -26,8 +26,9 @@ models: a guide through modern methods - Fine and Gray model
         -   [2.3.1 Observed and Expected ratio ICI E50 E90
             Emax](#231-observed-and-expected-ratio-ici-e50-e90-emax)
         -   [2.3.2 Calibration plot](#232-calibration-plot)
--   [Goal 3 - Clinical utility](#goal-3----clinical-utility)
+-   [Goal 3 - Clinical utility](#goal-3---clinical-utility)
 -   [References](#references)
+-   [Reproducibility ticket](#reproducibility-ticket)
 
 ## Goals
 

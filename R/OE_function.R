@@ -1,4 +1,3 @@
-# 8th March 2021
 #' Calculate observed and expected (OE) ratio of competing risk models
 #'
 #' @param fit FG model or CSC model a riskRegression::FGR() or

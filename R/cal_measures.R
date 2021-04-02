@@ -18,7 +18,7 @@ cal_measures <- function(data, thorizon, fit, Tstop, status, cause) {
   cll.pred <- log(-log(1 - pred))
 
   # Create grid along which to create calibration curves.
-  range.pred <- quantile(pred, probs = c(0.01, 0.99))
+  range.pred <- stats::quantile(pred, probs = c(0.01, 0.99))
   pred.grid <- seq(from = range.pred[1], to = range.pred[2], length = 100)
   cll.pred.grid <- log(-log(1 - pred.grid))
 
