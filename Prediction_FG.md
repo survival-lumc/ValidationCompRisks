@@ -194,7 +194,7 @@ plot(mfit4,
 title("Validation data")
 ```
 
-<img src="imgs/Prediction_CSC/cuminc-1.png" width="672" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_FG/cuminc-1.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
 par(oldpar)
@@ -470,7 +470,7 @@ plot(P_fg_size_rcs$size, P_fg_size_rcs$yhat,
 )
 ```
 
-<img src="imgs/Prediction_CSC/ff-1.png" width="672" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_FG/ff-1.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
 par(oldpar)
@@ -556,7 +556,7 @@ for (i in 1:4) {
 mtext("Fine and Gray", side = 3, line = -1, outer = TRUE, font = 2)
 ```
 
-<img src="imgs/Prediction_CSC/sph-1.png" width="672" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_FG/sph-1.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
 par(oldpar)
@@ -1450,7 +1450,7 @@ plotCalibration(x,
 title("Fine and Gray model")
 ```
 
-<img src="imgs/Prediction_CSC/cal_rcs-1.png" width="672" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_FG/cal_rcs-1.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
 par(oldpar)
@@ -1536,7 +1536,7 @@ mtext("Harm to benefit ratio", 1, line = 5)
 title("Development data")
 ```
 
-<img src="imgs/Prediction_CSC/dca-1.png" width="672" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_FG/dca-1.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
 par(oldpar)
@@ -1592,7 +1592,7 @@ mtext("Harm to benefit ratio", 1, line = 5)
 title("Validation data")
 ```
 
-<img src="imgs/Prediction_CSC/dca-2.png" width="672" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_FG/dca-2.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
 par(oldpar)
