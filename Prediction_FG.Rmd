@@ -195,7 +195,9 @@ par(oldpar)
 # Cumulative incidences
 smfit3 <- summary(mfit3, times = c(1, 2, 3, 4, 5))
 smfit4 <- summary(mfit4, times = c(1, 2, 3, 4, 5))
+```
 
+```{r res_ci, echo=FALSE}
 res_ci <- cbind(
   1 - smfit3$surv,
   1 - smfit3$upper,
@@ -299,7 +301,9 @@ weights = weight.cens,
 x = T, y = T, surv = T, data = rdata.w
 )
 options(datadist = NULL)
+```
 
+```{r res_AIC, echo=FALSE}
 res_AIC <- matrix(c(AIC(fit_fg), AIC(fit_fg_rcs)),
   byrow = T, ncol = 2, nrow = 1,
   dimnames = list(
@@ -449,7 +453,9 @@ vboot <- vboot %>% mutate(
   cr.prep = map(splits, crprep_boot),
   IPA1 = map_dbl(splits, score_boot_1),
 )
+```
 
+```{r res_ov, echo=FALSE}
 # Table overall measures
 alpha <- .05
 k <- 2 # number of digits
@@ -571,8 +577,9 @@ C_boot1 <- function(split) {
 # to calculate the non-parametric CI through percentile bootstrap
 rboot <- rboot %>% mutate(C1 = map_dbl(splits, C_boot1))
 vboot <- vboot %>% mutate(C1 = map_dbl(splits, C_boot1))
+```
 
-
+```{r res_discr, echo=FALSE}
 alpha <- .05
 k <- 2
 res_discr_fgr <- matrix(c(
@@ -721,7 +728,8 @@ oldpar <- par(
 plotCalibration(x,
   brier.in.legend = FALSE,
   auc.in.legend = FALSE, cens.method = "pseudo",
-  cex = 1, xlim = c(0, 0.5), ylim = c(0, 0.5)
+  cex = 1, xlim = c(0, 0.5), ylim = c(0, 0.5),
+  rug = TRUE
 )
 title("Fine and Gray model")
 par(oldpar)
