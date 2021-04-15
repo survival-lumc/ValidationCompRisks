@@ -202,7 +202,9 @@ par(oldpar)
 # Cumulative incidences
 smfit3 <- summary(mfit3, times = c(1, 2, 3, 4, 5))
 smfit4 <- summary(mfit4, times = c(1, 2, 3, 4, 5))
+```
 
+```{r, res_ci, fig.align='center',echo=FALSE}
 res_ci <- cbind(
   1 - smfit3$surv,
   1 - smfit3$upper,
@@ -356,7 +358,9 @@ plot(P_csc2_size_rcs$size, P_csc2_size_rcs$yhat,
 title("Non recurrence mortality")
 options(datadist = NULL)
 par(oldpar)
+```
 
+```{r, res_aic, fig.align='center',echo=FALSE}
 res_AIC <- matrix(c(
   AIC(fit_csc1), AIC(fit_csc1_rcs),
   AIC(fit_csc2), AIC(fit_csc2_rcs)
@@ -551,7 +555,9 @@ vboot <- vboot %>% mutate(
   cr.prep = map(splits, crprep_boot),
   IPA1 = map_dbl(splits, score_boot_1),
 )
+```
 
+```{r, res_ov, fig.align='center',echo=FALSE}
 # Table overall measures
 alpha <- .05
 k <- 2 # number of digits
@@ -681,8 +687,9 @@ vboot <- vboot %>% mutate(
   C1 = map_dbl(splits, C_boot1_cph1),
   C2 = map_dbl(splits, C_boot1_cph2)
 )
+```
 
-
+```{r, res_disc, fig.align='center',echo=FALSE}
 alpha <- .05
 k <- 2
 res_discr_csh <- matrix(c(
@@ -841,7 +848,7 @@ oldpar <- par(
 plotCalibration(x,
   brier.in.legend = FALSE,
   auc.in.legend = FALSE, cens.method = "pseudo",
-  cex = 1, xlim = c(0, 0.5), ylim = c(0, 0.5)
+  cex = 1, xlim = c(0, 0.5), ylim = c(0, 0.5), rug=TRUE
 )
 title("Cause-specific hazards models")
 par(oldpar)
