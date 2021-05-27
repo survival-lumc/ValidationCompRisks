@@ -2,41 +2,41 @@ External validation of the performance of competing risks prediction
 models: a guide through modern methods - Cause specific hazard models
 ================
 
--   [Goals](#goals)
+-   [Steps](#steps)
     -   [Installing and loading packages and import
         data](#installing-and-loading-packages-and-import-data)
     -   [Descriptive statistics](#descriptive-statistics)
--   [Goal 1 - develop a risk prediction model with competing
-    risks](#goal-1---develop-a-risk-prediction-model-with-competing-risks)
-    -   [1.1 Primary investigation - cumulative incidence
-        curves](#primary-investigation---cumulative-incidence-curves)
-    -   [1.2 Secondary investigation - check non-linearity of continuous
-        predictors](#secondary-investigation---check-non-linearity-of-continuous-predictors)
-    -   [1.3 Model development - first check - the proportional
-        subdistribution hazard
-        assumption](#model-development---first-check---the-proportional-subdistribution-hazard-assumption)
-    -   [1.4 Model development - fit the risk prediction
-        models](#model-development---fit-the-risk-prediction-models)
--   [Goal 2 - Assessing performance of a competing risk prediction
-    model](#goal-2---assessing-performance-of-a-competing-risk-prediction-model)
-    -   [2.1 Overall performance
-        measures](#overall-performance-measures)
-    -   [2.2 Discrimination measures](#discrimination-measures)
-    -   [2.3 Calibration](#calibration)
-        -   [2.3.1 Observed and Expected ratio ICI E50 E90
-            Emax](#observed-and-expected-ratio-ici-e50-e90-emax)
-        -   [2.3.2 Calibration plot](#calibration-plot)
+-   [Goal 1 - develop a competing risks prediction
+    model](#goal-1---develop-a-competing-risks-prediction-model)
+    -   [1.1 Cumulative incidence
+        curves](#11-cumulative-incidence-curves)
+    -   [1.2 Check non-linearity of continuous
+        predictors](#12-check-non-linearity-of-continuous-predictors)
+    -   [1.3 Checking proportional hazards
+        assumption](#13-checking-proportional-hazards-assumption)
+    -   [1.4 Examine the risk fit of the
+        models](#14-examine-the-risk-fit-of-the-models)
+-   [Goal 2 - Assessing performance of a competing risks prediction
+    model](#goal-2---assessing-performance-of-a-competing-risks-prediction-model)
+    -   [2.1 Overall prediction error](#21-overall-prediction-error)
+    -   [2.2 Discrimination](#22-discrimination)
+    -   [2.3 Calibration](#23-calibration)
+        -   [2.3.1 Numerical summaries of
+            calibration](#231-numerical-summaries-of-calibration)
+        -   [2.3.2 Calibration plot](#232-calibration-plot)
 -   [Goal 3 - Clinical utility](#goal-3---clinical-utility)
--   [References](#references)
+-   [Additional references](#additional-references)
 -   [Reproducibility ticket](#reproducibility-ticket)
 
-## Goals
+## Steps
 
-The goals are:  
-1. To develop a competing risk prediction model;  
-2. To assess the performance of a competing risk prediction model;  
-3. To assess the potential clinical utility of a competing risk
-prediction model;
+The steps taken in this file are:  
+1. To develop a competing risks prediction model cause specific hazards
+approach;  
+2. To assess the performance of the model in terms of calibration,
+discrimination and overall prediction error;  
+3. To assess the potential clinical utility the model using decision
+curve analysis;
 
 ### Installing and loading packages and import data
 
@@ -73,7 +73,6 @@ pacman::p_load(
   gridExtra,
   webshot
 )
-# webshot::install_phantomjs()
 
 rdata <- readRDS(here::here("Data/rdata.rds"))
 vdata <- readRDS(here::here("Data/vdata.rds"))
@@ -82,8 +81,8 @@ rdata$hr_status <- relevel(rdata$hr_status, ref = "ER and/or PR +")
 vdata$hr_status <- relevel(vdata$hr_status, ref = "ER and/or PR +")
 ```
 
-We loaded the development (rdata) and the validation data (vdata). More
-details about development and validation data are provided in the
+We loaded the development data (rdata) and the validation data (vdata).
+More details about development and validation data are provided in the
 manuscript.
 
 ### Descriptive statistics
@@ -113,7 +112,7 @@ Age (years)
 </td>
 </tr>
 <tr>
-<td style="text-align:left; padding-left:  2em;" indentlevel="1">
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 Mean (SD)
 </td>
 <td style="text-align:left;">
@@ -124,7 +123,7 @@ Mean (SD)
 </td>
 </tr>
 <tr>
-<td style="text-align:left; padding-left:  2em;" indentlevel="1">
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 Median (Range)
 </td>
 <td style="text-align:left;">
@@ -144,7 +143,7 @@ Size (cm)
 </td>
 </tr>
 <tr>
-<td style="text-align:left; padding-left:  2em;" indentlevel="1">
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 Mean (SD)
 </td>
 <td style="text-align:left;">
@@ -155,7 +154,7 @@ Mean (SD)
 </td>
 </tr>
 <tr>
-<td style="text-align:left; padding-left:  2em;" indentlevel="1">
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 Median (Range)
 </td>
 <td style="text-align:left;">
@@ -175,7 +174,7 @@ Nodal status
 </td>
 </tr>
 <tr>
-<td style="text-align:left; padding-left:  2em;" indentlevel="1">
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 negative
 </td>
 <td style="text-align:left;">
@@ -186,7 +185,7 @@ negative
 </td>
 </tr>
 <tr>
-<td style="text-align:left; padding-left:  2em;" indentlevel="1">
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 positive
 </td>
 <td style="text-align:left;">
@@ -206,7 +205,7 @@ Hormon receptor status
 </td>
 </tr>
 <tr>
-<td style="text-align:left; padding-left:  2em;" indentlevel="1">
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 ER and/or PR +
 </td>
 <td style="text-align:left;">
@@ -217,7 +216,7 @@ ER and/or PR +
 </td>
 </tr>
 <tr>
-<td style="text-align:left; padding-left:  2em;" indentlevel="1">
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 ER-/PR-
 </td>
 <td style="text-align:left;">
@@ -230,9 +229,9 @@ ER-/PR-
 </tbody>
 </table>
 
-## Goal 1 - develop a risk prediction model with competing risks
+## Goal 1 - develop a competing risks prediction model
 
-### 1.1 Primary investigation - cumulative incidence curves
+### 1.1 Cumulative incidence curves
 
 First, we draw the cumulative incidence curves of breast cancer
 recurrence.
@@ -245,7 +244,6 @@ rdata$status1[rdata$status_num == 1] <- 1
 rdata$status1[rdata$status_num != 1] <- 0
 rdata$status2[rdata$status_num == 2] <- 2
 rdata$status2[rdata$status_num != 2] <- 0
-
 # Create indicator variables for the outcome
 vdata$status_num <- as.numeric(vdata$status) - 1
 vdata$status1[vdata$status_num == 1] <- 1
@@ -253,12 +251,7 @@ vdata$status1[vdata$status_num != 1] <- 0
 vdata$status2[vdata$status_num == 2] <- 2
 vdata$status2[vdata$status_num != 2] <- 0
 
-# Median follow-up
-# Reverse KM method censoring also competing events (so median follow-up at first event?)
-
-# survfit(coxph(Surv(time,status_num==0)~1,data=rdata)) # 5 years
-
-# Expand data
+# Expand data to prepare for fitting the model 
 rdata.w <- crprep(
   Tstop = "time",
   status = "status_num",
@@ -267,12 +260,10 @@ rdata.w <- crprep(
   keep = c("age", "size", "ncat", "hr_status"),
   data = rdata
 )
-
 # Save extended data with weights for recurrence (failcode=1)
 # and non recurrence mortality (failcode=2)
 rdata.w1 <- rdata.w %>% filter(failcode == 1)
 rdata.w2 <- rdata.w %>% filter(failcode == 2)
-
 vdata.w <- crprep(
   Tstop = "time",
   status = "status_num",
@@ -281,36 +272,31 @@ vdata.w <- crprep(
   keep = c("age", "size", "ncat", "hr_status"),
   data = vdata
 )
-
 vdata.w1 <- vdata.w %>% filter(failcode == 1)
 vdata.w2 <- vdata.w %>% filter(failcode == 2)
-
 # Development set
 mfit3 <- survfit(
   Surv(Tstart, Tstop, status == 1) ~ 1,
   data = rdata.w1, weights = weight.cens
 )
-
 mfit4 <- survfit(
   Surv(Tstart, Tstop, status == 1) ~ 1,
   data = vdata.w1, weights = weight.cens
 )
-
 par(xaxs = "i", yaxs = "i", las = 1)
 oldpar <- par(mfrow = c(1, 2), mar = c(5, 5, 1, 1))
 plot(mfit3,
-  col = 1, lwd = 2,
-  xlab = "Years since BC diagnosis",
-  ylab = "Cumulative incidence", bty = "n",
-  ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
+     col = 1, lwd = 2,
+     xlab = "Years since BC diagnosis",
+     ylab = "Cumulative incidence", bty = "n",
+     ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
 )
 title("Development data")
-
 plot(mfit4,
-  col = 1, lwd = 2,
-  xlab = "Years since BC diagnosis",
-  ylab = "Cumulative incidence", bty = "n",
-  ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
+     col = 1, lwd = 2,
+     xlab = "Years since BC diagnosis",
+     ylab = "Cumulative incidence", bty = "n",
+     ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
 )
 title("Validation data")
 ```
@@ -319,8 +305,6 @@ title("Validation data")
 
 ``` r
 par(oldpar)
-
-# Cumulative incidences
 # Cumulative incidences
 smfit3 <- summary(mfit3, times = c(1, 2, 3, 4, 5))
 smfit4 <- summary(mfit4, times = c(1, 2, 3, 4, 5))
@@ -492,34 +476,27 @@ Upper .95
 </tbody>
 </table>
 
-The median follow-up of the development and validation data was 5 years.
 The 5-year cumulative incidence of breast cancer recurrence was 14% (95%
 CI: 11-16%), and 10% (95%CI: 8-12%)
 
-### 1.2 Secondary investigation - check non-linearity of continuous predictors
+### 1.2 Check non-linearity of continuous predictors
 
-The potential non-linear relation between continuous predictors
-(i.e. age and size) and the outcome should be investigated before
-developing a competing risk prediction model. Non-linearity of
-continuous predictors can be checked using three-knot restricted cubic
-splines using rms::rcs() function. More details are given in Frank
-Harrell’s book ‘Regression Model Strategies’ on page 27 (second
-edition). We developed the competing risks prediction models using the
-cause-specific Cox model.
+Here we investigate the potential non-linear relation between continuous
+predictors (i.e. age and size) and the outcomes. We apply three-knot
+restricted cubic splines using `rms::rcs()` function (details are given
+in e.g. Frank Harrell’s book ‘Regression Model Strategies (second
+edition)’, page 27.
 
 ``` r
-# CSC models without splines
+# Models without splines
 fit_csh <- CSC(Hist(time, status_num) ~ age + size +
   ncat + hr_status, data = rdata, fitter = "cph")
-
 fit_csc1 <- fit_csh$models$`Cause 1`
 fit_csc2 <- fit_csh$models$`Cause 2`
-
-# CSC models
-# CS models
-# Recurrence
+# Models with splines
 dd <- datadist(rdata)
 options(datadist = "dd")
+# Recurrence
 fit_csc1_rcs <- cph(Surv(time, status_num == 1) ~ rcs(age, 3) + rcs(size, 3) +
   ncat + hr_status, x = T, y = T, surv = T, data = rdata)
 # print(fit_csc1_rcs)
@@ -528,8 +505,7 @@ fit_csc1_rcs <- cph(Surv(time, status_num == 1) ~ rcs(age, 3) + rcs(size, 3) +
 P_csc1_age_rcs <- Predict(fit_csc1_rcs, "age")
 P_csc1_size_rcs <- Predict(fit_csc1_rcs, "size")
 options(datadist = NULL)
-
-# Non-mortality recurrence
+# Non-recurrence mortality
 dd <- datadist(rdata)
 options(datadist = "dd")
 fit_csc2_rcs <- cph(Surv(time, status_num == 2) ~ rcs(age, 3) + rcs(size, 3) +
@@ -540,8 +516,6 @@ fit_csc2_rcs <- cph(Surv(time, status_num == 2) ~ rcs(age, 3) + rcs(size, 3) +
 P_csc2_age_rcs <- Predict(fit_csc2_rcs, "age")
 P_csc2_size_rcs <- Predict(fit_csc2_rcs, "size")
 options(datadist = NULL)
-
-
 oldpar <- par(mfrow = c(2, 2), mar = c(5, 5, 1, 1))
 par(xaxs = "i", yaxs = "i", las = 1)
 plot(P_csc1_age_rcs$age, P_csc1_age_rcs$yhat,
@@ -561,7 +535,6 @@ plot(P_csc1_age_rcs$age, P_csc1_age_rcs$yhat,
   ylim = c(-2, 2), xlim = c(65, 95)
 )
 title("Recurrence")
-
 # CSC 1- size
 par(xaxs = "i", yaxs = "i", las = 1)
 plot(P_csc1_size_rcs$size, P_csc1_size_rcs$yhat,
@@ -583,7 +556,6 @@ plot(P_csc1_size_rcs$size, P_csc1_size_rcs$yhat,
 title("Recurrence")
 par(xaxs = "i", yaxs = "i", las = 1)
 options(datadist = NULL)
-
 # CSC 2- age
 plot(P_csc2_age_rcs$age, P_csc2_age_rcs$yhat,
   type = "l", lwd = 2, col = "blue", bty = "n",
@@ -602,7 +574,6 @@ plot(P_csc2_age_rcs$age, P_csc2_age_rcs$yhat,
   ylim = c(-2, 2), xlim = c(65, 95)
 )
 title("Non recurrence mortality")
-
 # CSC 2 - size
 par(xaxs = "i", yaxs = "i", las = 1)
 plot(P_csc2_size_rcs$size, P_csc2_size_rcs$yhat,
@@ -670,19 +641,18 @@ Non recurrence mortality
 </tbody>
 </table>
 
-The AIC and the graphical check suggested a potential linear relation
-between the continuous predictors (age and size) and the cause-specific
-hazards (breast cancer recurrence and non recurrence mortality).
+Both the graphical comparison and the AIC comparison suggested no
+relevant departure from linear relations between the continuous
+predictors (age and size) and the cause-specific hazards (recurrence and
+non-recurrence mortality).
 
-### 1.3 Model development - first check - the proportional subdistribution hazard assumption
+### 1.3 Checking proportional hazards assumption
 
-We now examine the fits in a more careful way by checking the
-proportionality of the cause-specific hazards of the Cox proportional
-hazard regression models.
+We now examine the fits further by checking the proportionality of the
+cause-specific hazards of the models.
 
 ``` r
 zp_csc1 <- cox.zph(fit_csc1, transform = "identity")
-
 par(las = 1, xaxs = "i", yaxs = "i")
 # c(bottom, left, top, right)
 oldpar <- par(mfrow = c(2, 2), mar = c(5, 6.1, 3.1, 1))
@@ -699,7 +669,6 @@ mtext("Recurrence", side = 3, line = -1, outer = TRUE, font = 2)
 
 ``` r
 par(oldpar)
-
 kable(round(zp_csc1$table, 3)) %>%
   kable_styling("striped", position = "center")
 ```
@@ -796,7 +765,6 @@ GLOBAL
 
 ``` r
 zp_csc2 <- cox.zph(fit_csc2, transform = "identity")
-
 par(las = 1, xaxs = "i", yaxs = "i")
 # c(bottom, left, top, right)
 oldpar <- par(mfrow = c(2, 2), mar = c(5, 6.1, 3.1, 1))
@@ -806,14 +774,13 @@ for (i in 1:4) {
   abline(0, 0, lty = 3)
   title(sub_title[i])
 }
-mtext("Non recurrence mortality", side = 3, line = -1, outer = TRUE, font = 2)
+mtext("Non-recurrence mortality", side = 3, line = -1, outer = TRUE, font = 2)
 ```
 
 <img src="imgs/Prediction_CSC/ph_csc2-1.png" width="672" style="display: block; margin: auto;" />
 
 ``` r
 par(oldpar)
-
 kable(round(zp_csc2$table, 3)) %>%
   kable_styling("striped", position = "center")
 ```
@@ -909,15 +876,15 @@ GLOBAL
 </table>
 
 The statistical tests showed a potential violation of the proportional
-non recurrence mortality hazard of nodal status. Since the follow-up is
-short we assume, the proportional hazard was not violated.
+hazards assumption for nodal status in the model for non-recurrence
+mortality. For simplicity we ignore this violation in the remainder.
 
-### 1.4 Model development - fit the risk prediction models
+### 1.4 Examine the risk fit of the models
 
-We develop and show the results of the Cox proportional cause-specific
-hazards regression models
+We show the results of the Cox proportional cause-specific hazards
+regression models
 
--   Cox proportional recurrence-specific hazard model
+-   Cox proportional hazard model for recurrence
 
 ``` r
 dd <- datadist(rdata)
@@ -1125,52 +1092,35 @@ print(fit_csc2_cph)
 options(datadist = NULL)
 ```
 
-The coefficients of the models indicated that larger size, positive
-nodal status and ER- and/or PR- were associated with higher risk to
-develop a breast cancer recurrence, while older patients and larger
-tumors are associated with higher risk of non recurrence mortality.
+The coefficients of the models indicated that larger tumor size,
+positive nodal status and negative hormone receptor status status were
+associated with higher risk to develop a breast cancer recurrence, while
+older patients and larger tumors are associated with higher risk of non
+recurrence mortality.
 
-## Goal 2 - Assessing performance of a competing risk prediction model
+## Goal 2 - Assessing performance of a competing risks prediction model
 
-The performance of a risk prediction models may be evaluated through:
+Here we evaluate the performance of the risk prediction models in terms
+of calibration, discrimination and overall prediction error.
 
--   discrimination: the ability of the model to identify patients with
-    and without the outcome and it requires the coefficients (or the log
-    of the subdistribution hazard ratios) of the developed risk
-    prediction model to be evaluated.
+### 2.1 Overall prediction error
 
--   calibration: the agreement between observed and predicted
-    probabilities.
+We calculate the Brier Score, and the scaled Brier scale and the
+corresponding confidence intervals..
 
--   overall performance measures: as a combination of discrimination and
-    calibration and/or as a measure of the explained variation;
-
-### 2.1 Overall performance measures
-
-We calculate the Brier Score and the Index of Prediction Accuracy (IPA,
-the scaled Brier) as a overall performance measure.
-
-Some confidence intervals are calculates using the bootstrap percentile
-method. So we use bootstrapping the development and validation data.
+Some confidence intervals are calculated using the bootstrap percentile
+method.
 
 ``` r
 # Bootstrapping data
 set.seed(20201214)
 rboot <- bootstraps(rdata, times = 10)
 vboot <- bootstraps(vdata, times = 10)
-# NOTE: B=10 to speed up the procedure for now
+# NOTE: B=10 to speed up the procedure, is typically set to 100 or 1000
 ```
 
-We calculate the overall performance measures: Brier score, IPA and the
-corresponding confidence intervals.
-
 ``` r
-# Overall performance measures #
-
-# Two measures
-# - Brier score
-# - IPA
-
+# riskRegression::Score() to calculate Brier and scaled Brier (in this function called "ipa")
 # Development set - apparent validation
 score_rdata1 <- Score(list("CSH development" = fit_csh),
   formula = Hist(time, status_num) ~ 1,
@@ -1178,7 +1128,6 @@ score_rdata1 <- Score(list("CSH development" = fit_csh),
   cens.model = "km", metrics = "brier",
   summary = "ipa", cause = 1
 )
-
 # Validation set - external validation
 score_vdata1 <-
   Score(list("CSH validation" = fit_csh),
@@ -1187,7 +1136,6 @@ score_vdata1 <-
     cens.model = "km", metrics = "brier",
     summary = "ipa", cause = 1
   )
-
 # Development set - internal validation (bootstrap)
 # mstate::crprep() for every bootstrap sample
 crprep_boot <- function(split) {
@@ -1200,8 +1148,7 @@ crprep_boot <- function(split) {
     )
   )
 }
-
-# riskRegression::Score() to calculate Brier and IPA for every bootstrap sample
+# riskRegression::Score() to calculate Brier and scaled Brier (here called IPA) for every bootstrap sample
 score_boot_1 <- function(split) {
   Score(list("CSH" = fit_csh),
     formula = Hist(time, status_num) ~ 1,
@@ -1210,15 +1157,11 @@ score_boot_1 <- function(split) {
     summary = "ipa"
   )$Brier[[1]]$IPA[2]
 }
-
-
 # Development data
 rboot <- rboot %>% mutate(
   cr.prep = map(splits, crprep_boot),
   IPA1 = map_dbl(splits, score_boot_1)
 )
-
-
 # Validation data
 vboot <- vboot %>% mutate(
   cr.prep = map(splits, crprep_boot),
@@ -1299,7 +1242,7 @@ Brier
 </tr>
 <tr>
 <td style="text-align:left;">
-IPA
+scaled Brier
 </td>
 <td style="text-align:right;">
 0.04
@@ -1323,54 +1266,37 @@ IPA
 </tbody>
 </table>
 
-The overall performance measures seems better in the validation than in
-the development data
+Note: unexpectedly, the point estimate for the Brier score is lower
+(thus better) and for the scaled Brier score is higher (thus better) in
+the validation data compared to the development data.
 
-### 2.2 Discrimination measures
+### 2.2 Discrimination
 
-Discrimination is the ability to differentiate between subjects who have
-the outcome and subjects who do not.  
-We propose to calculate:
+We here calculate
 
--   Wolbers’ C-index. More details are in the paper and in the
-    references below;
+-   The 5-year C-index. More details are in the main manuscript and its
+    references;
+-   The 5-year time-dependent AUC. More details are in the manuscript
+    and in its references;
 
--   Uno’s time-dependent AUC measure of discrimination at a specific
-    time horizon *t* (i.e. five years in this case). More details are in
-    the paper and in the references below;
-
-Values close to 1 indicate good discrimination ability, while values
-close to 0.5 indicated poor discrimination ability.  
-We used the time horizon at 4.99 and not 5 years since controls are
+We used the time horizon up to 4.99 and not 5 years since controls are
 considered patients at risk after the time horizon.
-
-We calculate the discrimination ability based on the absolute risk to
-develop breast cancer recurrence calculated by combining cause-specific
-hazards.
 
 ``` r
 # C-index
-# Time-dependent AUC
-
-# Wolbers' C-index
-# Apparent
+# Development set (Apparent validation)
 C_rdata1_cph1 <- unlist(pec::cindex(fit_csh,
-  cause = 1,
-  eval.times = 4.99
+                                    cause = 1,
+                                    eval.times = 4.99
 )$AppCindex)
-
-# External validation
+# Validdation set
 C_vdata1_cph1 <- unlist(pec::cindex(fit_csh,
-  data = vdata,
-  cause = 1, eval.times = 4.99
+                                    data = vdata,
+                                    cause = 1, eval.times = 4.99
 )$AppCindex)
 
-# Time dependent AUC
-# Time-dependent AUC (in Table 3 called Uno's TD AUC at 5 years) ###
-# Uno's time-dependent Area Under the Curve
-# NOTE: no discrimination measures considers data with left-truncation.
-
-# All CSC models using absolute risk as a marker
+# 5-year time dependent AUC
+# Development set (Apparent validation)
 Uno_rdata1_CSC <-
   timeROC(
     T = rdata$time, delta = rdata$status1,
@@ -1378,9 +1304,7 @@ Uno_rdata1_CSC <-
     cause = 1, weighting = "marginal", times = 4.99,
     iid = TRUE
   )
-
-# External validation
-# All CSC models using absolute risk as a marker
+# Validdation set
 Uno_vdata1_CSC <-
   timeROC(
     T = vdata$time, delta = vdata$status1,
@@ -1389,27 +1313,24 @@ Uno_vdata1_CSC <-
     iid = TRUE
   )
 
-# NOTE: if you have a lot of data n > 2000, standard error computation may be really long.
-# In that case, please use bootstrap percentile to calculate confidence intervals.
-# NOTE: AUC_1: controls = subjects free of any event
-# NOTE: AUC_2: controls = subjects not a case
-# NOTE: I used AUC_2 for now (to be discussed)
+# NOTE: if you have many observations (n > 2000), standard error computation may be really long.
+# In that case, you may consider using bootstrapping to calculate confidence intervals.
+# NOTE: AUC_1: controls = subjects free of any event 
+# NOTE: AUC_2: controls = subjects does not experience the primary event, this is what we use here 
 
 # Bootstraping Wolbers' C-index to calculate the bootstrap percentile confidence intervals
 C_boot1_cph1 <- function(split) {
   unlist(pec::cindex(fit_csh,
-    data = analysis(split),
-    cause = 1, eval.times = 4.99
+                     data = analysis(split),
+                     cause = 1, eval.times = 4.99
   )$AppCindex)
 }
-
 C_boot1_cph2 <- function(split) {
   unlist(pec::cindex(fit_csh,
-    data = analysis(split),
-    cause = 2, eval.times = 4.99
+                     data = analysis(split),
+                     cause = 2, eval.times = 4.99
   )$AppCindex)
 }
-
 # Run time-dependent AUC in the bootstrapped development and validation data
 # to calculate the non-parametric CI through percentile bootstrap
 rboot <- rboot %>% mutate(
@@ -1519,67 +1440,56 @@ Uno AUC
 </tbody>
 </table>
 
-The time-dependent AUCs at 5 years were in the external validation were
-between 0.71 and 0.74.
+The time-dependent AUC at 5 years was 0.74 in the validation set.
 
 ### 2.3 Calibration
 
-Calibration is the agreement between observed outcomes and predicted
-probabilities. For example, in competing risks models, a predicted
-probability of the event of interest at a fixed time horizon *t* of 80%
-is considered reliable if it can be expected that 80 out of 100 will
-experience the event of interest among patients received a predicted
-probability of 80%.
+We assess calibration by:
 
-Calibration is measured by:
+-   The calibration plot as a graphical representation of calibration;
 
--   Observed and Expected ratio (OE ratio) at time horizon (*t*);
+-   The observed vs expected ratio (O/E ratio);
 
--   Integrated Calibration Index (ICI): it is the weighted difference
-    between smoothed observed proportions and predicted probabilities in
-    which observations are weighted by the empirical density function of
-    the predicted probabilities;
+-   The squared bias, i.e., the average squared difference between
+    actual risks and risk predictions;
 
--   E50, E90 and Emax denote the median, the 90th percentile and the
-    maximum absolute difference between observed and predicted
-    probabilities of the outcome at time *t*;
+-   The integrated Calibration Index (ICI), i.e., the average absolute
+    difference between actual risks and risk predictions;
 
--   Calibration plot as a graphical representation of calibration.
+-   E50, E90 and Emax denote the median, 90th percentile and the maximum
+    of the absolute differences between actual risks and risk
+    predictions;
 
-#### 2.3.1 Observed and Expected ratio ICI E50 E90 Emax
+#### 2.3.1 Numerical summaries of calibration
 
-We calculate the observed/ expected ratio (OE) , ICI, E50, E90 and Emax
-at 5 years in the development and validation data.
+We calculate the O/E ratio, squared bias, ICI, E50, E90 and Emax at 5
+years in the development and validation data.
 
 ``` r
 # Load the function to calculate the OE ratio
 source(here::here("R/OE_function.R"))
-
 # O = estimated cumulative incidence at 5 years
 # E = mean of the predicted cumulative incidence at 5 years
-
 Po_t <- summary(
   survfit(Surv(Tstart, Tstop, status == 1) ~ 1,
-    data = vdata.w1, weights = weight.cens
+          data = vdata.w1, weights = weight.cens
   ),
   times = 5
 )
 obs_vdata <- 1 - Po_t$surv
 obs_stderror <- Po_t$std.err
-
 # Observed/Expected ratio
 OE_vdata <- OE_function(
   fit = fit_csh, newdata = vdata, cause = 1,
   thorizon = 5, obs_cif = obs_vdata,
   std.error = obs_stderror
 )
-
 res_OE <- matrix(OE_vdata,
-  ncol = 3, nrow = 1, byrow = T,
-  dimnames = list(
-    c("O/E ratio"),
-    c("Estimate", "Lower.95", "Upper.95")
-  )
+                 ncol = 3, nrow = 1, byrow = T,
+                 dimnames = list(
+                   c("O/E ratio"),
+                   c("Estimate", "Lower.95", "Upper.95")
+                 )
 )
 kable(res_OE) %>%
   kable_styling("striped", position = "center")
@@ -1619,26 +1529,24 @@ O/E ratio
 </tbody>
 </table>
 
-The competing risks prediction model slightly overestimates the risk to
-develop breast cancer recurrence in the validation data.
+The competing risks prediction model slightly overestimates the absolute
+risk to develop breast cancer recurrence in the validation data.
 
 ``` r
-# Calibration measures: ICI, E50, E90, Emax
+# Calibration measures: squared bias, ICI, E50, E90, Emax
 source(here::here("R/cal_measures.R"))
-
 calmeas_vdata <- cal_measures(vdata, 5, fit_csh,
-  Tstop = "time", status = "status_num", cause = 1
+                              Tstop = "time", status = "status_num", cause = 1
 )
-
 # Squared bias
 avg_sqbias_CSC <- mean((predictRisk(fit_csh, newdata = vdata, cause = 1, times = 5)
-- obs_vdata)**2)
+                        - obs_vdata)**2)
 res_calmeas <- matrix(c(avg_sqbias_CSC, calmeas_vdata),
-  ncol = 1, nrow = 5, byrow = T,
-  dimnames = list(
-    c("Average squared bias", "ICI", "E50", "E90", "Emax"),
-    c("Estimate")
-  )
+                      ncol = 1, nrow = 5, byrow = T,
+                      dimnames = list(
+                        c("Average squared bias", "ICI", "E50", "E90", "Emax"),
+                        c("Estimate")
+                      )
 )
 res_calmeas <- round(res_calmeas, 2)
 kable(res_calmeas) %>%
@@ -1699,41 +1607,35 @@ Emax
 </tbody>
 </table>
 
-The absolute difference between estimated risk and risk predicted by the
-model seems pretty narrow. All values are pretty close to zero.
-
 #### 2.3.2 Calibration plot
 
-Calibration plots of the external validation data are calculated using
+Calibration plot for the validation data is calculated using
 pseudo-values.
 
 Calibration plots reports:
 
--   on the *x-axis* the predicted risk by the the model at a fixed time
-    horizon (e.g. at 5 years);
-
-    -   on the *y-axis* the estimated actual risk at a fixed time
-        horizon (e.g. at 5 years);
-
-    -   The 45-degree line indicates the good overall calibration.
-        Points below the 45-degree line indicates that the model
-        overestimate the estimated actual risk. If points are above the
-        45-degree line, the model underestimate the estimated actual
-        risk.
+-   on the *x-axis* the estimated risk by the prediction model by a
+    fixed time point (e.g. at 5 years);
+-   on the *y-axis* the estimated actual risk by a fixed time point
+    (e.g. at 5 years);
+-   The 45-degree line indicates perfect calibration. Points below the
+    45-degree line indicate that the model overestimates the estimated
+    actual risk. If points are above the 45-degree line, the model
+    underestimates the estimated actual risk.
 
 ``` r
 x <- Score(list(model1 = fit_csh), Hist(time, status_num) ~ 1,
-  data = vdata,
-  cause = 1, times = 5, plots = "cal"
+           data = vdata,
+           cause = 1, times = 5, plots = "cal"
 )
 oldpar <- par(
   mar = c(5.1, 5.8, 4.1, 2.1), mgp = c(4.25, 1, 0),
   xaxs = "i", yaxs = "i", las = 1
 )
 plotCalibration(x,
-  brier.in.legend = FALSE,
-  auc.in.legend = FALSE, cens.method = "pseudo",
-  cex = 1, xlim = c(0, 0.5), ylim = c(0, 0.5), rug=TRUE
+                brier.in.legend = FALSE,
+                auc.in.legend = FALSE, cens.method = "pseudo",
+                cex = 1, xlim = c(0, 0.5), ylim = c(0, 0.5), rug=TRUE
 )
 title("Cause-specific hazards models")
 ```
@@ -1745,77 +1647,49 @@ par(oldpar)
 ```
 
 Calibration plot suggests that the prediction model seems to
-overestimate the actual risk, especially in the lowest and highest
-values of the actual risk.
+overestimate the actual risk, especially at the lower and higher values
+of the estimated risk.
 
 ## Goal 3 - Clinical utility
 
-Discrimination and calibration measures are essential to assess the
-prediction performance but insufficient to evaluate the potential
-clinical utility of a risk prediction model for decision making.  
-Clinical utility is measured by the net benefit that includes the number
-of true positives and the number of false positives. For example, in
-time-to-event models, the true positives reflect the benefit of being
-event free for a given time horizon using additional interventions such
-as additional treatments, personalized follow-up or additional
-surgeries. The false positives represent the harms of unnecessary
-interventions.  
-Generally, in medicine, clinicians accepts to treat a certain number of
-patients for which interventions are unnecessary to be event free for a
-given time horizon. So, false negatives (the harm of not being event
-free for a given time horizon) are more important than false positives
-(the harm of unnecessary interventions). Thus, net benefit is the number
-of true positives classifications minus the false positives
-classifications weighted by a factor related to the harm of not
-preventing the event versus unnecessary interventions. The weighting is
-derived from the threshold probability to death (one minus survival
-probability) using a defined time horizon (for example 5 years since
-diagnosis). For example, a threshold of 10% implies that additional
-interventions for 10 patients of whom one would have experience the
-event in 5 years if untreated is acceptable (thus treating 9 unnecessary
-patients). This strategy is compared with the strategies of treat all
-and treat none patients. If overtreatment is harmful, a higher threshold
-should be used.  
-Detailed information about net benefit, decision curve calculation and
-interpretation are provided in the references below and in the
-manuscript (see also the appendix).
+Clinical utility can be measured by the net benefit and plotted in a
+decision curve. Details about net benefit, decision curve calculation
+and interpretation are provided in the manuscript (see also the
+appendix) and its references.
 
 ``` r
-# Run the function to calculate the net benefit and the elements needed to develop decision curve analysis
+# Run the stdca function to calculate the net benefit and the elements needed to develop decision curve analysis
 source(here::here("R/stdca.R"))
-
 # Development data
-# Predicted probability calculation
+# calculation estimated risk
 rdata$pred5 <- predictRisk(fit_csh, newdata = rdata, times = 5)
 rdata <- as.data.frame(rdata)
-# Development data
 dca_rdata_1 <- stdca(
   data = rdata, outcome = "status_num", ttoutcome = "time",
   timepoint = 5, predictors = "pred5", xstop = 0.35,
   ymin = -0.01, graph = FALSE, cmprsk = TRUE
 )
-
 # Decision curves plot
 oldpar <- par(xaxs = "i", yaxs = "i", las = 1, mar = c(6.1, 5.8, 4.1, 2.1), mgp = c(4.25, 1, 0))
 plot(dca_rdata_1$net.benefit$threshold,
-  dca_rdata_1$net.benefit$pred5,
-  type = "l", lwd = 2, lty = 1,
-  xlab = "", ylab = "Net Benefit",
-  xlim = c(0, 0.5), ylim = c(-0.10, 0.10), bty = "n", xaxt = "n"
+     dca_rdata_1$net.benefit$pred5,
+     type = "l", lwd = 2, lty = 1,
+     xlab = "", ylab = "Net Benefit",
+     xlim = c(0, 0.5), ylim = c(-0.10, 0.10), bty = "n", xaxt = "n"
 )
 legend("topright", c("Treat all", "Treat none", "Prediction model"),
-  lwd = c(2, 2, 2), lty = c(1, 2, 1), col = c("darkgray", "black", "black"), bty = "n"
+       lwd = c(2, 2, 2), lty = c(1, 2, 1), col = c("darkgray", "black", "black"), bty = "n"
 )
 lines(dca_rdata_1$net.benefit$threshold, dca_rdata_1$net.benefit$none,
-  type = "l", lwd = 2, lty = 4
+      type = "l", lwd = 2, lty = 4
 )
 lines(dca_rdata_1$net.benefit$threshold, dca_rdata_1$net.benefit$all,
-  type = "l", lwd = 2, col = "darkgray"
+      type = "l", lwd = 2, col = "darkgray"
 )
 axis(1, at = c(0, 0.1, 0.2, 0.3, 0.4, 0.5))
 axis(1,
-  pos = -0.145, at = c(0.1, 0.2, 0.3, 0.4, 0.5),
-  labels = c("1:9", "1:4", "1:3", "1:2", "1:1")
+     pos = -0.145, at = c(0.1, 0.2, 0.3, 0.4, 0.5),
+     labels = c("1:9", "1:4", "3:7", "2:3", "1:1")
 )
 mtext("Threshold probability", 1, line = 2)
 mtext("Harm to benefit ratio", 1, line = 5)
@@ -1826,15 +1700,11 @@ title("Development data")
 
 ``` r
 par(oldpar)
-
-
-# External data
 # Validation data
 # Predicted probability calculation
 vdata$pred5 <- predictRisk(fit_csh, newdata = vdata, times = 5)
 vdata <- as.data.frame(vdata)
 # Run decision curve analysis
-
 # Development data
 # Model without PGR
 dca_vdata_1 <- stdca(
@@ -1845,26 +1715,26 @@ dca_vdata_1 <- stdca(
 # Decision curves plot
 oldpar <- par(xaxs = "i", yaxs = "i", las = 1, mar = c(6.1, 5.8, 4.1, 2.1), mgp = c(4.25, 1, 0))
 plot(dca_vdata_1$net.benefit$threshold,
-  dca_vdata_1$net.benefit$pred5,
-  type = "l", lwd = 2, lty = 1,
-  xlab = "", ylab = "Net Benefit",
-  xlim = c(0, 0.5), ylim = c(-0.10, 0.10), bty = "n", xaxt = "n"
+     dca_vdata_1$net.benefit$pred5,
+     type = "l", lwd = 2, lty = 1,
+     xlab = "", ylab = "Net Benefit",
+     xlim = c(0, 0.5), ylim = c(-0.10, 0.10), bty = "n", xaxt = "n"
 )
 lines(dca_vdata_1$net.benefit$threshold,
-  dca_vdata_1$net.benefit$none,
-  type = "l", lwd = 2, lty = 4
+      dca_vdata_1$net.benefit$none,
+      type = "l", lwd = 2, lty = 4
 )
 lines(dca_vdata_1$net.benefit$threshold,
-  dca_vdata_1$net.benefit$all,
-  type = "l", lwd = 2, col = "darkgray"
+      dca_vdata_1$net.benefit$all,
+      type = "l", lwd = 2, col = "darkgray"
 )
 legend("topright", c("Treat all", "Treat none", "Prediction model"),
-  lwd = c(2, 2, 2), lty = c(1, 2, 1), col = c("darkgray", "black", "black"), bty = "n"
+       lwd = c(2, 2, 2), lty = c(1, 2, 1), col = c("darkgray", "black", "black"), bty = "n"
 )
 axis(1, at = c(0, 0.1, 0.2, 0.3, 0.4, 0.5))
 axis(1,
-  pos = -0.145, at = c(0.1, 0.2, 0.3, 0.4, 0.5),
-  labels = c("1:9", "1:4", "1:3", "1:2", "1:1")
+     pos = -0.145, at = c(0.1, 0.2, 0.3, 0.4, 0.5),
+     labels = c("1:9", "1:4", "3:7", "2:3", "1:1")
 )
 mtext("Threshold probability", 1, line = 2)
 mtext("Harm to benefit ratio", 1, line = 5)
@@ -1877,40 +1747,28 @@ title("Validation data")
 par(oldpar)
 ```
 
-Based on previous research we used a range of thresholds from 14% to 25%
-to reccomend adjuvant chemotherapy. If we choose a threshold of 20% the
-model had a net benefit of 0.011 in the development data. This means
-that the model would identify 11 patients per 1000 who will have beast
-cancer recurrence within 5 years since diagnosis where adjuvant
-chemotherapy is really needed. The same interpretation may be used in
-the validation data: choosing a threshold of 20% the basic model had a
-net benefit of 0.014 Moreover, net benefit can be defined in terms of
-reduction of avoidable interventions (e.g adjuvant chemotherapy per 1000
-patients) by:
+If we choose a threshold of 20%, the model had a net benefit of 0.011 in
+the development data. This means that the model would identify 11
+patients per 1000 who will have beast cancer recurrence within 5 years
+since diagnosis where adjuvant chemotherapy is really needed. In the
+validation data, the model had a net benefit of 0.014 choosing a
+threshold of 20%.
 
-<img src="https://render.githubusercontent.com/render/math?math=%5Chuge%7B%5Cfrac%7BNB_%7Bmodel%7D%20-%20NB_%7Ball%7D%7D%7B(p_t%2F%20(1-p_t))%7D*1000%7D%0A">
-
-where *NB*<sub>model</sub> is the net benefit of the prediction model,
-*NB*<sub>all</sub> is the net benefit of the strategy treat all and
-*p*<sub>*t*</sub> is the risk threshold.
-
-## References
-
--   Overall measures  
-    References:
-    <https://onlinelibrary.wiley.com/doi/abs/10.1002/bimj.201000073>  
-    <https://diagnprognres.biomedcentral.com/articles/10.1186/s41512-018-0029-2>  
-    R Vignette:
-    <https://cran.r-project.org/web/packages/riskRegression/vignettes/IPA.html#fn.1>  
-
--   Discrimination measures  
-    References:  
-    <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4059461/>  
-    <https://onlinelibrary.wiley.com/doi/10.1002/sim.5958>  
+## Additional references
 
 -   Calibration  
     <https://onlinelibrary.wiley.com/doi/abs/10.1002/sim.6152>  
     <https://onlinelibrary.wiley.com/doi/full/10.1002/sim.8570>  
+
+-   Discrimination  
+    <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4059461>  
+    <https://onlinelibrary.wiley.com/doi/10.1002/sim.5958>  
+
+-   Overall prediction error
+    <https://onlinelibrary.wiley.com/doi/abs/10.1002/bimj.201000073>  
+    <https://diagnprognres.biomedcentral.com/articles/10.1186/s41512-018-0029-2>  
+    R Vignette:
+    <https://cran.r-project.org/web/packages/riskRegression/vignettes/IPA.html>  
 
 -   Clinical utility (decision curves)  
     R/SAS/STATA code and references:
@@ -1919,169 +1777,83 @@ where *NB*<sub>model</sub> is the net benefit of the prediction model,
     <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6261531/>  
     <https://diagnprognres.biomedcentral.com/articles/10.1186/s41512-019-0064-7>  
 
--   Other useful references  
-    <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6728752/>  
-    <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7100774/>  
-
 ## Reproducibility ticket
 
 ``` r
-sessioninfo::session_info()
+sessionInfo()
 ```
 
-    ## - Session info ---------------------------------------------------------------
-    ##  setting  value                       
-    ##  version  R version 4.0.3 (2020-10-10)
-    ##  os       Windows 10 x64              
-    ##  system   x86_64, mingw32             
-    ##  ui       RTerm                       
-    ##  language (EN)                        
-    ##  collate  English_Netherlands.1252    
-    ##  ctype    English_Netherlands.1252    
-    ##  tz       Europe/Berlin               
-    ##  date     2021-04-15                  
+    ## R version 4.0.4 (2021-02-15)
+    ## Platform: x86_64-w64-mingw32/x64 (64-bit)
+    ## Running under: Windows 10 x64 (build 18363)
     ## 
-    ## - Packages -------------------------------------------------------------------
-    ##  package        * version    date       lib source        
-    ##  assertthat       0.2.1      2019-03-21 [1] CRAN (R 4.0.3)
-    ##  backports        1.2.0      2020-11-02 [1] CRAN (R 4.0.3)
-    ##  base64enc        0.1-3      2015-07-28 [1] CRAN (R 4.0.3)
-    ##  bit              4.0.4      2020-08-04 [1] CRAN (R 4.0.3)
-    ##  bit64            4.0.5      2020-08-30 [1] CRAN (R 4.0.3)
-    ##  blob             1.2.1      2020-01-20 [1] CRAN (R 4.0.3)
-    ##  boot           * 1.3-25     2020-04-26 [2] CRAN (R 4.0.3)
-    ##  broom            0.7.4      2021-01-29 [1] CRAN (R 4.0.3)
-    ##  broom.helpers    1.2.1      2021-02-26 [1] CRAN (R 4.0.4)
-    ##  cachem           1.0.1      2021-01-21 [1] CRAN (R 4.0.3)
-    ##  cellranger       1.1.0      2016-07-27 [1] CRAN (R 4.0.3)
-    ##  checkmate        2.0.0      2020-02-06 [1] CRAN (R 4.0.3)
-    ##  chron            2.3-56     2020-08-18 [1] CRAN (R 4.0.3)
-    ##  cli              2.3.0      2021-01-31 [1] CRAN (R 4.0.3)
-    ##  cluster          2.1.0      2019-06-19 [2] CRAN (R 4.0.3)
-    ##  cmprsk           2.2-10     2020-06-09 [1] CRAN (R 4.0.3)
-    ##  codetools        0.2-16     2018-12-24 [2] CRAN (R 4.0.3)
-    ##  colorspace       2.0-0      2020-11-11 [1] CRAN (R 4.0.3)
-    ##  conquer          1.0.2      2020-08-27 [1] CRAN (R 4.0.3)
-    ##  crayon           1.4.0      2021-01-30 [1] CRAN (R 4.0.3)
-    ##  curl             4.3        2019-12-02 [1] CRAN (R 4.0.3)
-    ##  data.table       1.13.6     2020-12-30 [1] CRAN (R 4.0.3)
-    ##  DBI              1.1.1      2021-01-15 [1] CRAN (R 4.0.3)
-    ##  dbplyr           2.1.0      2021-02-03 [1] CRAN (R 4.0.3)
-    ##  digest           0.6.27     2020-10-24 [1] CRAN (R 4.0.3)
-    ##  dplyr          * 1.0.3      2021-01-15 [1] CRAN (R 4.0.3)
-    ##  ellipsis         0.3.1      2020-05-15 [1] CRAN (R 4.0.3)
-    ##  evaluate         0.14       2019-05-28 [1] CRAN (R 4.0.3)
-    ##  fastmap          1.1.0      2021-01-25 [1] CRAN (R 4.0.3)
-    ##  forcats        * 0.5.1      2021-01-27 [1] CRAN (R 4.0.3)
-    ##  foreach          1.5.1      2020-10-15 [1] CRAN (R 4.0.3)
-    ##  foreign          0.8-80     2020-05-24 [2] CRAN (R 4.0.3)
-    ##  Formula        * 1.2-4      2020-10-16 [1] CRAN (R 4.0.3)
-    ##  fs               1.5.0      2020-07-31 [1] CRAN (R 4.0.3)
-    ##  furrr            0.2.2      2021-01-29 [1] CRAN (R 4.0.3)
-    ##  future           1.21.0     2020-12-10 [1] CRAN (R 4.0.3)
-    ##  generics         0.1.0      2020-10-31 [1] CRAN (R 4.0.3)
-    ##  ggplot2        * 3.3.3      2020-12-30 [1] CRAN (R 4.0.3)
-    ##  globals          0.14.0     2020-11-22 [1] CRAN (R 4.0.3)
-    ##  glue             1.4.2      2020-08-27 [1] CRAN (R 4.0.3)
-    ##  gridExtra      * 2.3        2017-09-09 [1] CRAN (R 4.0.3)
-    ##  gsubfn         * 0.7        2018-03-16 [1] CRAN (R 4.0.3)
-    ##  gt               0.2.2      2020-08-05 [1] CRAN (R 4.0.4)
-    ##  gtable           0.3.0      2019-03-25 [1] CRAN (R 4.0.3)
-    ##  gtsummary      * 1.3.7      2021-02-26 [1] CRAN (R 4.0.4)
-    ##  haven            2.3.1      2020-06-01 [1] CRAN (R 4.0.3)
-    ##  here             1.0.1      2020-12-13 [1] CRAN (R 4.0.4)
-    ##  highr            0.8        2019-03-20 [1] CRAN (R 4.0.3)
-    ##  Hmisc          * 4.4-2      2020-11-29 [1] CRAN (R 4.0.3)
-    ##  hms              1.0.0      2021-01-13 [1] CRAN (R 4.0.3)
-    ##  htmlTable        2.1.0      2020-09-16 [1] CRAN (R 4.0.3)
-    ##  htmltools        0.5.1.1    2021-01-22 [1] CRAN (R 4.0.3)
-    ##  htmlwidgets      1.5.3      2020-12-10 [1] CRAN (R 4.0.3)
-    ##  httr             1.4.2      2020-07-20 [1] CRAN (R 4.0.3)
-    ##  iterators        1.0.13     2020-10-15 [1] CRAN (R 4.0.3)
-    ##  jpeg             0.1-8.1    2019-10-24 [1] CRAN (R 4.0.3)
-    ##  jsonlite         1.7.2      2020-12-09 [1] CRAN (R 4.0.3)
-    ##  kableExtra     * 1.3.1      2020-10-22 [1] CRAN (R 4.0.3)
-    ##  KernSmooth       2.23-17    2020-04-26 [2] CRAN (R 4.0.3)
-    ##  knitr          * 1.31       2021-01-27 [1] CRAN (R 4.0.3)
-    ##  lattice        * 0.20-41    2020-04-02 [2] CRAN (R 4.0.3)
-    ##  latticeExtra     0.6-29     2019-12-19 [1] CRAN (R 4.0.3)
-    ##  lava             1.6.8.1    2020-11-04 [1] CRAN (R 4.0.3)
-    ##  lifecycle        0.2.0      2020-03-06 [1] CRAN (R 4.0.3)
-    ##  listenv          0.8.0      2019-12-05 [1] CRAN (R 4.0.3)
-    ##  lubridate        1.7.9.2    2020-11-13 [1] CRAN (R 4.0.3)
-    ##  magrittr         2.0.1      2020-11-17 [1] CRAN (R 4.0.3)
-    ##  MASS             7.3-53     2020-09-09 [2] CRAN (R 4.0.3)
-    ##  Matrix           1.2-18     2019-11-27 [2] CRAN (R 4.0.3)
-    ##  MatrixModels     0.4-1      2015-08-22 [1] CRAN (R 4.0.3)
-    ##  matrixStats      0.58.0     2021-01-29 [1] CRAN (R 4.0.3)
-    ##  memoise          2.0.0      2021-01-26 [1] CRAN (R 4.0.3)
-    ##  mets             1.2.8.1    2020-09-28 [1] CRAN (R 4.0.3)
-    ##  modelr           0.1.8      2020-05-19 [1] CRAN (R 4.0.3)
-    ##  mstate         * 0.3.1      2020-12-17 [1] CRAN (R 4.0.3)
-    ##  multcomp         1.4-15     2020-11-14 [1] CRAN (R 4.0.3)
-    ##  munsell          0.5.0      2018-06-12 [1] CRAN (R 4.0.3)
-    ##  mvtnorm          1.1-1      2020-06-09 [1] CRAN (R 4.0.3)
-    ##  nlme             3.1-149    2020-08-23 [2] CRAN (R 4.0.3)
-    ##  nnet             7.3-14     2020-04-26 [2] CRAN (R 4.0.3)
-    ##  numDeriv         2016.8-1.1 2019-06-06 [1] CRAN (R 4.0.3)
-    ##  openxlsx         4.2.3      2020-10-27 [1] CRAN (R 4.0.4)
-    ##  pacman         * 0.5.1      2019-03-11 [1] CRAN (R 4.0.4)
-    ##  parallelly       1.23.0     2021-01-04 [1] CRAN (R 4.0.3)
-    ##  pec            * 2020.11.17 2020-11-16 [1] CRAN (R 4.0.3)
-    ##  pillar           1.4.7      2020-11-20 [1] CRAN (R 4.0.3)
-    ##  pkgconfig        2.0.3      2019-09-22 [1] CRAN (R 4.0.3)
-    ##  plotrix        * 3.8-1      2021-01-21 [1] CRAN (R 4.0.3)
-    ##  png              0.1-7      2013-12-03 [1] CRAN (R 4.0.3)
-    ##  polspline        1.1.19     2020-05-15 [1] CRAN (R 4.0.3)
-    ##  prodlim        * 2019.11.13 2019-11-17 [1] CRAN (R 4.0.3)
-    ##  proto          * 1.0.0      2016-10-29 [1] CRAN (R 4.0.3)
-    ##  purrr          * 0.3.4      2020-04-17 [1] CRAN (R 4.0.3)
-    ##  quantreg         5.83       2021-01-22 [1] CRAN (R 4.0.3)
-    ##  R6               2.5.0      2020-10-28 [1] CRAN (R 4.0.3)
-    ##  RColorBrewer     1.1-2      2014-12-07 [1] CRAN (R 4.0.3)
-    ##  Rcpp             1.0.6      2021-01-15 [1] CRAN (R 4.0.3)
-    ##  readr          * 1.4.0      2020-10-05 [1] CRAN (R 4.0.3)
-    ##  readxl           1.3.1      2019-03-13 [1] CRAN (R 4.0.3)
-    ##  reprex           1.0.0      2021-01-27 [1] CRAN (R 4.0.3)
-    ##  rio            * 0.5.26     2021-03-01 [1] CRAN (R 4.0.4)
-    ##  riskRegression * 2020.12.08 2020-12-09 [1] CRAN (R 4.0.3)
-    ##  rlang            0.4.10     2020-12-30 [1] CRAN (R 4.0.3)
-    ##  rmarkdown        2.6        2020-12-14 [1] CRAN (R 4.0.3)
-    ##  rms            * 6.1-0      2020-11-29 [1] CRAN (R 4.0.3)
-    ##  rpart            4.1-15     2019-04-12 [2] CRAN (R 4.0.3)
-    ##  rprojroot        2.0.2      2020-11-15 [1] CRAN (R 4.0.3)
-    ##  rsample        * 0.0.8      2020-09-23 [1] CRAN (R 4.0.3)
-    ##  RSQLite        * 2.2.3      2021-01-24 [1] CRAN (R 4.0.3)
-    ##  rstudioapi       0.13       2020-11-12 [1] CRAN (R 4.0.3)
-    ##  rvest            0.3.6      2020-07-25 [1] CRAN (R 4.0.3)
-    ##  sandwich         3.0-0      2020-10-02 [1] CRAN (R 4.0.3)
-    ##  scales           1.1.1      2020-05-11 [1] CRAN (R 4.0.3)
-    ##  sessioninfo      1.1.1      2018-11-05 [1] CRAN (R 4.0.4)
-    ##  SparseM        * 1.78       2019-12-13 [1] CRAN (R 4.0.3)
-    ##  sqldf          * 0.4-11     2017-06-28 [1] CRAN (R 4.0.3)
-    ##  stringi          1.5.3      2020-09-09 [1] CRAN (R 4.0.3)
-    ##  stringr        * 1.4.0      2019-02-10 [1] CRAN (R 4.0.3)
-    ##  survAUC        * 1.0-5      2012-09-04 [1] CRAN (R 4.0.3)
-    ##  survival       * 3.2-7      2020-09-28 [1] CRAN (R 4.0.3)
-    ##  survivalROC    * 1.0.3      2013-01-13 [1] CRAN (R 4.0.3)
-    ##  table1         * 1.2.1      2020-11-26 [1] CRAN (R 4.0.3)
-    ##  TH.data          1.0-10     2019-01-21 [1] CRAN (R 4.0.3)
-    ##  tibble         * 3.0.6      2021-01-29 [1] CRAN (R 4.0.3)
-    ##  tidyr          * 1.1.2      2020-08-27 [1] CRAN (R 4.0.3)
-    ##  tidyselect       1.1.0      2020-05-11 [1] CRAN (R 4.0.3)
-    ##  tidyverse      * 1.3.0      2019-11-21 [1] CRAN (R 4.0.3)
-    ##  timereg          1.9.8      2020-10-05 [1] CRAN (R 4.0.3)
-    ##  timeROC        * 0.4        2019-12-18 [1] CRAN (R 4.0.3)
-    ##  usethis          2.0.1      2021-02-10 [1] CRAN (R 4.0.4)
-    ##  vctrs            0.3.6      2020-12-17 [1] CRAN (R 4.0.3)
-    ##  viridisLite      0.3.0      2018-02-01 [1] CRAN (R 4.0.3)
-    ##  webshot        * 0.5.2      2019-11-22 [1] CRAN (R 4.0.3)
-    ##  withr            2.4.1      2021-01-26 [1] CRAN (R 4.0.3)
-    ##  xfun             0.20       2021-01-06 [1] CRAN (R 4.0.3)
-    ##  xml2             1.3.2      2020-04-23 [1] CRAN (R 4.0.3)
-    ##  yaml             2.2.1      2020-02-01 [1] CRAN (R 4.0.3)
-    ##  zip              2.1.1      2020-08-27 [1] CRAN (R 4.0.4)
-    ##  zoo              1.8-8      2020-05-02 [1] CRAN (R 4.0.3)
+    ## Matrix products: default
     ## 
-    ## [1] C:/Users/danie/Documents/R/win-library/4.0
-    ## [2] C:/Program Files/R/R-4.0.3/library
+    ## locale:
+    ## [1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252   
+    ## [3] LC_MONETARY=Dutch_Netherlands.1252 LC_NUMERIC=C                      
+    ## [5] LC_TIME=Dutch_Netherlands.1252    
+    ## 
+    ## attached base packages:
+    ## [1] splines   stats     graphics  grDevices utils     datasets  methods  
+    ## [8] base     
+    ## 
+    ## other attached packages:
+    ##  [1] webshot_0.5.2             gridExtra_2.3            
+    ##  [3] rsample_0.1.0             forcats_0.5.1            
+    ##  [5] stringr_1.4.0             dplyr_1.0.6              
+    ##  [7] purrr_0.3.4               readr_1.4.0              
+    ##  [9] tidyr_1.1.3               tibble_3.1.1             
+    ## [11] tidyverse_1.3.1           boot_1.3-28              
+    ## [13] gtsummary_1.4.0           kableExtra_1.3.4         
+    ## [15] table1_1.4                knitr_1.33               
+    ## [17] plotrix_3.8-1             timeROC_0.4              
+    ## [19] survivalROC_1.0.3         survAUC_1.0-5            
+    ## [21] riskRegression_2020.12.08 pec_2020.11.17           
+    ## [23] prodlim_2019.11.13        sqldf_0.4-11             
+    ## [25] RSQLite_2.2.7             gsubfn_0.7               
+    ## [27] proto_1.0.0               mstate_0.3.1             
+    ## [29] rms_6.2-0                 SparseM_1.81             
+    ## [31] Hmisc_4.5-0               ggplot2_3.3.3            
+    ## [33] Formula_1.2-4             lattice_0.20-44          
+    ## [35] survival_3.2-11           rio_0.5.26               
+    ## [37] pacman_0.5.1             
+    ## 
+    ## loaded via a namespace (and not attached):
+    ##   [1] readxl_1.3.1        backports_1.2.1     systemfonts_1.0.2  
+    ##   [4] listenv_0.8.0       TH.data_1.0-10      digest_0.6.27      
+    ##   [7] foreach_1.5.1       htmltools_0.5.1.1   fansi_0.4.2        
+    ##  [10] magrittr_2.0.1      checkmate_2.0.0     memoise_2.0.0      
+    ##  [13] cluster_2.1.2       openxlsx_4.2.3      globals_0.14.0     
+    ##  [16] modelr_0.1.8        mets_1.2.8.1        matrixStats_0.58.0 
+    ##  [19] sandwich_3.0-0      svglite_2.0.0       jpeg_0.1-8.1       
+    ##  [22] colorspace_2.0-1    blob_1.2.1          rvest_1.0.0        
+    ##  [25] haven_2.4.1         xfun_0.22           tcltk_4.0.4        
+    ##  [28] crayon_1.4.1        jsonlite_1.7.2      zoo_1.8-9          
+    ##  [31] iterators_1.0.13    glue_1.4.2          gtable_0.3.0       
+    ##  [34] MatrixModels_0.5-0  scales_1.1.1        mvtnorm_1.1-1      
+    ##  [37] DBI_1.1.1           Rcpp_1.0.6          viridisLite_0.4.0  
+    ##  [40] cmprsk_2.2-10       htmlTable_2.1.0     foreign_0.8-81     
+    ##  [43] bit_4.0.4           lava_1.6.9          htmlwidgets_1.5.3  
+    ##  [46] httr_1.4.2          RColorBrewer_1.1-2  ellipsis_0.3.2     
+    ##  [49] pkgconfig_2.0.3     nnet_7.3-16         dbplyr_2.1.1       
+    ##  [52] here_1.0.1          utf8_1.2.1          tidyselect_1.1.1   
+    ##  [55] rlang_0.4.11        munsell_0.5.0       cellranger_1.1.0   
+    ##  [58] tools_4.0.4         cachem_1.0.4        cli_2.5.0          
+    ##  [61] generics_0.1.0      broom_0.7.6         evaluate_0.14      
+    ##  [64] fastmap_1.1.0       yaml_2.2.1          bit64_4.0.5        
+    ##  [67] fs_1.5.0            timereg_1.9.8       zip_2.1.1          
+    ##  [70] future_1.21.0       nlme_3.1-152        quantreg_5.85      
+    ##  [73] xml2_1.3.2          compiler_4.0.4      rstudioapi_0.13    
+    ##  [76] curl_4.3.1          png_0.1-7           gt_0.3.0           
+    ##  [79] reprex_2.0.0        broom.helpers_1.3.0 stringi_1.6.1      
+    ##  [82] highr_0.9           Matrix_1.3-3        vctrs_0.3.8        
+    ##  [85] pillar_1.6.0        lifecycle_1.0.0     furrr_0.2.2        
+    ##  [88] data.table_1.14.0   conquer_1.0.2       R6_2.5.0           
+    ##  [91] latticeExtra_0.6-29 KernSmooth_2.23-20  parallelly_1.25.0  
+    ##  [94] codetools_0.2-18    polspline_1.1.19    MASS_7.3-54        
+    ##  [97] assertthat_0.2.1    chron_2.3-56        rprojroot_2.0.2    
+    ## [100] withr_2.4.2         multcomp_1.4-17     parallel_4.0.4     
+    ## [103] hms_1.0.0           grid_4.0.4          rpart_4.1-15       
+    ## [106] rmarkdown_2.8       numDeriv_2016.8-1.1 lubridate_1.7.10   
+    ## [109] base64enc_0.1-3
