@@ -6,7 +6,6 @@
 
 
 library(survival)
-library(mstate)
 library(pec)
 library(riskRegression)
 library(splines)
@@ -125,7 +124,7 @@ calib_fgr <- FGR(
   data = vdata_bis
 )
 
-# Confidence intervals can only be obtained by resampling (discuss later)
+# Imo confidence intervals can only be obtained by resampling (discuss later)
 dat_fgr <- cbind.data.frame(
   "obs" = predict(calib_fgr, times = 5, newdata = vdata_bis),
   "pred" = vdata$pred
