@@ -1,9 +1,4 @@
-# To-do:
-# - Edit source data directly so no re-leveling needed
-
-
 # Load libraries and data -------------------------------------------------
-
 
 library(survival)
 library(pec)
@@ -12,11 +7,6 @@ library(splines)
 
 rdata <- readRDS("Data/rdata.rds")
 vdata <- readRDS("Data/vdata.rds")
-
-rdata$hr_status <- relevel(rdata$hr_status, ref = "ER and/or PR +")
-rdata$status_num <- as.numeric(rdata$status) - 1
-vdata$hr_status <- relevel(vdata$hr_status, ref = "ER and/or PR +")
-vdata$status_num <- as.numeric(vdata$status) - 1
 
 
 # Fit cause-specific models -----------------------------------------------
@@ -28,7 +18,7 @@ fit_csh <- CSC(
 )
 
 # External validation at 5 years
-horizon <- 4.99
+horizon <- 5
 
 score_vdata <- Score(
   list("csh_validation" = fit_csh),
@@ -52,22 +42,6 @@ pred <- predictRisk(
 )
 
 
-# Calibration (O/E) -------------------------------------------------------
-
-
-# First calculate Aalen-Johansen estimates (as 'observed')
-obj <- summary(survfit(Surv(time, status) ~ 1, data = vdata), times = horizon)
-aj <- list("obs" = obj$pstate[, 2], "se" = obj$std.err[, 2])
-
-OE <- aj$obs / mean(pred)
-OE_summary <- c(
-  "OE" = OE,
-  "lower" = exp(log(OE - qnorm(0.975) * aj$se / aj$obs)),
-  "upper" = exp(log(OE + qnorm(0.975) * aj$se / aj$obs))
-)
-OE_summary
-
-
 # Calibration plot (pseudo-obs approach) ----------------------------------
 
 
@@ -76,9 +50,9 @@ calplot_pseudo <- plotCalibration(
   brier.in.legend = FALSE,
   auc.in.legend = FALSE, 
   cens.method = "pseudo",
-  bandwidth = 0.05, # or NULL to leave to prodlim::neighborhood(pred)$bandwidth; look at paper for justification
+  bandwidth = 0.05, # or NULL to leave default prodlim::neighborhood(pred)$bandwidth; look at paper for justification
   cex = 1, 
-  round = FALSE, # Important, keeps all unique risk estimates (here = 665)
+  round = FALSE, # Important, keeps all unique risk estimates rather then rounding (here = 665)
   xlim = c(0, 0.6), 
   ylim = c(0, 0.6), 
   rug = TRUE
@@ -86,14 +60,16 @@ calplot_pseudo <- plotCalibration(
 
 # We can extract predicted and observed, this will depend on smoothing
 dat_pseudo <- calplot_pseudo$plotFrames$csh_validation
-absdiff_pseudo <- abs(dat_pseudo$Pred - dat_pseudo$Obs)
+
+# Make sure to use all predicted risks (not just unique ones)
+diff_pseudo <- pred - dat_pseudo$Obs[match(pred, dat_pseudo$Pred)]
 
 # Collect all numerical summary measures
 numsum_pseudo <- c(
-  "ICI" = mean(absdiff_pseudo),
-  setNames(quantile(absdiff_pseudo, c(0.5, 0.9)), c("E50", "E90")),
-  "Emax" = max(absdiff_pseudo),
-  "squared_bias" = mean((dat_pseudo$Pred - dat_pseudo$Obs)^2)
+  "ICI" = mean(abs(diff_pseudo)),
+  setNames(quantile(abs(diff_pseudo), c(0.5, 0.9)), c("E50", "E90")),
+  "Emax" = max(abs(diff_pseudo)),
+  "squared_bias" = mean(diff_pseudo^2)
 )
 numsum_pseudo
 
@@ -106,7 +82,8 @@ vdata$pred <- pred
 vdata$cll_pred <- log(-log(1 - pred))
 
 # 5 knots seems to give equivalent graph to pseudo method with bw = 0.05
-rcs_vdata <- ns(vdata$cll_pred, df = 6)
+n_internal_knots <- 5 # Pick between 3 (more smoothing, less flexible) -5 (less smoothing, more flexible), 
+rcs_vdata <- ns(vdata$cll_pred, df = n_internal_knots + 1)
 class(rcs_vdata) <- "matrix"
 colnames(rcs_vdata) <- paste0("basisf_", colnames(rcs_vdata))
 vdata_bis <- cbind.data.frame(vdata, rcs_vdata)
@@ -143,13 +120,13 @@ plot(
 abline(a = 0, b = 1, lty = "dashed", col = "red")
 
 # Numerical measures
-absdiff_fgr <- abs(dat_fgr$pred - dat_fgr$obs)
+diff_fgr <- dat_fgr$pred - dat_fgr$obs
 
 numsum_fgr <- c(
-  "ICI" = mean(absdiff_fgr),
-  setNames(quantile(absdiff_fgr, c(0.5, 0.9)), c("E50", "E90")),
-  "Emax" = max(absdiff_fgr),
-  "squared_bias" = mean((dat_fgr$pred - dat_fgr$obs)^2)
+  "ICI" = mean(abs(diff_fgr)),
+  setNames(quantile(abs(diff_fgr), c(0.5, 0.9)), c("E50", "E90")),
+  "Emax" = max(abs(diff_fgr)),
+  "squared_bias" = mean(diff_fgr^2)
 )
 numsum_fgr
 
@@ -176,6 +153,85 @@ legend(
   lwd = rep(2, 2),
   bty = "n"
 )
+
+
+# Calibration (O/E) -------------------------------------------------------
+
+
+# First calculate Aalen-Johansen estimates (as 'observed')
+obj <- summary(survfit(Surv(time, status) ~ 1, data = vdata), times = horizon)
+aj <- list("obs" = obj$pstate[, 2], "se" = obj$std.err[, 2])
+
+OE <- aj$obs / mean(pred)
+OE_summary <- c(
+  "OE" = OE,
+  "lower" = exp(log(OE - qnorm(0.975) * aj$se / aj$obs)),
+  "upper" = exp(log(OE + qnorm(0.975) * aj$se / aj$obs))
+)
+OE_summary
+
+
+# Calibration intercept/slope ---------------------------------------------
+
+library(geepack)
+library(pseudo) #maybe
+
+
+# Option 1: using pseudo
+pseudo <- pseudoci(
+  time = vdata$time,
+  event = vdata$status_num,
+  tmax = horizon
+)
+
+vdata$pseudo <- pseudo$pseudo$cause1
+
+fit1 <- geese(
+  pseudo ~ offset(cll_pred), 
+  data = vdata,
+  id = id, 
+  scale.fix = TRUE, 
+  family = gaussian,
+  mean.link = "cloglog",
+  corstr = "independence", 
+  jack = TRUE
+)
+summary(fit1)
+
+fit2 <- update(fit1, formula = . ~ . + cll_pred)
+summary(fit2)
+
+bet <- fit2$beta
+vbet <- fit2$vbeta
+wald <- bet %*% solve(vbet) %*% bet
+wald
+pchisq(wald, df = 2, lower.tail=FALSE)
+
+
+# Option 2: using riskRegression
+pseudo_df_rr <- data.frame(score_vdata$Calibration$plotframe)
+pseudo_df_rr$cll_pred <- log(-log(1 - pseudo_df_rr$risk))
+
+fit1_rr <- geese(
+  pseudovalue ~ offset(cll_pred), 
+  data = pseudo_df_rr,
+  id = ID, 
+  scale.fix = TRUE, 
+  family = gaussian,
+  mean.link = "cloglog",
+  corstr = "independence", 
+  jack = TRUE
+)
+summary(fit1_rr)
+
+fit2_rr <- update(fit1_rr, formula = . ~ . + cll_pred)
+summary(fit2_rr)
+
+bet_rr <- fit2_rr$beta
+vbet_rr <- fit2_rr$vbeta
+wald_rr <- bet_rr %*% solve(vbet_rr) %*% bet_rr
+wald_rr
+pchisq(wald_rr, df = 2, lower.tail = FALSE)
 
 
 # Discrimination ----------------------------------------------------------
