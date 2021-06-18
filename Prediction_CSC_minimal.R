@@ -4,6 +4,8 @@ library(survival)
 library(pec)
 library(riskRegression)
 library(splines)
+library(sandwich)
+library(lmtest)
 
 rdata <- readRDS("Data/rdata.rds")
 vdata <- readRDS("Data/vdata.rds")
@@ -173,65 +175,48 @@ OE_summary
 
 # Calibration intercept/slope ---------------------------------------------
 
-library(geepack)
-library(pseudo) #maybe
 
+# Use pseudo values calculated by score (can also use pseudo::pseudoci)
+pseudos <- data.frame(score_vdata$Calibration$plotframe)
 
-# Option 1: using pseudo
-pseudo <- pseudoci(
-  time = vdata$time,
-  event = vdata$status_num,
-  tmax = horizon
-)
+# Notes:
+# - this is dataframe with ACTUAL pseudovalues, not the smoothed ones
+# - ID is not the id in data, it is just a number assigned to each row of 
+# the original validation data sorted by time and event indicator
+pseudos
+pseudos$pseudovalue # the pseudo values
+pseudos$cll_pred <- log(-log(1 - pseudos$risk)) # add the cloglog risk ests
 
-vdata$pseudo <- pseudo$pseudo$cause1
-
-fit1 <- geese(
-  pseudo ~ offset(cll_pred), 
-  data = vdata,
-  id = id, 
-  scale.fix = TRUE, 
-  family = gaussian,
-  mean.link = "cloglog",
-  corstr = "independence", 
-  jack = TRUE
-)
-summary(fit1)
-
-fit2 <- update(fit1, formula = . ~ . + cll_pred)
-summary(fit2)
-
-bet <- fit2$beta
-vbet <- fit2$vbeta
-wald <- bet %*% solve(vbet) %*% bet
-wald
-pchisq(wald, df = 2, lower.tail=FALSE)
-
-
-# Option 2: using riskRegression
-pseudo_df_rr <- data.frame(score_vdata$Calibration$plotframe)
-pseudo_df_rr$cll_pred <- log(-log(1 - pseudo_df_rr$risk))
-
-fit1_rr <- geese(
+# Fit model for calibration intercept
+fit_cal_int <- glm(
   pseudovalue ~ offset(cll_pred), 
-  data = pseudo_df_rr,
-  id = ID, 
-  scale.fix = TRUE, 
-  family = gaussian,
-  mean.link = "cloglog",
-  corstr = "independence", 
-  jack = TRUE
+  data = pseudos,
+  family = quasi(link = "cloglog"), 
+  start = 0
 )
-summary(fit1_rr)
 
-fit2_rr <- update(fit1_rr, formula = . ~ . + cll_pred)
-summary(fit2_rr)
+# Fit model for calibration slope
+# or: update(fit_cal_int, formula. = . ~ . + cll_pred, start = c(0, 0))
+fit_cal_slope <- glm(
+  pseudovalue ~ offset(cll_pred) + cll_pred, 
+  data = pseudos,
+  family = quasi(link = "cloglog"), 
+  start = c(0, 0)
+)
 
-bet_rr <- fit2_rr$beta
-vbet_rr <- fit2_rr$vbeta
-wald_rr <- bet_rr %*% solve(vbet_rr) %*% bet_rr
-wald_rr
-pchisq(wald_rr, df = 2, lower.tail = FALSE)
+# Perform joint test 
+betas <- coef(fit_cal_slope)
+vcov_mat <- vcovCL(fit_cal_slope, cluster = ~ ID)
+wald <- drop(betas %*% solve(vcov_mat) %*% betas)
+pchisq(wald, df = 2, lower.tail = FALSE)
+
+# Slope test + value and confidence interval
+test_slope <- coeftest(fit_cal_slope, vcov. = vcovCL, cluster = ~ ID) 
+c("slope" = 1 + betas[["cll_pred"]], 1 + confint(test_slope)["cll_pred", ])
+
+# Test for intercept
+test_int <- coeftest(fit_cal_int, vcov. = vcovCL, cluster = ~ ID)
+c("intercept" = coef(test_int), drop(confint(test_int)))
 
 
 # Discrimination ----------------------------------------------------------
