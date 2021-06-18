@@ -10,6 +10,9 @@ library(lmtest)
 rdata <- readRDS("Data/rdata.rds")
 vdata <- readRDS("Data/vdata.rds")
 
+# Set seed (for bootstrapping)
+set.seed(2021)
+
 
 # Fit cause-specific models -----------------------------------------------
 
@@ -21,6 +24,7 @@ fit_csh <- CSC(
 
 # External validation at 5 years
 horizon <- 5
+primary_event <- 1 # set 2 if cause 2 is of interest 
 
 score_vdata <- Score(
   list("csh_validation" = fit_csh),
@@ -31,14 +35,14 @@ score_vdata <- Score(
   times = horizon,
   metrics = c("auc", "brier"),
   summary = c("ipa"), 
-  cause = 1,
+  cause = primary_event,
   plots = "calibration"
 )
 
 # Calculate predicted probabilities 
 pred <- predictRisk(
   fit_csh, 
-  cause = 1, 
+  cause = primary_event, 
   newdata = vdata, 
   times = horizon
 )
@@ -99,7 +103,7 @@ form_fgr <- reformulate(
 # Regress subdistribution of event of interest on cloglog of predicted risks
 calib_fgr <- FGR(
   form_fgr,
-  cause = 1,
+  cause = primary_event,
   data = vdata_bis
 )
 
@@ -162,7 +166,7 @@ legend(
 
 # First calculate Aalen-Johansen estimates (as 'observed')
 obj <- summary(survfit(Surv(time, status) ~ 1, data = vdata), times = horizon)
-aj <- list("obs" = obj$pstate[, 2], "se" = obj$std.err[, 2])
+aj <- list("obs" = obj$pstate[, primary_event + 1], "se" = obj$std.err[, primary_event + 1])
 
 OE <- aj$obs / mean(pred)
 OE_summary <- c(
@@ -183,8 +187,8 @@ pseudos <- data.frame(score_vdata$Calibration$plotframe)
 # - this is dataframe with ACTUAL pseudovalues, not the smoothed ones
 # - ID is not the id in data, it is just a number assigned to each row of 
 # the original validation data sorted by time and event indicator
-pseudos
-pseudos$pseudovalue # the pseudo values
+head(pseudos)
+head(pseudos$pseudovalue) # the pseudo values
 pseudos$cll_pred <- log(-log(1 - pseudos$risk)) # add the cloglog risk ests
 
 # Fit model for calibration intercept
@@ -212,10 +216,12 @@ pchisq(wald, df = 2, lower.tail = FALSE)
 
 # Slope test + value and confidence interval
 test_slope <- coeftest(fit_cal_slope, vcov. = vcovCL, cluster = ~ ID) 
+test_slope
 c("slope" = 1 + betas[["cll_pred"]], 1 + confint(test_slope)["cll_pred", ])
 
 # Test for intercept
 test_int <- coeftest(fit_cal_int, vcov. = vcovCL, cluster = ~ ID)
+test_int
 c("intercept" = coef(test_int), drop(confint(test_int)))
 
 
@@ -226,8 +232,14 @@ c("intercept" = coef(test_int), drop(confint(test_int)))
 score_vdata$AUC$score
 
 # C-index
-pec::cindex(fit_csh, cause = 1, eval.times = horizon, data = vdata)$AppCindex
-# Optional bootstrap for cindex here
+cindex_csh <- pec::cindex(
+  object = fit_csh, 
+  formula = Hist(time, status_num) ~ 1,
+  cause = primary_event, 
+  eval.times = horizon, 
+  data = vdata
+)$AppCindex$CauseSpecificCox
+# Optional bootstrap for cindex here (or at end?)
 
 
 # Prediction error --------------------------------------------------------
@@ -240,4 +252,130 @@ score_vdata$Brier$score # brier + IPA
 # Clinical utility --------------------------------------------------------
 
 
-# (Source Daniele's function here)
+# Minimal version (better to use Daniele's function):
+
+# 1. Set grid of thresholds
+thresholds <- seq(0, 0.6, by = 0.01)
+
+# 2. Calculate Aelen johansen for all patients exceeding threshold (i.e. treat-all)
+survfit_all <- summary(
+  survfit(Surv(time, status) ~ 1, data = vdata), 
+  times = horizon
+)
+f_all <- survfit_all$pstate[primary_event + 1]
+
+# 3. Calculate Net Benefit across all thresholds
+list_nb <- lapply(thresholds, function(ps) {
+  
+  # Treat all
+  NB_all <- f_all - (1 - f_all) * (ps / (1 - ps))
+  
+  # Based on threshold
+  p_exceed <- mean(vdata$pred > ps)
+  survfit_among_exceed <- try(
+    summary(
+      survfit(Surv(time, status) ~ 1, data = vdata[vdata$pred > ps, ]), 
+      times = horizon
+    ), silent = TRUE
+  )
+  
+  # If a) no more observations above threshold, or b) among subset exceeding..
+  # ..no indiv has event time >= horizon, then NB = 0
+  if (class(survfit_among_exceed) == "try-error") {
+    NB <- 0
+  } else {
+    f_given_exceed <- survfit_among_exceed$pstate[primary_event + 1]
+    TP <- f_given_exceed * p_exceed
+    FP <- (1 - f_given_exceed) * p_exceed
+    NB <- TP - FP * (ps / (1 - ps))
+  }
+  
+  # Return together
+  df_res <- data.frame("threshold" = ps, "NB" = NB, "treat_all" = NB_all)
+  return(df_res)
+})
+
+# Combine into data frame
+df_nb <- do.call(rbind.data.frame, list_nb)
+head(df_nb)
+
+# Make basic decision curve plot
+par(
+  xaxs = "i", 
+  yaxs = "i", 
+  las = 1, 
+  mar = c(6.1, 5.8, 4.1, 2.1), 
+  mgp = c(4.25, 1, 0)
+)
+plot(
+  df_nb$threshold, 
+  df_nb$NB,
+  type = "l", 
+  lwd = 2,
+  ylim = c(-0.1, 0.1),
+  xlim = c(0, 0.5), 
+  xlab = "",
+  ylab = "Net Benefit",
+  bty = "n", 
+  xaxt = "n"
+)
+lines(df_nb$threshold, df_nb$treat_all, type = "l", col = "darkgray", lwd = 2)
+abline(h = 0, lty = 2, lwd = 2)
+legend(
+  "topright", 
+  c("Treat all", "Treat none", "Prediction model"),
+  lwd = c(2, 2, 2), 
+  lty = c(1, 2, 1), 
+  col = c("darkgray", "black", "black"), 
+  bty = "n"
+)
+axis(side = 1, at = c(0, 0.1, 0.2, 0.3, 0.4, 0.5))
+axis(
+  side = 1,
+  pos = -0.145, 
+  at = c(0.1, 0.2, 0.3, 0.4, 0.5),
+  labels = c("1:9", "1:4", "3:7", "2:3", "1:1")
+)
+mtext("Threshold probability", 1, line = 2)
+mtext("Harm to benefit ratio", 1, line = 5)
+title("Validation data")
+
+# Restore old graphical parameters
+dev.off() 
+
+# -- End minimal script
+
+
+# Extra: bootstrap confidence intervals -----------------------------------
+
+
+# Repeat whole modelling process:
+# - Resample training data, evaluate each model on test set
+# (i.e. not resample test set with same model)
+B <- 250
+
+cindexes <- vapply(seq_len(B), function(b) {
+  
+  # Fit model on bootstrapped development data
+  obj <- fit_csh_boot <- CSC(
+    formula = Hist(time, status_num) ~ age + size + ncat + hr_status, 
+    data = rdata[sample(nrow(rdata), replace = TRUE), ]
+  )
+  
+  # Get cindex on validation data
+  pec::cindex(
+    object = obj, 
+    formula = Hist(time, status_num) ~ 1,
+    cause = 1, 
+    eval.times = horizon, 
+    data = vdata,
+    verbose = FALSE
+  )$AppCindex$CauseSpecificCox
+}, FUN.VALUE = numeric(1))
+
+hist(cindexes)
+cindex_csh
+quantile(cindexes, probs = c(0.025, 0.975))
+
+
+# Do we do it for the calibration curves..? Probs not
