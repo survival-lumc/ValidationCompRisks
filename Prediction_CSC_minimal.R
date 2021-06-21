@@ -4,8 +4,7 @@ library(survival)
 library(pec)
 library(riskRegression)
 library(splines)
-library(sandwich)
-library(lmtest)
+library(geepack)
 
 rdata <- readRDS("Data/rdata.rds")
 vdata <- readRDS("Data/vdata.rds")
@@ -39,7 +38,7 @@ score_vdata <- Score(
   plots = "calibration"
 )
 
-# Calculate predicted probabilities 
+# Calculate predicted risk for each patient (in validation data) at horizon 
 pred <- predictRisk(
   fit_csh, 
   cause = primary_event, 
@@ -90,7 +89,6 @@ vdata$cll_pred <- log(-log(1 - pred))
 # 5 knots seems to give equivalent graph to pseudo method with bw = 0.05
 n_internal_knots <- 5 # Pick between 3 (more smoothing, less flexible) -5 (less smoothing, more flexible), 
 rcs_vdata <- ns(vdata$cll_pred, df = n_internal_knots + 1)
-class(rcs_vdata) <- "matrix"
 colnames(rcs_vdata) <- paste0("basisf_", colnames(rcs_vdata))
 vdata_bis <- cbind.data.frame(vdata, rcs_vdata)
 
@@ -192,37 +190,57 @@ head(pseudos$pseudovalue) # the pseudo values
 pseudos$cll_pred <- log(-log(1 - pseudos$risk)) # add the cloglog risk ests
 
 # Fit model for calibration intercept
-fit_cal_int <- glm(
+fit_cal_int <- geese(
   pseudovalue ~ offset(cll_pred), 
   data = pseudos,
-  family = quasi(link = "cloglog"), 
-  start = 0
+  id = ID, 
+  scale.fix = TRUE, 
+  family = gaussian,
+  mean.link = "cloglog",
+  corstr = "independence", 
+  jack = TRUE
 )
 
 # Fit model for calibration slope
-# or: update(fit_cal_int, formula. = . ~ . + cll_pred, start = c(0, 0))
-fit_cal_slope <- glm(
+# or: update(fit_cal_int, formula. = . ~ . + cll_pred)
+fit_cal_slope <- geese(
   pseudovalue ~ offset(cll_pred) + cll_pred, 
   data = pseudos,
-  family = quasi(link = "cloglog"), 
-  start = c(0, 0)
+  id = ID, 
+  scale.fix = TRUE, 
+  family = gaussian,
+  mean.link = "cloglog",
+  corstr = "independence", 
+  jack = TRUE
 )
 
 # Perform joint test 
-betas <- coef(fit_cal_slope)
-vcov_mat <- vcovCL(fit_cal_slope, cluster = ~ ID)
+betas <- fit_cal_slope$beta
+vcov_mat <- fit_cal_slope$vbeta
 wald <- drop(betas %*% solve(vcov_mat) %*% betas)
 pchisq(wald, df = 2, lower.tail = FALSE)
 
 # Slope test + value and confidence interval
-test_slope <- coeftest(fit_cal_slope, vcov. = vcovCL, cluster = ~ ID) 
-test_slope
-c("slope" = 1 + betas[["cll_pred"]], 1 + confint(test_slope)["cll_pred", ])
+summary(fit_cal_slope)
+with(
+  summary(fit_cal_slope)$mean["cll_pred", ],
+  c(
+    "slope" = 1 + estimate, 
+    `2.5 %` = 1 + (estimate - qnorm(0.975) * san.se),
+    `97.5 %` = 1 + (estimate + qnorm(0.975) * san.se)
+  )
+)
 
 # Test for intercept
-test_int <- coeftest(fit_cal_int, vcov. = vcovCL, cluster = ~ ID)
-test_int
-c("intercept" = coef(test_int), drop(confint(test_int)))
+summary(fit_cal_int)
+with(
+  summary(fit_cal_int)$mean,
+  c(
+    "slope" = estimate, 
+    `2.5 %` = estimate - qnorm(0.975) * san.se,
+    `97.5 %` = estimate + qnorm(0.975) * san.se
+  )
+)
 
 
 # Discrimination ----------------------------------------------------------
@@ -239,7 +257,9 @@ cindex_csh <- pec::cindex(
   eval.times = horizon, 
   data = vdata
 )$AppCindex$CauseSpecificCox
-# Optional bootstrap for cindex here (or at end?)
+
+cindex_csh
+# Optional bootstrap for cindex CI here (or at end?)
 
 
 # Prediction error --------------------------------------------------------
@@ -352,30 +372,56 @@ dev.off()
 # Repeat whole modelling process:
 # - Resample training data, evaluate each model on test set
 # (i.e. not resample test set with same model)
-B <- 250
+B <- 100
 
-cindexes <- vapply(seq_len(B), function(b) {
+boots_ls <- lapply(seq_len(B), function(b) {
   
   # Fit model on bootstrapped development data
-  obj <- fit_csh_boot <- CSC(
+  fit_csh_boot <- CSC(
     formula = Hist(time, status_num) ~ age + size + ncat + hr_status, 
     data = rdata[sample(nrow(rdata), replace = TRUE), ]
   )
   
   # Get cindex on validation data
-  pec::cindex(
-    object = obj, 
+  cindex_boot <- pec::cindex(
+    object = fit_csh_boot, 
     formula = Hist(time, status_num) ~ 1,
     cause = 1, 
     eval.times = horizon, 
     data = vdata,
     verbose = FALSE
   )$AppCindex$CauseSpecificCox
-}, FUN.VALUE = numeric(1))
+  
+  # Get IPA on validation data
+  score_boot <- Score(
+    list("csh_boot" = fit_csh_boot),
+    formula = Hist(time, status_num) ~ 1,
+    cens.model = "km", 
+    data = vdata, 
+    conf.int = FALSE, 
+    times = horizon,
+    metrics = c("brier"),
+    summary = c("ipa"), 
+    cause = primary_event
+  )
+  
+  ipa_boot <- score_boot$Brier$score[model == "csh_boot"][["IPA"]]
+  cbind.data.frame("cindex" = cindex_boot, "ipa" = ipa_boot)
+})
 
-hist(cindexes)
-cindex_csh
-quantile(cindexes, probs = c(0.025, 0.975))
+df_boots <- do.call(rbind.data.frame, boots_ls)
+hist(df_boots$cindex)
+hist(df_boots$ipa)
+
+# Summarise cindex
+c("cindex_5y" = cindex_csh, quantile(df_boots$cindex, probs = c(0.025, 0.975)))
+
+# Summarise ipa
+c(
+  "ipa_5y" = score_vdata$Brier$score[model == "csh_validation"][["IPA"]], 
+  quantile(df_boots$ipa, probs = c(0.025, 0.975))
+)
+
 
 
 # Do we do it for the calibration curves..? Probs not
