@@ -369,35 +369,32 @@ dev.off()
 # Extra: bootstrap confidence intervals -----------------------------------
 
 
-# Repeat whole modelling process:
-# - Resample training data, evaluate each model on test set
-# (i.e. not resample test set with same model)
+# Validate final model in resampled test datasets
+# (this is what you would do in practice, when only full model is available;
+# instead of for example resampling development data)
 B <- 100
 
 boots_ls <- lapply(seq_len(B), function(b) {
   
-  # Fit model on bootstrapped development data
-  fit_csh_boot <- CSC(
-    formula = Hist(time, status_num) ~ age + size + ncat + hr_status, 
-    data = rdata[sample(nrow(rdata), replace = TRUE), ]
-  )
+  # Resample validation data
+  vdata_boot <- vdata[sample(nrow(vdata), replace = TRUE), ]
   
-  # Get cindex on validation data
+  # Get cindex on boot validation data
   cindex_boot <- pec::cindex(
-    object = fit_csh_boot, 
+    object = fit_csh, 
     formula = Hist(time, status_num) ~ 1,
     cause = 1, 
     eval.times = horizon, 
-    data = vdata,
+    data = vdata_boot,
     verbose = FALSE
   )$AppCindex$CauseSpecificCox
   
-  # Get IPA on validation data
+  # Get IPA on boot validation data
   score_boot <- Score(
-    list("csh_boot" = fit_csh_boot),
+    list("csh_validation" = fit_csh),
     formula = Hist(time, status_num) ~ 1,
     cens.model = "km", 
-    data = vdata, 
+    data = vdata_boot, 
     conf.int = FALSE, 
     times = horizon,
     metrics = c("brier"),
@@ -405,7 +402,9 @@ boots_ls <- lapply(seq_len(B), function(b) {
     cause = primary_event
   )
   
-  ipa_boot <- score_boot$Brier$score[model == "csh_boot"][["IPA"]]
+  #.. can add other measure heres, eg. E50/E90/netbenefit
+  
+  ipa_boot <- score_boot$Brier$score[model == "csh_validation"][["IPA"]]
   cbind.data.frame("cindex" = cindex_boot, "ipa" = ipa_boot)
 })
 
@@ -424,4 +423,4 @@ c(
 
 
 
-# Do we do it for the calibration curves..? Probs not
+# Do we do it for the calibration curves and E50/E90 etc..? Probs not
