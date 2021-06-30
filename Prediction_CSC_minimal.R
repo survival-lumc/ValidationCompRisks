@@ -1,11 +1,19 @@
 # Load libraries and data -------------------------------------------------
 
-library(survival)
-library(pec)
-library(riskRegression)
-library(splines)
-library(geepack)
 
+# General packages
+pkgs <- c("survival", "pec", "splines", "geepack")
+vapply(pkgs, function(pkg) {
+  if (!require(pkg, character.only = TRUE)) install.packages(pkg)
+  require(pkg, character.only = TRUE, quietly = TRUE)
+}, FUN.VALUE = logical(length = 1L))
+
+# Install latest development version of riskRegression
+if (!require("devtools", character.only = TRUE)) install.packages("devtools")
+if (!require("riskRegression", character.only = TRUE)) devtools::install_github("tagteam/riskRegression")
+require("riskRegression", character.only = TRUE)
+
+# Load datasets
 rdata <- readRDS("Data/rdata.rds")
 vdata <- readRDS("Data/vdata.rds")
 
@@ -23,11 +31,11 @@ fit_csh <- CSC(
 
 # External validation at 5 years
 horizon <- 5
-primary_event <- 1 # set 2 if cause 2 is of interest 
+primary_event <- 1 # Set to 2 if cause 2 was of interest 
 
 score_vdata <- Score(
   list("csh_validation" = fit_csh),
-  formula = Hist(time, status_num) ~ 1,
+  formula = Hist(time, status_num) ~ 1, # add covariates censoring may depend on
   cens.model = "km", 
   data = vdata, 
   conf.int = TRUE, 
@@ -38,9 +46,9 @@ score_vdata <- Score(
   plots = "calibration"
 )
 
-# Calculate predicted risk for each patient (in validation data) at horizon 
+# Calculate predictions for each patient (in validation data) at horizon 
 pred <- predictRisk(
-  fit_csh, 
+  object = fit_csh, 
   cause = primary_event, 
   newdata = vdata, 
   times = horizon
@@ -51,22 +59,23 @@ pred <- predictRisk(
 
 
 calplot_pseudo <- plotCalibration(
-  score_vdata,
+  x = score_vdata,
   brier.in.legend = FALSE,
   auc.in.legend = FALSE, 
   cens.method = "pseudo",
-  bandwidth = 0.05, # or NULL to leave default prodlim::neighborhood(pred)$bandwidth; look at paper for justification
+  bandwidth = 0.05, # leave as NULL for default choice of smoothing
   cex = 1, 
-  round = FALSE, # Important, keeps all unique risk estimates rather then rounding (here = 665)
+  round = FALSE, # Important, keeps all unique risk estimates rather than rounding 
   xlim = c(0, 0.6), 
   ylim = c(0, 0.6), 
-  rug = TRUE
+  rug = TRUE, 
+  xlab = "Predictions"
 )
 
-# We can extract predicted and observed, this will depend on smoothing
+# We can extract predicted and 'observed', this will depend on smoothing
 dat_pseudo <- calplot_pseudo$plotFrames$csh_validation
 
-# Make sure to use all predicted risks (not just unique ones)
+# Make sure to use all predictions (not just unique ones)
 diff_pseudo <- pred - dat_pseudo$Obs[match(pred, dat_pseudo$Pred)]
 
 # Collect all numerical summary measures
@@ -82,17 +91,17 @@ numsum_pseudo
 # Calibration plot (subdistribution approach) -----------------------------
 
 
-# Add predicted risk and complementary log-log of it to dataset
+# Add predictions and complementary log-log of them to dataset
 vdata$pred <- pred
 vdata$cll_pred <- log(-log(1 - pred))
 
-# 5 knots seems to give equivalent graph to pseudo method with bw = 0.05
-n_internal_knots <- 5 # Pick between 3 (more smoothing, less flexible) -5 (less smoothing, more flexible), 
+# Pick knots between 3 (more smoothing, less flexible) to 5 (less smoothing, more flexible)
+n_internal_knots <- 5 
 rcs_vdata <- ns(vdata$cll_pred, df = n_internal_knots + 1)
 colnames(rcs_vdata) <- paste0("basisf_", colnames(rcs_vdata))
 vdata_bis <- cbind.data.frame(vdata, rcs_vdata)
 
-# With FGR
+# Prepare Fine-Gray formula
 form_fgr <- reformulate(
   termlabels = colnames(rcs_vdata),
   response = "Hist(time, status_num)"
@@ -100,14 +109,14 @@ form_fgr <- reformulate(
 
 # Regress subdistribution of event of interest on cloglog of predicted risks
 calib_fgr <- FGR(
-  form_fgr,
+  formula = form_fgr,
   cause = primary_event,
   data = vdata_bis
 )
 
-# Imo confidence intervals can only be obtained by resampling (discuss later)
+# Predictions from this model are the 'observed' risks
 dat_fgr <- cbind.data.frame(
-  "obs" = predict(calib_fgr, times = 5, newdata = vdata_bis),
+  "obs" = predict(calib_fgr, times = horizon, newdata = vdata_bis),
   "pred" = vdata$pred
 )
 
@@ -118,7 +127,7 @@ plot(
   type = "l",
   xlim = c(0, 0.6), 
   ylim = c(0, 0.6),
-  xlab = "Predicted risk",
+  xlab = "Predictions",
   ylab = "Estimated actual risk"
 )
 abline(a = 0, b = 1, lty = "dashed", col = "red")
@@ -134,7 +143,7 @@ numsum_fgr <- c(
 )
 numsum_fgr
 
-# (Plot this and pseudo together)
+# Plot calibration plots from both methods together
 plot(
   x = dat_fgr$pred, 
   y = dat_fgr$obs, 
@@ -143,7 +152,7 @@ plot(
   ylim = c(0, 0.6),
   col = "blue",
   lwd = 2,
-  xlab = "Predicted risk",
+  xlab = "Predictions",
   ylab = "Estimated actual risk"
 )
 lines(x = dat_pseudo$Pred, y = dat_pseudo$Obs, col = "lightblue", lwd = 2)
@@ -162,7 +171,7 @@ legend(
 # Calibration (O/E) -------------------------------------------------------
 
 
-# First calculate Aalen-Johansen estimates (as 'observed')
+# First calculate Aalen-Johansen estimate (as 'observed')
 obj <- summary(survfit(Surv(time, status) ~ 1, data = vdata), times = horizon)
 aj <- list("obs" = obj$pstate[, primary_event + 1], "se" = obj$std.err[, primary_event + 1])
 
@@ -178,16 +187,16 @@ OE_summary
 # Calibration intercept/slope ---------------------------------------------
 
 
-# Use pseudo values calculated by score (can also use pseudo::pseudoci)
+# Use pseudo-observations calculated by Score() 
 pseudos <- data.frame(score_vdata$Calibration$plotframe)
 
-# Notes:
-# - this is dataframe with ACTUAL pseudovalues, not the smoothed ones
-# - ID is not the id in data, it is just a number assigned to each row of 
+# Note:
+# - 'pseudos' is the data.frame with ACTUAL pseudo-observations, not the smoothed ones
+# - Column ID is not the id in vdata; it is just a number assigned to each row of 
 # the original validation data sorted by time and event indicator
 head(pseudos)
-head(pseudos$pseudovalue) # the pseudo values
-pseudos$cll_pred <- log(-log(1 - pseudos$risk)) # add the cloglog risk ests
+head(pseudos$pseudovalue) # the pseudo-observations
+pseudos$cll_pred <- log(-log(1 - pseudos$risk)) # add the cloglog predictions 
 
 # Fit model for calibration intercept
 fit_cal_int <- geese(
@@ -202,7 +211,6 @@ fit_cal_int <- geese(
 )
 
 # Fit model for calibration slope
-# or: update(fit_cal_int, formula. = . ~ . + cll_pred)
 fit_cal_slope <- geese(
   pseudovalue ~ offset(cll_pred) + cll_pred, 
   data = pseudos,
@@ -236,7 +244,7 @@ summary(fit_cal_int)
 with(
   summary(fit_cal_int)$mean,
   c(
-    "slope" = estimate, 
+    "intercept" = estimate, 
     `2.5 %` = estimate - qnorm(0.975) * san.se,
     `97.5 %` = estimate + qnorm(0.975) * san.se
   )
@@ -246,38 +254,35 @@ with(
 # Discrimination ----------------------------------------------------------
 
 
-# AUC described in paper (same as AUC_2 from timeROC)
+# AUC described in paper - same as AUC_2 from timeROC::timeROC()
 score_vdata$AUC$score
 
 # C-index
 cindex_csh <- pec::cindex(
   object = fit_csh, 
-  formula = Hist(time, status_num) ~ 1,
+  formula = Hist(time, status_num) ~ 1, # add covariates censoring may depend on
   cause = primary_event, 
   eval.times = horizon, 
   data = vdata
 )$AppCindex$CauseSpecificCox
 
 cindex_csh
-# Optional bootstrap for cindex CI here (or at end?)
 
 
 # Prediction error --------------------------------------------------------
 
 
-score_vdata$Brier$score # brier + IPA
-# Add optional bootstrap for IPA here
+# Brier and IPA
+score_vdata$Brier$score 
 
 
 # Clinical utility --------------------------------------------------------
 
 
-# Minimal version (better to use Daniele's function):
-
 # 1. Set grid of thresholds
 thresholds <- seq(0, 0.6, by = 0.01)
 
-# 2. Calculate Aelen johansen for all patients exceeding threshold (i.e. treat-all)
+# 2. Calculate Aalen-Johansen for all patients exceeding threshold (i.e. treat-all)
 survfit_all <- summary(
   survfit(Surv(time, status) ~ 1, data = vdata), 
   times = horizon
@@ -300,7 +305,7 @@ list_nb <- lapply(thresholds, function(ps) {
   )
   
   # If a) no more observations above threshold, or b) among subset exceeding..
-  # ..no indiv has event time >= horizon, then NB = 0
+  # ..no individual has event time >= horizon, then NB = 0
   if (class(survfit_among_exceed) == "try-error") {
     NB <- 0
   } else {
@@ -363,15 +368,14 @@ title("Validation data")
 # Restore old graphical parameters
 dev.off() 
 
-# -- End minimal script
-
 
 # Extra: bootstrap confidence intervals -----------------------------------
 
 
-# Validate final model in resampled test datasets
-# (this is what you would do in practice, when only full model is available;
-# instead of for example resampling development data)
+# Validate final model in re-sampled validation datasets
+# (this is what you would do in practice, when only full model is available)
+
+# Number of bootstrap samples
 B <- 100
 
 boots_ls <- lapply(seq_len(B), function(b) {
@@ -402,25 +406,21 @@ boots_ls <- lapply(seq_len(B), function(b) {
     cause = primary_event
   )
   
-  #.. can add other measure heres, eg. E50/E90/netbenefit
+  # .. can add other measures here, eg. E50/E90/net-benefit
   
   ipa_boot <- score_boot$Brier$score[model == "csh_validation"][["IPA"]]
   cbind.data.frame("cindex" = cindex_boot, "ipa" = ipa_boot)
 })
 
 df_boots <- do.call(rbind.data.frame, boots_ls)
-hist(df_boots$cindex)
-hist(df_boots$ipa)
+hist(df_boots$cindex, main = "Bootstrapped C-index", xlab = "C-index")
+hist(df_boots$ipa, main = "Bootstrapped IPA", xlab = "IPA")
 
-# Summarise cindex
+# Summarize C-index
 c("cindex_5y" = cindex_csh, quantile(df_boots$cindex, probs = c(0.025, 0.975)))
 
-# Summarise ipa
+# Summarize IPA
 c(
   "ipa_5y" = score_vdata$Brier$score[model == "csh_validation"][["IPA"]], 
   quantile(df_boots$ipa, probs = c(0.025, 0.975))
 )
-
-
-
-# Do we do it for the calibration curves and E50/E90 etc..? Probs not
