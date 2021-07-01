@@ -4,28 +4,29 @@ R Code repository for the manuscript 'External validation of the performance of 
 
 The repository contains the following code:
 
-+ [Prediction_FG](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Prediction_FG.md) illustrates how to develop and validate a competing risks prediction model using the Fine and Gray subdistribution hazard regression model. The RMarkdown source code (.Rmd) is [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Prediction_FG.Rmd).  
++ [Prediction_CSC_minimal.R](Prediction_CSC_minimal.R) : the companion (minimal) script for the manuscript, illustrating external validation of a prediction model based on cause-specific Cox models. To reproduce results of the manuscript, this script is sufficient.
++ [Prediction_CSC.md](Prediction_CSC.md) : a markdown document containing a more in-depth version of the minimal script,  with complete details on model development, descriptive tables and plots. The RMarkdown source code (.Rmd) is [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Prediction_CSC.Rmd).
++ [Prediction_FG.md](Prediction_FG.md) : a markdown document illustrating how to develop and validate a competing risks prediction model using the Fine-Gray subdistribution hazard regression model. The RMarkdown source code (.Rmd) is [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Prediction_FG.Rmd).  
 
-+ [Prediction_CSC](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Prediction_CSC.md) illustrates how to develop and validate a competing risks prediction model using cause-specific hazards regression models.he RMarkdown source code (.Rmd) is [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Prediction_CSC.Rmd)
-
-Data are available [here](https://github.com/survival-lumc/ValidationCompRisks/tree/main/Data).  
-Additional functions useful to develop and validate competing risks predition models are available [here](https://github.com/survival-lumc/ValidationCompRisks/tree/main/R).
+Data are available [here](https://github.com/survival-lumc/ValidationCompRisks/tree/main/Data).  Additional functions useful to develop and validate competing risks prediction models are available [here](https://github.com/survival-lumc/ValidationCompRisks/tree/main/R).
 
 ## Usage
 
-You can either download a zip file containing the directory, or you can clone it by using
+If you are git user, you can clone the directory by using
 
 ```bash
 git clone https://github.com/survival-lumc/ValidationCompRisks.git
 ```
 
-In either case, you can then use the `ValidationCompRisks.Rproj` file to open
-and Rstudio session in the directory you have just downloaded. You may then knit
-both rmarkdown files, or run them line-by-line.
+Otherwise, you can simply download a zip file containing the directory by clicking Code -> Download ZIP at the top-right of this Github page. Extract the zipped files to a directory of your choice.
+
+Afterwards, you can double-click the `ValidationCompRisks.Rproj` file to open an Rstudio session in the directory you have just downloaded. This will ensure all file-paths called in the files are maintained. The minimal script and the .Rmd files can now be executed.
 
 ## Contributions
 
-| Name                                                         | Affiliation                           | Role              |
-| ------------------------------------------------------------ | ------------------------------------- | ----------------- |
-| [Daniele Giardiello](https://github.com/danielegiardiello/)  | The Netherlands Cancer Institute (NL) | Author/maintainer |
-| [Edouard Bonneville](https://www.lumc.nl/org/bds/medewerkers/1968807) | Leiden University Medical Center (NL) | Code reviewer     |
+| Name                                                         | Affiliation                           | Role                                            |
+| ------------------------------------------------------------ | ------------------------------------- | ----------------------------------------------- |
+| [Daniele Giardiello](https://github.com/danielegiardiello/)  | The Netherlands Cancer Institute (NL) | Author .Rmd files/maintainer                    |
+| [Edouard Bonneville](https://www.lumc.nl/org/bds/medewerkers/1968807) | Leiden University Medical Center (NL) | Author minimal .R script/review of .Rmd scripts |
+| [Nan van Geloven](https://www.lumc.nl/org/bds/medewerkers/1216536?setlanguage=English&setcountry=en) | Leiden University Medical Center (NL) | Review of both .R and .Rmd scripts              |
+
