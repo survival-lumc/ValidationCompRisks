@@ -21,7 +21,7 @@ vdata <- readRDS("Data/vdata.rds")
 set.seed(2021)
 
 
-# Fit cause-specific models -----------------------------------------------
+# Fit cause-specific hazards models ---------------------------------------
 
 
 fit_csh <- CSC(
@@ -29,13 +29,13 @@ fit_csh <- CSC(
   data = rdata
 )
 
-# External validation at 5 years
+# External validation at 5 years for primary event
 horizon <- 5
 primary_event <- 1 # Set to 2 if cause 2 was of interest 
 
 score_vdata <- Score(
   list("csh_validation" = fit_csh),
-  formula = Hist(time, status_num) ~ 1, # add covariates censoring may depend on
+  formula = Hist(time, status_num) ~ 1, 
   cens.model = "km", 
   data = vdata, 
   conf.int = TRUE, 
@@ -46,7 +46,7 @@ score_vdata <- Score(
   plots = "calibration"
 )
 
-# Calculate predictions for each patient (in validation data) at horizon 
+# Calculate estimated risk for each patient (in validation data) by time horizon 
 pred <- predictRisk(
   object = fit_csh, 
   cause = primary_event, 
@@ -72,10 +72,10 @@ calplot_pseudo <- plotCalibration(
   xlab = "Predictions"
 )
 
-# We can extract predicted and 'observed', this will depend on smoothing
+# We can extract predicted and observed, observed will depend on degree of smoothing (bandwidth)
 dat_pseudo <- calplot_pseudo$plotFrames$csh_validation
 
-# Make sure to use all predictions (not just unique ones)
+# Calculate difference between predicted and observed (make sure to use all estimated risks, not just unique ones)
 diff_pseudo <- pred - dat_pseudo$Obs[match(pred, dat_pseudo$Pred)]
 
 # Collect all numerical summary measures
@@ -88,38 +88,39 @@ numsum_pseudo <- c(
 numsum_pseudo
 
 
-# Calibration plot (subdistribution approach) -----------------------------
+# Calibration plot (flexible regression approach) -------------------------
 
 
-# Add predictions and complementary log-log of them to dataset
+# Add estimated risk and complementary log-log of it to dataset
 vdata$pred <- pred
 vdata$cll_pred <- log(-log(1 - pred))
 
-# Pick knots between 3 (more smoothing, less flexible) to 5 (less smoothing, more flexible)
-n_internal_knots <- 5 
+# 5 knots seems to give somewhat equivalent graph to pseudo method with bw = 0.05
+n_internal_knots <- 5 # Austin et al. advise to use between 3 (more smoothing, less flexible) and 5 (less smoothing, more flexible)
 rcs_vdata <- ns(vdata$cll_pred, df = n_internal_knots + 1)
 colnames(rcs_vdata) <- paste0("basisf_", colnames(rcs_vdata))
 vdata_bis <- cbind.data.frame(vdata, rcs_vdata)
 
-# Prepare Fine-Gray formula
+# Use subdistribution hazards (Fine-Gray) model
 form_fgr <- reformulate(
   termlabels = colnames(rcs_vdata),
   response = "Hist(time, status_num)"
 )
 
-# Regress subdistribution of event of interest on cloglog of predicted risks
+# Regress subdistribution of event of interest on cloglog of estimated risks
 calib_fgr <- FGR(
   formula = form_fgr,
   cause = primary_event,
   data = vdata_bis
 )
 
-# Predictions from this model are the 'observed' risks
+# Add observed and predicted together in a data frame 
 dat_fgr <- cbind.data.frame(
   "obs" = predict(calib_fgr, times = horizon, newdata = vdata_bis),
   "pred" = vdata$pred
 )
 
+# Calibration plot
 dat_fgr <- dat_fgr[order(dat_fgr$pred), ]
 plot(
   x = dat_fgr$pred, 
@@ -132,7 +133,7 @@ plot(
 )
 abline(a = 0, b = 1, lty = "dashed", col = "red")
 
-# Numerical measures
+# Numerical summary measures
 diff_fgr <- dat_fgr$pred - dat_fgr$obs
 
 numsum_fgr <- c(
@@ -175,7 +176,10 @@ legend(
 obj <- summary(survfit(Surv(time, status) ~ 1, data = vdata), times = horizon)
 aj <- list("obs" = obj$pstate[, primary_event + 1], "se" = obj$std.err[, primary_event + 1])
 
+# Calculate O/E
 OE <- aj$obs / mean(pred)
+
+# For the confidence interval we use method proposed in Debray et al. (2017) doi:10.1136/bmj.i6460
 OE_summary <- c(
   "OE" = OE,
   "lower" = exp(log(OE - qnorm(0.975) * aj$se / aj$obs)),
@@ -187,16 +191,15 @@ OE_summary
 # Calibration intercept/slope ---------------------------------------------
 
 
-# Use pseudo-observations calculated by Score() 
+# Use pseudo-observations calculated by Score() (can alternatively use pseudo::pseudoci)
 pseudos <- data.frame(score_vdata$Calibration$plotframe)
 
 # Note:
 # - 'pseudos' is the data.frame with ACTUAL pseudo-observations, not the smoothed ones
 # - Column ID is not the id in vdata; it is just a number assigned to each row of 
 # the original validation data sorted by time and event indicator
-head(pseudos)
 head(pseudos$pseudovalue) # the pseudo-observations
-pseudos$cll_pred <- log(-log(1 - pseudos$risk)) # add the cloglog predictions 
+pseudos$cll_pred <- log(-log(1 - pseudos$risk)) # add the cloglog risk ests 
 
 # Fit model for calibration intercept
 fit_cal_int <- geese(
@@ -222,13 +225,13 @@ fit_cal_slope <- geese(
   jack = TRUE
 )
 
-# Perform joint test 
+# Perform joint test on intercept and slope
 betas <- fit_cal_slope$beta
 vcov_mat <- fit_cal_slope$vbeta
 wald <- drop(betas %*% solve(vcov_mat) %*% betas)
 pchisq(wald, df = 2, lower.tail = FALSE)
 
-# Slope test + value and confidence interval
+# Value, confidence interval and test for calibration slope
 summary(fit_cal_slope)
 with(
   summary(fit_cal_slope)$mean["cll_pred", ],
@@ -239,7 +242,7 @@ with(
   )
 )
 
-# Test for intercept
+# Value, confidence interval and test for calibration intercept
 summary(fit_cal_int)
 with(
   summary(fit_cal_int)$mean,
@@ -254,35 +257,37 @@ with(
 # Discrimination ----------------------------------------------------------
 
 
-# AUC described in paper - same as AUC_2 from timeROC::timeROC()
+# AUC as described in paper - same as AUC_2 from timeROC::timeROC()
 score_vdata$AUC$score
 
 # C-index
 cindex_csh <- pec::cindex(
   object = fit_csh, 
-  formula = Hist(time, status_num) ~ 1, # add covariates censoring may depend on
+  formula = Hist(time, status_num) ~ 1, 
   cause = primary_event, 
   eval.times = horizon, 
   data = vdata
 )$AppCindex$CauseSpecificCox
 
 cindex_csh
+# Optional bootstrap for C-index confidence interval at the end of this code
 
 
 # Prediction error --------------------------------------------------------
 
 
-# Brier and IPA
+# Brier score + scaled Brier score (here named index of prediction accuracy-IPA)
 score_vdata$Brier$score 
+# Optional bootstrap for IPA at the end of this code
 
 
-# Clinical utility --------------------------------------------------------
+# Decision curve analysis -------------------------------------------------
 
 
 # 1. Set grid of thresholds
 thresholds <- seq(0, 0.6, by = 0.01)
 
-# 2. Calculate Aalen-Johansen for all patients exceeding threshold (i.e. treat-all)
+# 2. Calculate Aalen-Johansen estimator for all patients exceeding the threshold (i.e. treat-all)
 survfit_all <- summary(
   survfit(Surv(time, status) ~ 1, data = vdata), 
   times = horizon
@@ -363,17 +368,16 @@ axis(
 )
 mtext("Threshold probability", 1, line = 2)
 mtext("Harm to benefit ratio", 1, line = 5)
-title("Validation data")
+#title("Validation data")
 
 # Restore old graphical parameters
 dev.off() 
 
 
-# Extra: bootstrap confidence intervals -----------------------------------
+# Optional: bootstrap confidence intervals --------------------------------
 
 
-# Validate final model in re-sampled validation datasets
-# (this is what you would do in practice, when only full model is available)
+# Validate final model in resampled test datasets
 
 # Number of bootstrap samples
 B <- 100
