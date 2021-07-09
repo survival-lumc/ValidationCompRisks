@@ -14,7 +14,7 @@ vdata <- readRDS("Data/vdata.rds")
 
 
 # Fit model
-fit_csh <- CSC(
+fit_csh <- riskRegression::CSC(
   formula = Hist(time, status_num) ~ age + size + ncat + hr_status, 
   data = rdata
 )
@@ -22,8 +22,8 @@ fit_csh <- CSC(
 # The bare minimum to share: coefficients, baseline hazards and model formulas
 # (No data sharing is needed)
 model_info <- list(
-  "coefficients" = coef(fit_csh),
-  "baseline_hazards" = lapply(fit_csh$models, function(mod) basehaz(mod, centered = FALSE)),
+  "coefficients" = stats::coef(fit_csh),
+  "baseline_hazards" = lapply(fit_csh$models, function(mod) survival::basehaz(mod, centered = FALSE)),
   "model_formulas" = lapply(fit_csh$models, function(mod) mod[["formula"]])
 )
 
@@ -34,40 +34,75 @@ model_info <- list(
 # Calculating predicted risks  --------------------------------------------
 
 
-# Pick primary event and prediction horizon
-primary_event <- 1
-horizon <- 5
-
-# Get index of causes
-causes <- seq_along(model_info$coefficients)
-
-# Calculate linear predictors for all causes in new dataset (vdata)
-linpreds <- lapply(causes, function(cause) {
-  mod_matrix <- model.matrix(model_info$model_formulas[[cause]], data = vdata)
-  unname(drop(mod_matrix[, -1] %*% model_info$coefficients[[cause]]))
-})
-
-# Compute absolute risks for each individual
-preds <- vapply(seq_len(nrow(vdata)), function(id) {
+# Function to calculate predicted risks
+predictRisk_shared_CSC <- function(model_info,
+                                   newdata,
+                                   horizon,
+                                   primary_event) {
   
-  # Calculate individual-specific cause-specific hazards
-  hazards <- lapply(causes, function(cause) {
-    cumhaz <- model_info$baseline_hazards[[cause]][["hazard"]] * exp(linpreds[[cause]][[id]])
-    diff(c(0, cumhaz))
+  # -- Basic checks
+  
+  # Check model_info components
+  info_names <- c("coefficients", "baseline_hazards", "model_formulas")
+  if (any(!(names(model_info) %in% info_names))) {
+    stop(paste0("Names of model_info components should be: ", paste(info_names, collapse = ", ")))
+  }
+  n_causes <- unique(vapply(model_info, length, FUN.VALUE = integer(1L)))
+  if (length(n_causes) > 1) {
+    stop("The elements of model_info should all be of length equal to number of competing risks!")
+  } 
+  
+  # Check predictor variables in newdata
+  predictor_vars <- Reduce(
+    f = "intersect",
+    x = lapply(model_info$model_formulas, function(form) all.vars(stats::update(form, 1 ~ .)))
+  )
+  if (any(!(predictor_vars %in% colnames(newdata)))) {
+    which_missing <- predictor_vars[!(predictor_vars %in% colnames(newdata))]
+    stop(paste0("newdata does not contain the following predictors: ", paste(which_missing, collapse = ", ")))
+  }
+
+  # -- Absolute risk prediction
+  
+  causes_ind <- seq_len(n_causes)
+  
+  # Calculate linear predictors for all causes in new dataset
+  linpreds <- lapply(causes_ind, function(cause) {
+    mod_matrix <- stats::model.matrix(model_info$model_formulas[[cause]], data = newdata)
+    unname(drop(mod_matrix[, -1] %*% model_info$coefficients[[cause]]))
   })
   
-  # Calculate event-free survival
-  surv <- cumprod(1 - Reduce("+", hazards))
-                  
-  # Calculate cumulative incidence
-  cuminc <- cumsum(hazards[[primary_event]] * c(1, surv[-length(surv)]))
-  time_points <- model_info$baseline_hazards[[primary_event]][["time"]]
-  cuminc_horizon <- cuminc[length(time_points[time_points <= horizon])]
-  return(cuminc_horizon)
-}, FUN.VALUE = numeric(1L))
+  # Compute absolute risks for each individual
+  preds <- vapply(seq_len(nrow(vdata)), function(id) {
+    
+    # Calculate individual-specific cause-specific hazards
+    time_points <- model_info$baseline_hazards[[primary_event]][["time"]]
+    hazards <- vapply(causes_ind, function(cause) {
+      cumhaz <- model_info$baseline_hazards[[cause]][["hazard"]] * exp(linpreds[[cause]][[id]])
+      diff(c(0, cumhaz))
+    }, FUN.VALUE = numeric(length(time_points)))
+    
+    # Calculate event-free survival
+    surv <- cumprod(1 - rowSums(hazards))
+    
+    # Calculate cumulative incidence
+    cuminc <- cumsum(hazards[, primary_event] * c(1, surv[-length(surv)]))
+    cuminc_horizon <- cuminc[length(time_points[time_points <= horizon])]
+    return(cuminc_horizon)
+  }, FUN.VALUE = numeric(1L))
+  
+  return(preds)
+}
+
+# Set prediction horizon and event of interest
+horiz <- 5
+cause_interest <- 1
+
+# Get absolute risk
+preds <- predictRisk_shared_CSC(model_info, newdata = vdata, horizon = horiz, primary_event = cause_interest)
 
 # Check results against riskRegression::predictRisk()
-preds_riskReg <- drop(predictRisk(fit_csh, vdata, times = horizon, cause = primary_event))
+preds_riskReg <- drop(predictRisk(fit_csh, vdata, times = horiz, cause = cause_interest))
 all.equal(preds, preds_riskReg)
 
 
@@ -81,10 +116,10 @@ score_vdata <- Score(
   cens.model = "km", 
   data = vdata, 
   conf.int = TRUE, 
-  times = horizon,
+  times = horiz,
   metrics = c("auc", "brier"),
   summary = c("ipa"), 
-  cause = primary_event,
+  cause = cause_interest,
   plots = "calibration"
 )
 
