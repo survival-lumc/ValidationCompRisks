@@ -35,10 +35,10 @@ model_info <- list(
 
 
 # Function to calculate predicted risks
-predictRisk_shared_CSC <- function(model_info,
-                                   newdata,
-                                   horizon,
-                                   primary_event) {
+predictRisk_shared_CSC <- function(model_info, # List object (see above)
+                                   newdata, # Data.frame for which to make predictions
+                                   horizon, # Prediction time horizon (numeric)
+                                   primary_event) { # Primary event (numeric)
   
   # -- Basic checks
   
@@ -73,7 +73,7 @@ predictRisk_shared_CSC <- function(model_info,
   })
   
   # Compute absolute risks for each individual
-  preds <- vapply(seq_len(nrow(vdata)), function(id) {
+  preds <- vapply(seq_len(nrow(newdata)), function(id) {
     
     # Calculate individual-specific cause-specific hazards
     time_points <- model_info$baseline_hazards[[primary_event]][["time"]]
