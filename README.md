@@ -6,7 +6,6 @@ The repository contains the following code:
 
 + [Prediction_CSC_minimal.R](Prediction_CSC_minimal.R) : the companion (minimal) script for the manuscript, illustrating external validation of a prediction model based on cause-specific Cox models. To reproduce results of the manuscript, this script is sufficient.
 + [Prediction_CSC.md](Prediction_CSC.md) : a markdown document containing a more in-depth version of the minimal script,  with complete details on model development, descriptive tables and plots. The RMarkdown source code (.Rmd) is [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Prediction_CSC.Rmd).
-+ [Prediction_FG.md](Prediction_FG.md) : a markdown document illustrating how to develop and validate a competing risks prediction model using the Fine-Gray subdistribution hazard regression model. The RMarkdown source code (.Rmd) is [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Prediction_FG.Rmd).  
 
 Data are available [here](https://github.com/survival-lumc/ValidationCompRisks/tree/main/Data).  Additional functions useful to develop and validate competing risks prediction models are available [here](https://github.com/survival-lumc/ValidationCompRisks/tree/main/R).
 
