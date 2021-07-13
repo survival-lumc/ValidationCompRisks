@@ -58,6 +58,12 @@ pacman::p_load(
   webshot
 )
 
+# Install latest development version of riskRegression
+if (!require("devtools", character.only = TRUE)) install.packages("devtools")
+if (!require("riskRegression", character.only = TRUE)) devtools::install_github("tagteam/riskRegression")
+require("riskRegression", character.only = TRUE)
+
+# Import data ------------------
 rdata <- readRDS(here::here("Data/rdata.rds"))
 vdata <- readRDS(here::here("Data/vdata.rds"))
 
@@ -118,15 +124,14 @@ gtsummary::tbl_summary(
 First, we draw the cumulative incidence curves of breast cancer recurrence.
 
 ```{r, cuminc, fig.align='center'}
-# Expand datasets
-# Create indicator variables for the outcome
-rdata$status_num <- as.numeric(rdata$status) - 1
+# Expand datasets -------------------------
+# Create indicator variables for the outcomes in the development set
 rdata$status1[rdata$status_num == 1] <- 1
 rdata$status1[rdata$status_num != 1] <- 0
 rdata$status2[rdata$status_num == 2] <- 2
 rdata$status2[rdata$status_num != 2] <- 0
-# Create indicator variables for the outcome
-vdata$status_num <- as.numeric(vdata$status) - 1
+
+# Create indicator variables for the outcomes in the validation set
 vdata$status1[vdata$status_num == 1] <- 1
 vdata$status1[vdata$status_num != 1] <- 0
 vdata$status2[vdata$status_num == 2] <- 2
@@ -155,7 +160,8 @@ vdata.w <- crprep(
 )
 vdata.w1 <- vdata.w %>% filter(failcode == 1)
 vdata.w2 <- vdata.w %>% filter(failcode == 2)
-# Development set
+
+# Development set --------
 mfit3 <- survfit(
   Surv(Tstart, Tstop, status == 1) ~ 1,
   data = rdata.w1, weights = weight.cens
@@ -220,16 +226,23 @@ Here we investigate the potential non-linear relation between continuous predict
 
 ```{r,ff, warning=FALSE, fig.align='center'}
 # Models without splines
-fit_csh <- CSC(Hist(time, status_num) ~ age + size +
-  ncat + hr_status, data = rdata, fitter = "cph")
+fit_csh <- CSC(Hist(time, status_num) ~ 
+                 age + size +
+                 ncat + hr_status, data = rdata, 
+               fitter = "cph")
 fit_csc1 <- fit_csh$models$`Cause 1`
 fit_csc2 <- fit_csh$models$`Cause 2`
 # Models with splines
 dd <- datadist(rdata)
 options(datadist = "dd")
 # Recurrence
-fit_csc1_rcs <- cph(Surv(time, status_num == 1) ~ rcs(age, 3) + rcs(size, 3) +
-  ncat + hr_status, x = T, y = T, surv = T, data = rdata)
+fit_csc1_rcs <- cph(Surv(time, status_num == 1) ~
+                      rcs(age, 3) + rcs(size, 3) +
+                      ncat + hr_status, 
+  x = T, 
+  y = T, 
+  surv = T, 
+  data = rdata)
 # print(fit_csc1_rcs)
 # print(summary(fit_csc1_rcs))
 # print(anova(fit_csc1_rcs))
@@ -239,8 +252,13 @@ options(datadist = NULL)
 # Non-recurrence mortality
 dd <- datadist(rdata)
 options(datadist = "dd")
-fit_csc2_rcs <- cph(Surv(time, status_num == 2) ~ rcs(age, 3) + rcs(size, 3) +
-  ncat + hr_status, x = T, y = T, surv = T, data = rdata)
+fit_csc2_rcs <- cph(Surv(time, status_num == 2) ~ 
+                      rcs(age, 3) + rcs(size, 3) +
+                      ncat + hr_status, 
+                    x = T, 
+                    y = T, 
+                    surv = T, 
+                    data = rdata)
 # print(fit_csc2_rcs)
 # print(summary(fit_csc2_rcs))
 # print(anova(fit_csc2_rcs))
@@ -249,79 +267,135 @@ P_csc2_size_rcs <- Predict(fit_csc2_rcs, "size")
 options(datadist = NULL)
 oldpar <- par(mfrow = c(2, 2), mar = c(5, 5, 1, 1))
 par(xaxs = "i", yaxs = "i", las = 1)
-plot(P_csc1_age_rcs$age, P_csc1_age_rcs$yhat,
-  type = "l", lwd = 2, col = "blue", bty = "n",
-  xlab = "Age at breast cancer diagnosis", ylab = "log Relative Hazard", ylim = c(-2, 2),
-  xlim = c(65, 95)
+plot(P_csc1_age_rcs$age, 
+     P_csc1_age_rcs$yhat,
+     type = "l", 
+     lwd = 2, 
+     col = "blue", 
+     bty = "n",
+     xlab = "Age at breast cancer diagnosis", 
+     ylab = "log Relative Hazard", 
+     ylim = c(-2, 2),
+     xlim = c(65, 95)
 )
-polygon(c(P_csc1_age_rcs$age, rev(P_csc1_age_rcs$age)),
-  c(P_csc1_age_rcs$lower, rev(P_csc1_age_rcs$upper)),
+polygon(c(P_csc1_age_rcs$age, 
+          rev(P_csc1_age_rcs$age)),
+        c(P_csc1_age_rcs$lower, 
+          rev(P_csc1_age_rcs$upper)),
   col = "grey75",
   border = FALSE
 )
 par(new = TRUE)
-plot(P_csc1_age_rcs$age, P_csc1_age_rcs$yhat,
-  type = "l", lwd = 2, col = "blue", bty = "n",
-  xlab = "Age at breast cancer diagnosis", ylab = "log Relative Hazard",
-  ylim = c(-2, 2), xlim = c(65, 95)
+plot(P_csc1_age_rcs$age, 
+     P_csc1_age_rcs$yhat,
+     type = "l",
+     lwd = 2, 
+     col = "blue", 
+     bty = "n",
+     xlab = "Age at breast cancer diagnosis", 
+     ylab = "log Relative Hazard",
+     ylim = c(-2, 2), 
+     xlim = c(65, 95)
 )
 title("Recurrence")
 # CSC 1- size
 par(xaxs = "i", yaxs = "i", las = 1)
-plot(P_csc1_size_rcs$size, P_csc1_size_rcs$yhat,
-  type = "l", lwd = 2, col = "blue", bty = "n",
-  xlab = "Size of breast cancer", ylab = "log Relative Hazard", ylim = c(-2, 2),
-  xlim = c(0, 7)
+plot(P_csc1_size_rcs$size, 
+     P_csc1_size_rcs$yhat,
+     type = "l", 
+     lwd = 2, 
+     col = "blue", 
+     bty = "n",
+     xlab = "Size of breast cancer", 
+     ylab = "log Relative Hazard", 
+     ylim = c(-2, 2),
+     xlim = c(0, 7)
 )
-polygon(c(P_csc1_size_rcs$size, rev(P_csc1_size_rcs$size)),
-  c(P_csc1_size_rcs$lower, rev(P_csc1_size_rcs$upper)),
+polygon(c(P_csc1_size_rcs$size, 
+          rev(P_csc1_size_rcs$size)),
+        c(P_csc1_size_rcs$lower, 
+          rev(P_csc1_size_rcs$upper)),
   col = "grey75",
   border = FALSE
 )
 par(new = TRUE)
-plot(P_csc1_size_rcs$size, P_csc1_size_rcs$yhat,
-  type = "l", lwd = 2, col = "blue", bty = "n",
-  xlab = "Size of breast cancer", ylab = "log Relative Hazard",
-  ylim = c(-2, 2), xlim = c(0, 7)
+plot(P_csc1_size_rcs$size, 
+     P_csc1_size_rcs$yhat,
+     type = "l", 
+     lwd = 2, 
+     col = "blue", 
+     bty = "n",
+     xlab = "Size of breast cancer", 
+     ylab = "log Relative Hazard",
+     ylim = c(-2, 2), 
+     xlim = c(0, 7)
 )
 title("Recurrence")
 par(xaxs = "i", yaxs = "i", las = 1)
 options(datadist = NULL)
 # CSC 2- age
-plot(P_csc2_age_rcs$age, P_csc2_age_rcs$yhat,
-  type = "l", lwd = 2, col = "blue", bty = "n",
-  xlab = "Age at breast cancer diagnosis", ylab = "log Relative Hazard", ylim = c(-2, 2),
-  xlim = c(65, 95)
+plot(P_csc2_age_rcs$age, 
+     P_csc2_age_rcs$yhat,
+     type = "l", 
+     lwd = 2, 
+     col = "blue", 
+     bty = "n",
+     xlab = "Age at breast cancer diagnosis", 
+     ylab = "log Relative Hazard", 
+     ylim = c(-2, 2),
+     xlim = c(65, 95)
 )
-polygon(c(P_csc2_age_rcs$age, rev(P_csc2_age_rcs$age)),
-  c(P_csc2_age_rcs$lower, rev(P_csc2_age_rcs$upper)),
+polygon(c(P_csc2_age_rcs$age, 
+          rev(P_csc2_age_rcs$age)),
+        c(P_csc2_age_rcs$lower, 
+          rev(P_csc2_age_rcs$upper)),
   col = "grey75",
   border = FALSE
 )
 par(new = TRUE)
-plot(P_csc2_age_rcs$age, P_csc2_age_rcs$yhat,
-  type = "l", lwd = 2, col = "blue", bty = "n",
-  xlab = "Age at breast cancer diagnosis", ylab = "log Relative Hazard",
-  ylim = c(-2, 2), xlim = c(65, 95)
+plot(P_csc2_age_rcs$age, 
+     P_csc2_age_rcs$yhat,
+     type = "l", 
+     lwd = 2, 
+     col = "blue", 
+     bty = "n",
+     xlab = "Age at breast cancer diagnosis", 
+     ylab = "log Relative Hazard",
+     ylim = c(-2, 2), 
+     xlim = c(65, 95)
 )
 title("Non recurrence mortality")
 # CSC 2 - size
 par(xaxs = "i", yaxs = "i", las = 1)
-plot(P_csc2_size_rcs$size, P_csc2_size_rcs$yhat,
-  type = "l", lwd = 2, col = "blue", bty = "n",
-  xlab = "Size of breast cancer", ylab = "log Relative Hazard", ylim = c(-2, 2),
-  xlim = c(0, 7)
+plot(P_csc2_size_rcs$size, 
+     P_csc2_size_rcs$yhat,
+     type = "l", 
+     lwd = 2, 
+     col = "blue", 
+     bty = "n",
+     xlab = "Size of breast cancer", 
+     ylab = "log Relative Hazard", 
+     ylim = c(-2, 2),
+     xlim = c(0, 7)
 )
-polygon(c(P_csc2_size_rcs$size, rev(P_csc2_size_rcs$size)),
-  c(P_csc2_size_rcs$lower, rev(P_csc2_size_rcs$upper)),
+polygon(c(P_csc2_size_rcs$size, 
+          rev(P_csc2_size_rcs$size)),
+        c(P_csc2_size_rcs$lower, 
+          rev(P_csc2_size_rcs$upper)),
   col = "grey75",
   border = FALSE
 )
 par(new = TRUE)
-plot(P_csc2_size_rcs$size, P_csc2_size_rcs$yhat,
-  type = "l", lwd = 2, col = "blue", bty = "n",
-  xlab = "Size of breast cancer", ylab = "log Relative Hazard",
-  ylim = c(-2, 2), xlim = c(0, 7)
+plot(P_csc2_size_rcs$size, 
+     P_csc2_size_rcs$yhat,
+     type = "l", 
+     lwd = 2, 
+     col = "blue", 
+     bty = "n",
+     xlab = "Size of breast cancer", 
+     ylab = "log Relative Hazard",
+     ylim = c(-2, 2), 
+     xlim = c(0, 7)
 )
 title("Non recurrence mortality")
 options(datadist = NULL)
@@ -333,9 +407,12 @@ res_AIC <- matrix(c(
   AIC(fit_csc1), AIC(fit_csc1_rcs),
   AIC(fit_csc2), AIC(fit_csc2_rcs)
 ),
-byrow = T, ncol = 2, nrow = 2,
-dimnames = list(
-  c(
+  byrow = T, 
+  ncol = 2, 
+nrow = 2,
+  dimnames = 
+  list( 
+    c(
     "Recurrence specific hazard",
     "Non recurrence mortality"
   ),
@@ -345,9 +422,7 @@ dimnames = list(
   )
 )
 )
-kable(res_AIC,
-  row.names = TRUE
-) %>%
+kable(res_AIC,row.names = TRUE) %>%
   kable_styling("striped", position = "center")
 ```
 
@@ -364,11 +439,18 @@ par(las = 1, xaxs = "i", yaxs = "i")
 oldpar <- par(mfrow = c(2, 2), mar = c(5, 6.1, 3.1, 1))
 sub_title <- c("Age", "Size", "Lymph node status", "HR status")
 for (i in 1:4) {
-  plot(zp_csc1[i], resid = F, bty = "n", xlim = c(0, 5))
+  plot(zp_csc1[i], 
+       resid = F, 
+       bty = "n", 
+       xlim = c(0, 5))
   abline(0, 0, lty = 3)
   title(sub_title[i])
 }
-mtext("Recurrence", side = 3, line = -1, outer = TRUE, font = 2)
+mtext("Recurrence", 
+      side = 3, 
+      line = -1, 
+      outer = TRUE, 
+      font = 2)
 par(oldpar)
 kable(round(zp_csc1$table, 3)) %>%
   kable_styling("striped", position = "center")
@@ -382,11 +464,18 @@ par(las = 1, xaxs = "i", yaxs = "i")
 oldpar <- par(mfrow = c(2, 2), mar = c(5, 6.1, 3.1, 1))
 sub_title <- c("Age", "Size", "Lymph node status", "HR status")
 for (i in 1:4) {
-  plot(zp_csc2[i], resid = F, bty = "n", xlim = c(0, 5))
+  plot(zp_csc2[i], 
+       resid = F, 
+       bty = "n", 
+       xlim = c(0, 5))
   abline(0, 0, lty = 3)
   title(sub_title[i])
 }
-mtext("Non-recurrence mortality", side = 3, line = -1, outer = TRUE, font = 2)
+mtext("Non-recurrence mortality", 
+      side = 3, 
+      line = -1, 
+      outer = TRUE, 
+      font = 2)
 par(oldpar)
 kable(round(zp_csc2$table, 3)) %>%
   kable_styling("striped", position = "center")
@@ -406,7 +495,10 @@ options(datadist = "dd")
 options(prType = "html")
 fit_csc1_cph <- cph(Surv(time, status_num == 1) ~ age + size +
   ncat + hr_status,
-x = T, y = T, surv = T, data = rdata
+x = T, 
+y = T, 
+surv = T, 
+data = rdata
 )
 print(fit_csc1_cph)
 # print(summary(fit_csc1_cph))
@@ -419,9 +511,13 @@ options(datadist = NULL)
 dd <- datadist(rdata)
 options(datadist = "dd")
 options(prType = "html")
-fit_csc2_cph <- cph(Surv(time, status_num == 2) ~ age + size +
-  ncat + hr_status,
-x = T, y = T, surv = T, data = rdata
+fit_csc2_cph <- cph(Surv(time, status_num == 2) ~ 
+                      age + size +
+                      ncat + hr_status,
+                    x = T,
+                    y = T,
+                    surv = T, 
+                    data = rdata
 )
 print(fit_csc2_cph)
 # print(summary(fit_csc2_cph))
@@ -430,70 +526,116 @@ options(datadist = NULL)
 
 The coefficients of the models indicated that larger tumor size, positive nodal status and negative hormone receptor status status were associated with higher risk to develop a breast cancer recurrence, while older patients and larger tumors are associated with higher risk of non recurrence mortality.
 
+### 1.5 Plot predictors vs predicted risk at 5 years
+R code to be added
+
 ## Goal 2 - Assessing performance of a competing risks prediction model
 
 Here we evaluate the performance of the risk prediction models in terms of calibration, discrimination and overall prediction error. 
 
 ### 2.1 Overall prediction error
 
-We calculate the Brier Score, and the scaled Brier scale and the corresponding confidence intervals..
+We calculate the Brier Score, and the scaled Brier scale and the corresponding confidence intervals.
 
 Some confidence intervals are calculated using the bootstrap percentile method.
 ```{r, bootstrap,warning=FALSE}
 # Bootstrapping data
 set.seed(20201214)
-rboot <- bootstraps(rdata, times = 10)
-vboot <- bootstraps(vdata, times = 10)
-# NOTE: B=10 to speed up the procedure, is typically set to 100 or 1000
+B <- 10 # number of bootstrap samples
+rboot <- bootstraps(rdata, times = B)
+vboot <- bootstraps(vdata, times = B)
 ```
 
 ```{r, overall, warning=FALSE}
-# riskRegression::Score() to calculate Brier and scaled Brier (in this function called "ipa")
-# Development set - apparent validation
-score_rdata1 <- Score(list("CSH development" = fit_csh),
-  formula = Hist(time, status_num) ~ 1,
-  data = rdata, conf.int = TRUE, times = 4.99,
-  cens.model = "km", metrics = "brier",
-  summary = "ipa", cause = 1
+
+# Overall performance measures ----------------
+primary_event <- 1 # Set to 2 if cause 2 was of interest 
+horizon <- 5 # Set time horizon for prediction (here 5 years)
+
+# Development data 
+score_rdata <- Score(
+  list("csh_development" = fit_csh),
+  formula = Hist(time, status_num) ~ 1, 
+  cens.model = "km", 
+  data = rdata, 
+  conf.int = TRUE, 
+  times = horizon,
+  metrics = c("auc", "brier"),
+  summary = c("ipa"), 
+  cause = primary_event,
+  plots = "calibration"
 )
-# Validation set - external validation
-score_vdata1 <-
-  Score(list("CSH validation" = fit_csh),
-    formula = Hist(time, status_num) ~ 1,
-    data = vdata, conf.int = TRUE, times = 4.99,
-    cens.model = "km", metrics = "brier",
-    summary = "ipa", cause = 1
-  )
-# Development set - internal validation (bootstrap)
-# mstate::crprep() for every bootstrap sample
+
+# Validation data
+score_vdata <- Score(
+  list("csh_validation" = fit_csh),
+  formula = Hist(time, status_num) ~ 1, 
+  cens.model = "km", 
+  data = vdata, 
+  conf.int = TRUE, 
+  times = horizon,
+  metrics = c("auc", "brier"),
+  summary = c("ipa"), 
+  cause = primary_event,
+  plots = "calibration"
+)
+
+# Bootstrap ------
+# Functions to expand data and calculate Brier, IPA and AUC in bootstrap 
+# samples. 
+# For Brier and AUC, bootstrap should be computationally faster when 
+# data has more than 2000 rows (see ?riskRegression::Score).
+# Our data has 1000 row so we will need only bootstrap to calculate
+# confidence intervals of the scaled Brier (IPA) since
+# it is not provided by riskRegression::Score() function.
+
+# Expand data in every bootstrap sample
 crprep_boot <- function(split) {
   crprep(
-    Tstop = "time", status = "status_num",
-    trans = 1, data = analysis(split),
-    keep = c(
-      "status_num", "age", "size",
-      "ncat", "hr_status"
+    Tstop = "time", 
+    status = "status_num",
+    trans = 1, 
+    data = analysis(split),
+    keep = c("status_num", 
+             "age", 
+             "size",
+             "ncat", 
+             "hr_status"
     )
   )
 }
-# riskRegression::Score() to calculate Brier and scaled Brier (here called IPA) for every bootstrap sample
-score_boot_1 <- function(split) {
-  Score(list("CSH" = fit_csh),
-    formula = Hist(time, status_num) ~ 1,
-    data = analysis(split), conf.int = FALSE, times = 4.99,
-    cens.model = "km", metrics = "brier", cause = 1,
-    summary = "ipa"
-  )$Brier[[1]]$IPA[2]
+
+# Score functions in any bootstrap data
+score_boot <- function(split) {
+  Score(
+  list("csh_validation" = fit_csh),
+  formula = Hist(time, status_num) ~ 1, 
+  cens.model = "km", 
+  data = analysis(split), 
+  conf.int = TRUE, 
+  times = horizon,
+  metrics = c("auc", "brier"),
+  summary = c("ipa"), 
+  cause = primary_event,
+  plots = "calibration"
+)
 }
+
 # Development data
 rboot <- rboot %>% mutate(
   cr.prep = map(splits, crprep_boot),
-  IPA1 = map_dbl(splits, score_boot_1)
+  score = map(splits, score_boot),
+  scaled_brier = map_dbl(score, function(x) {
+    x$Brier$score[model == "csh_validation"]$IPA
+  })
 )
 # Validation data
 vboot <- vboot %>% mutate(
   cr.prep = map(splits, crprep_boot),
-  IPA1 = map_dbl(splits, score_boot_1),
+  score = map(splits, score_boot),
+  scaled_brier = map_dbl(score, function(x) {
+    x$Brier$score[model == "csh_validation"]$IPA
+  })
 )
 ```
 
@@ -502,22 +644,25 @@ vboot <- vboot %>% mutate(
 alpha <- .05
 k <- 2 # number of digits
 res_ov_csh <- matrix(unlist(c(
-  score_rdata1$Brier$score$Brier[2],
-  # Brier apparent validation
-  score_rdata1$Brier$score[2, 6],
-  score_rdata1$Brier$score[2, 7],
-  score_vdata1$Brier$score$Brier[2],
-  # Brier external validation
-  score_vdata1$Brier$score[2, 6],
-  score_vdata1$Brier$score[2, 7],
-  score_rdata1$Brier$score$IPA[2],
-  # IPA apparent validation
-  quantile(rboot$IPA1, probs = alpha / 2),
-  quantile(rboot$IPA1, probs = 1 - alpha / 2),
-  score_vdata1$Brier$score$IPA[2],
-  # IPA external validation
-  quantile(vboot$IPA1, probs = alpha / 2),
-  quantile(vboot$IPA1, probs = 1 - alpha / 2)
+  # Brier score - apparent validation
+  score_rdata$Brier$score[model == "csh_development"]$Brier,
+  score_rdata$Brier$score[model == "csh_development"]$lower,
+  score_rdata$Brier$score[model == "csh_development"]$upper,
+  
+  # Brier score - external validation
+  score_vdata$Brier$score[model == "csh_validation"]$Brier,
+  score_vdata$Brier$score[model == "csh_validation"]$lower,
+  score_vdata$Brier$score[model == "csh_validation"]$upper,
+  
+  # IPA - apparent validation
+  score_rdata$Brier$score[model == "csh_development"]$IPA,
+  quantile(rboot$scaled_brier, probs = alpha / 2),
+  quantile(rboot$scaled_brier, probs = 1 - alpha / 2),
+  
+  # IPA - external validation
+  score_vdata$Brier$score[model == "csh_validation"]$IPA,
+  quantile(vboot$scaled_brier, probs = alpha / 2),
+  quantile(vboot$scaled_brier, probs = 1 - alpha / 2)
 )),
 nrow = 2, ncol = 6,
 byrow = T,
@@ -546,38 +691,21 @@ We here calculate
 + The 5-year C-index. More details are in the main manuscript and its references;
 + The 5-year time-dependent AUC. More details are in the manuscript and in its references;  
 
-We used the time horizon up to 4.99 and not 5 years since controls are considered patients at risk after the time horizon.
 
 ```{r, discrimination,warning=FALSE,message=FALSE}
 # C-index
 # Development set (Apparent validation)
 C_rdata1_cph1 <- unlist(pec::cindex(fit_csh,
                                     cause = 1,
-                                    eval.times = 4.99
+                                    eval.times = 5
 )$AppCindex)
 # Validdation set
 C_vdata1_cph1 <- unlist(pec::cindex(fit_csh,
                                     data = vdata,
-                                    cause = 1, eval.times = 4.99
+                                    cause = 1, eval.times = 5
 )$AppCindex)
 
-# 5-year time dependent AUC
-# Development set (Apparent validation)
-Uno_rdata1_CSC <-
-  timeROC(
-    T = rdata$time, delta = rdata$status1,
-    marker = predictRisk(fit_csh, newdata = rdata, cause = 1, times = 5),
-    cause = 1, weighting = "marginal", times = 4.99,
-    iid = TRUE
-  )
-# Validdation set
-Uno_vdata1_CSC <-
-  timeROC(
-    T = vdata$time, delta = vdata$status1,
-    marker = predictRisk(fit_csh, newdata = vdata, cause = 1, times = 5),
-    cause = 1, weighting = "marginal", times = 4.99,
-    iid = TRUE
-  )
+
 
 # NOTE: if you have many observations (n > 2000), standard error computation may be really long.
 # In that case, you may consider using bootstrapping to calculate confidence intervals.
