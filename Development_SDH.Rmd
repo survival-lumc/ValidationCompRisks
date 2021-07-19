@@ -1,0 +1,416 @@
+---
+title: "External validation of the performance of competing risks prediction models: a guide through modern methods -  Develop a risk prediction model using subdistribution hazard approach"
+always_allow_html: true
+output:
+  github_document:
+    toc: true
+    toc_depth: 4
+  keep_text: true
+  pandoc_args: --webtex
+---
+  
+
+### Installing and loading packages and import data
+
+The following libraries are needed to achieve the outlined goals, the code chunk below will a) check whether you already have them installed, b) install them for you if not already present, and c) load the packages into the session.
+
+
+```{r setup, include=FALSE}
+# Knitr options
+knitr::opts_chunk$set(
+  fig.retina = 3,
+  fig.path = "imgs/Prediction_CSC/"
+)
+```
+
+```{r, wdlib, message=FALSE,warning=FALSE}
+# Use pacman to check whether packages are installed, if not load
+if (!require("pacman")) install.packages("pacman")
+library(pacman)
+
+pacman::p_load(
+  survival,
+  rms,
+  mstate,
+  pseudo,
+  pec,
+  riskRegression,
+  plotrix,
+  knitr,
+  splines,
+  kableExtra,
+  gtsummary,
+  boot,
+  tidyverse,
+  rsample,
+  gridExtra,
+  webshot
+)
+
+# Install latest development version of riskRegression
+if (!require("devtools", character.only = TRUE)) install.packages("devtools")
+if (!require("riskRegression", character.only = TRUE)) devtools::install_github("tagteam/riskRegression")
+require("riskRegression", character.only = TRUE)
+
+# Import data ------------------
+rdata <- readRDS(here::here("Data/rdata.rds"))
+vdata <- readRDS(here::here("Data/vdata.rds"))
+
+rdata$hr_status <- relevel(rdata$hr_status, ref = "ER and/or PR +")
+vdata$hr_status <- relevel(vdata$hr_status, ref = "ER and/or PR +")
+```
+
+We loaded the development data (rdata) and the validation data (vdata).
+More details about development and validation data are provided in the manuscript.
+
+
+### Descriptive statistics
+
+```{r, import,echo=FALSE}
+rsel <- rdata[, c("id", "age", "size", "ncat", "hr_status")]
+vsel <- vdata[, c("id", "age", "size", "ncat", "hr_status")]
+rsel$dt <- 1
+vsel$dt <- 2
+cdata <- rbind(rsel, vsel)
+cdata$dt <- factor(cdata$dt,
+                   levels = c(1, 2),
+                   labels = c("Development data", "Validation data")
+)
+label(cdata$age) <- "Age"
+label(cdata$size) <- "Size"
+label(cdata$ncat) <- "Nodal status"
+label(cdata$hr_status) <- "Hormon receptor status"
+# Units
+units(cdata$age) <- "years"
+units(cdata$size) <- "cm"
+```
+
+```{r tab1_bis, echo=FALSE}
+gtsummary::tbl_summary(
+  data = cdata %>% select(-id),
+  label = list(age ~ "Age (years)", size ~ "Size (cm)"),
+  by = "dt", 
+  type = all_continuous() ~ "continuous2",
+  statistic = all_continuous() ~ c(
+    "{mean} ({sd})",
+    "{median} ({min}, {max})"
+  ),
+) %>% 
+  gtsummary::as_kable_extra() %>% 
+  kableExtra::kable_styling("striped") 
+```
+
+## Develop a competing risks prediction model using subdistribution hazard approach
+
+
+### Cumulative incidence curves
+First, we draw the cumulative incidence curves of breast cancer recurrence.
+
+```{r, cuminc, fig.align='center'}
+# Expand datasets -------------------------
+# Create indicator variables for the outcomes in the development set
+rdata$status1[rdata$status_num == 1] <- 1
+rdata$status1[rdata$status_num != 1] <- 0
+rdata$status2[rdata$status_num == 2] <- 2
+rdata$status2[rdata$status_num != 2] <- 0
+
+# Create indicator variables for the outcomes in the validation set
+vdata$status1[vdata$status_num == 1] <- 1
+vdata$status1[vdata$status_num != 1] <- 0
+vdata$status2[vdata$status_num == 2] <- 2
+vdata$status2[vdata$status_num != 2] <- 0
+
+# Expand data to prepare for fitting the model 
+rdata.w <- crprep(
+  Tstop = "time",
+  status = "status_num",
+  trans = c(1, 2),
+  id = "id",
+  keep = c("age", "size", "ncat", "hr_status"),
+  data = rdata
+)
+# Save extended data with weights for recurrence (failcode=1)
+# and non recurrence mortality (failcode=2)
+rdata.w1 <- rdata.w %>% filter(failcode == 1)
+rdata.w2 <- rdata.w %>% filter(failcode == 2)
+
+vdata.w <- crprep(
+  Tstop = "time",
+  status = "status_num",
+  trans = c(1, 2),
+  id = "id",
+  keep = c("age", "size", "ncat", "hr_status"),
+  data = vdata
+)
+vdata.w1 <- vdata.w %>% filter(failcode == 1)
+vdata.w2 <- vdata.w %>% filter(failcode == 2)
+
+# Development set --------
+mfit_rdata <- survfit(
+  Surv(Tstart, Tstop, status == 1) ~ 1,
+  data = rdata.w1, weights = weight.cens
+)
+mfit_vdata <- survfit(
+  Surv(Tstart, Tstop, status == 1) ~ 1,
+  data = vdata.w1, weights = weight.cens
+)
+par(xaxs = "i", yaxs = "i", las = 1)
+oldpar <- par(mfrow = c(1, 2), mar = c(5, 5, 1, 1))
+plot(mfit_rdata,
+     col = 1, lwd = 2,
+     xlab = "Years since BC diagnosis",
+     ylab = "Cumulative incidence", bty = "n",
+     ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
+)
+title("Development data")
+plot(mfit_vdata,
+     col = 1, lwd = 2,
+     xlab = "Years since BC diagnosis",
+     ylab = "Cumulative incidence", bty = "n",
+     ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
+)
+title("Validation data")
+par(oldpar)
+# Cumulative incidences
+smfit_rdata <- summary(mfit_rdata, times = c(1, 2, 3, 4, 5))
+smfit_vdata <- summary(mfit_vdata, times = c(1, 2, 3, 4, 5))
+```
+
+```{r, res_ci, fig.align='center',echo=FALSE}
+res_ci <- cbind(
+  1 - smfit_rdata$surv,
+  1 - smfit_rdata$upper,
+  1 - smfit_rdata$lower,
+  1 - smfit_vdata$surv,
+  1 - smfit_vdata$upper,
+  1 - smfit_vdata$lower
+)
+res_ci <- round(res_ci, 2)
+rownames(res_ci) <- c(
+  "1-year", "2-year",
+  "3-year", "4-year",
+  "5-year"
+)
+colnames(res_ci) <- rep(c(
+  "Estimate", "Lower .95",
+  "Upper .95"
+), 2)
+kable(res_ci,
+      row.names = TRUE
+) %>%
+  kable_styling("striped", position = "center") %>%
+  add_header_above(c(" " = 1, "Development data" = 3, "Validation data" = 3))
+```
+
+The 5-year cumulative incidence of breast cancer recurrence was 14% (95% CI: 11-16%), and 10% (95%CI: 8-12%)
+
+### Check non-linearity of continuous predictors
+
+Here we investigate the potential non-linear relation between continuous predictors (i.e. age and size) and the outcomes. We apply three-knot restricted cubic splines using `rms::rcs()` function (details are given in e.g. Frank Harrell's book 'Regression Model Strategies (second edition)', page 27.
+
+```{r,ff, warning=FALSE, fig.align='center'}
+# FG model
+dd <- datadist(rdata)
+options(datadist = "dd")
+fit_fg_rcs <- cph(Surv(Tstart, Tstop, status == 1) ~ 
+                    rcs(age, 3) + rcs(size, 3) +
+                    ncat + hr_status, 
+                  weights = weight.cens,
+                  x = T, 
+                  y = T, 
+                  surv = T, 
+                  data = rdata.w
+)
+P_fg_age_rcs <- Predict(fit_fg_rcs, "age")
+P_fg_size_rcs <- Predict(fit_fg_rcs, "size")
+# print(fit_fg_rcs)
+# print(summary(fit_fg_rcs))
+# print(anova(fit_fg_rcs))
+
+oldpar <- par(mfrow = c(1, 2), mar = c(5, 5, 1, 1))
+par(xaxs = "i", yaxs = "i", las = 1)
+
+# FG - age
+plot(P_fg_age_rcs$age, 
+     P_fg_age_rcs$yhat,
+     type = "l", 
+     lwd = 2, 
+     col = "blue", 
+     bty = "n",
+  xlab = "Age at breast cancer diagnosis",
+  ylab = "log Relative Hazard", 
+  ylim = c(-2, 2), 
+  xlim = c(65, 95)
+)
+polygon(c(P_fg_age_rcs$age, 
+          rev(P_fg_age_rcs$age)),
+  c(P_fg_age_rcs$lower, 
+    rev(P_fg_age_rcs$upper)),
+  col = "grey75",
+  border = FALSE
+)
+par(new = TRUE)
+plot(P_fg_age_rcs$age, 
+     P_fg_age_rcs$yhat,
+     type = "l", 
+     lwd = 2, 
+     col = "blue", 
+     bty = "n",
+     xlab = "Age at breast cancer diagnosis", 
+     ylab = "log Relative Hazard",
+     ylim = c(-2, 2),
+     xlim = c(65, 95)
+)
+
+# FG - size
+par(xaxs = "i", yaxs = "i", las = 1)
+plot(P_fg_size_rcs$size, 
+     P_fg_size_rcs$yhat,
+     type = "l", 
+     lwd = 2, 
+     col = "blue", 
+     bty = "n",
+     xlab = "Size of breast cancer",
+     ylab = "log Relative Hazard", 
+     ylim = c(-2, 2),
+     xlim = c(0, 7)
+)
+polygon(c(P_fg_size_rcs$size, 
+          rev(P_fg_size_rcs$size)),
+  c(P_fg_size_rcs$lower, 
+    rev(P_fg_size_rcs$upper)),
+  col = "grey75",
+  border = FALSE
+)
+par(new = TRUE)
+plot(P_fg_size_rcs$size, 
+     P_fg_size_rcs$yhat,
+     type = "l", 
+     lwd = 2, 
+     col = "blue", 
+     bty = "n",
+     xlab = "Size of breast cancer", 
+     ylab = "log Relative Hazard",
+     ylim = c(-2, 2), 
+     xlim = c(0, 7)
+)
+par(oldpar)
+options(datadist = NULL)
+
+# Fit the Fine and Gray model assuming linear relation of
+# the continuous predictors
+dd <- datadist(rdata, adjto.cat = "first")
+options(datadist = "dd")
+fit_fg <- cph(Surv(Tstart, Tstop, status == 1) ~ age + size +
+                ncat + hr_status,
+              weights = weight.cens,
+              x = T, 
+              y = T, 
+              surv = T, 
+              data = rdata.w
+)
+options(datadist = NULL)
+```
+
+```{r, res_aic, fig.align='center',echo=FALSE}
+res_AIC <- matrix(c(AIC(fit_fg), 
+                    AIC(fit_fg_rcs)),
+                  byrow = T,
+                  ncol = 2, 
+                  nrow = 1,
+  dimnames = list(
+    c("Fine and Gray models"),
+    c(
+      "AIC without splines",
+      "AIC with splines"
+    )
+  )
+)
+kable(res_AIC,
+  row.names = TRUE
+) %>%
+  kable_styling("striped", position = "center")
+```
+
+The AIC and the graphical check suggested a potential linear relation between the continuous predictors (age and size) and the event of interest (breast cancer recurrence).
+
+### Checking proportional subdistribution hazards assumption
+
+We now examine the fits further by checking the proportionality of the subdistribution hazards of the models.
+
+
+```{r,sph, message=FALSE, warning=FALSE,fig.align='center'}
+zp_fg <- cox.zph(fit_fg_rcs, transform = "identity")
+
+par(las = 1, xaxs = "i", yaxs = "i")
+# c(bottom, left, top, right)
+oldpar <- par(mfrow = c(2, 2), mar = c(5, 6.1, 3.1, 1))
+sub_title <- c("Age", "Size", "Lymph node status", "HR status")
+for (i in 1:4) {
+  plot(zp_fg[i], 
+       resid = F, 
+       bty = "n", 
+       xlim = c(0, 5))
+  abline(0, 0, lty = 3)
+  title(sub_title[i])
+}
+mtext("Fine and Gray", 
+      side = 3, 
+      line = -1, 
+      outer = TRUE, 
+      font = 2)
+par(oldpar)
+
+kable(round(zp_fg$table, 3)) %>%
+  kable_styling("striped", position = "center")
+```
+
+The statistical tests and plots suggested a no potential violation of the proportional subdistribution hazard assumption.
+
+
+### Model development - fit the risk prediction models
+We develop and show the results of the Fine and Gray subdistribution hazard regression model.
+
+#### Model development using mstate package and crprep() function
+```{r, summary, fig.align='center',warning=FALSE}
+dd <- datadist(rdata)
+options(datadist = "dd")
+options(prType = "html")
+print(fit_fg)
+# print(summary(fit_fg))
+options(datadist = NULL)
+
+# We also fit the FG model using riskRegression::FGR()
+# because it is useful to evaluate some of the prediction performance
+# measures later
+fit_fgr <- FGR(Hist(time, status_num) ~ age + size +
+  ncat + hr_status, cause = 1, data = rdata)
+```
+
+#### Model development using riskRegression package and FGR() function
+
+```{r, summary, fig.align='center',warning=FALSE}
+dd <- datadist(rdata)
+options(datadist = "dd")
+options(prType = "html")
+print(fit_fg)
+# print(summary(fit_fg))
+options(datadist = NULL)
+
+# We also fit the FG model using riskRegression::FGR()
+# because it is useful to evaluate some of the prediction performance
+# measures later
+fit_fgr <- FGR(Hist(time, status_num) ~ age + size +
+  ncat + hr_status, cause = 1, data = rdata)
+```
+
+The coefficients of the models indicated that higher size, positive nodal status and ER- and/or PR- were associated with higher risk to develop a breast cancer recurrence.
+
+The coefficients of the models indicated that larger tumor size, positive nodal status and negative hormone receptor status status were associated with higher risk to develop a breast cancer recurrence, while older patients and larger tumors are associated with higher risk of non recurrence mortality.
+
+
+## Reproducibility ticket
+
+```{r repro_ticket, echo=TRUE}
+sessionInfo()
+```
