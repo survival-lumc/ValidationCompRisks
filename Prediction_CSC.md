@@ -23,8 +23,10 @@ models: a guide through modern methods - Cause specific hazard models
     model](#goal-2---assessing-performance-of-a-competing-risks-prediction-model)
     -   [2.1 Calibration](#21-calibration)
     -   [2.2 Discrimination](#22-discrimination)
-        -   [2.2.1 Plot Area under the curve(s) over the
-            time](#221-plot-area-under-the-curves-over-the-time)
+        -   [2.2.1 C-index and time-dependent
+            AUC](#221-c-index-and-time-dependent-auc)
+        -   [2.2.2 Plot Area under the curve(s) over the
+            time](#222-plot-area-under-the-curves-over-the-time)
     -   [2.3 Overall prediction error](#23-overall-prediction-error)
 -   [Goal 3 - Clinical utility](#goal-3---clinical-utility)
 -   [Reproducibility ticket](#reproducibility-ticket)
@@ -1683,9 +1685,14 @@ Slope
 </tbody>
 </table>
 
-A calibration intercept indicated that the risk estimates are on average
-too high. Calibration slope indicated predictions do not show enought
-variation.
+The calibration intercept was estimated at -0.15 \[95% CI -0.36 to
+0.05\] also pointing towards slight overestimation (though not
+statistically significant). This number for example means that for an
+estimated risk of 30%, the expected actual risk is
+1-0.7^(exp(-0.15))=26%. The calibration slope was 1.22 \[95% CI 0.84 to
+1.60\], which would indicate too homogeneous predictions but the wide
+confidence interval precludes any firm conclusions from it. The p-value
+for the joint test on calibration intercept and slope was 0.09.
 
 ### 2.2 Discrimination
 
@@ -1696,6 +1703,8 @@ We here calculate
 -   The 5-year time-dependent AUC. More details are in the manuscript
     and in its references;
     -   Plot time-dependent AUC over the time;
+
+#### 2.2.1 C-index and time-dependent AUC
 
 ``` r
 # Models
@@ -1884,13 +1893,13 @@ Uno AUC
 
 The time-dependent AUC at 5 years was 0.71 in the validation set.
 
-#### 2.2.1 Plot Area under the curve(s) over the time
+#### 2.2.2 Plot Area under the curve(s) over the time
 
 We plot the time-dependent AUCs over the follow-up time using
 development and validation data.
 
 ``` r
-# Models
+# Models --------------
 fit_csh <- CSC(Hist(time, status_num) ~ 
                  age + size +
                  ncat + hr_status, data = rdata, 
@@ -2186,17 +2195,28 @@ and interpretation are provided in the manuscript (see also the
 appendix) and its references.
 
 ``` r
-# Run the stdca function to calculate the net benefit and the elements needed to develop decision curve analysis
-source(here::here("R/stdca.R"))
+# Models ------------------------------
+fit_csh <- CSC(Hist(time, status_num) ~ 
+                 age + size +
+                 ncat + hr_status, data = rdata, 
+               fitter = "cph")
+
+# useful objects
+primary_event <- 1 # Set to 2 if cause 2 was of interest 
+horizon <- 5 # Set time horizon for prediction (here 5 years)
+
 # Development data
 # calculation estimated risk
-rdata$pred5 <- predictRisk(fit_csh, newdata = rdata, times = 5)
+rdata$pred5 <- predictRisk(fit_csh, 
+                           cause = primary_event,
+                           newdata = rdata, 
+                           times = horizon)
 rdata <- as.data.frame(rdata)
-dca_rdata_1 <- stdca(
+dca_rdata <- stdca(
   data = rdata, 
   outcome = "status_num", 
   ttoutcome = "time",
-  timepoint = 5, 
+  timepoint = horizon, 
   predictors = "pred5", 
   xstop = 0.35,
   ymin = -0.01, 
@@ -2209,8 +2229,8 @@ oldpar <- par(xaxs = "i",
               las = 1, 
               mar = c(6.1, 5.8, 4.1, 2.1), 
               mgp = c(4.25, 1, 0))
-plot(dca_rdata_1$net.benefit$threshold,
-     dca_rdata_1$net.benefit$pred5,
+plot(dca_rdata$net.benefit$threshold,
+     dca_rdata$net.benefit$pred5,
      type = "l", 
      lwd = 2, 
      lty = 1,
@@ -2228,14 +2248,14 @@ legend("topright",
        col = c("darkgray", "black", "black"), 
        bty = "n"
 )
-lines(dca_rdata_1$net.benefit$threshold, 
-      dca_rdata_1$net.benefit$none,
+lines(dca_rdata$net.benefit$threshold, 
+      dca_rdata$net.benefit$none,
       type = "l", 
       lwd = 2, 
       lty = 4
 )
-lines(dca_rdata_1$net.benefit$threshold, 
-      dca_rdata_1$net.benefit$all,
+lines(dca_rdata$net.benefit$threshold, 
+      dca_rdata$net.benefit$all,
       type = "l", 
       lwd = 2, 
       col = "darkgray"
@@ -2256,14 +2276,19 @@ title("Development data")
 
 ``` r
 par(oldpar)
+
+
 # Validation data
 # Predicted probability calculation
-vdata$pred5 <- predictRisk(fit_csh, newdata = vdata, times = 5)
+vdata$pred5 <- predictRisk(fit_csh, 
+                           cause = primary_event,
+                           newdata = vdata, 
+                           times = horizon)
 vdata <- as.data.frame(vdata)
 # Run decision curve analysis
 # Development data
 # Model without PGR
-dca_vdata_1 <- stdca(
+dca_vdata <- stdca(
   data = vdata, 
   outcome = "status_num", 
   ttoutcome = "time",
@@ -2280,8 +2305,8 @@ oldpar <- par(xaxs = "i",
               las = 1, 
               mar = c(6.1, 5.8, 4.1, 2.1), 
               mgp = c(4.25, 1, 0))
-plot(dca_vdata_1$net.benefit$threshold,
-     dca_vdata_1$net.benefit$pred5,
+plot(dca_vdata$net.benefit$threshold,
+     dca_vdata$net.benefit$pred5,
      type = "l", 
      lwd = 2, 
      lty = 1,
@@ -2292,14 +2317,14 @@ plot(dca_vdata_1$net.benefit$threshold,
      bty = "n", 
      xaxt = "n"
 )
-lines(dca_vdata_1$net.benefit$threshold,
-      dca_vdata_1$net.benefit$none,
+lines(dca_vdata$net.benefit$threshold,
+      dca_vdata$net.benefit$none,
       type = "l", 
       lwd = 2, 
       lty = 4
 )
-lines(dca_vdata_1$net.benefit$threshold,
-      dca_vdata_1$net.benefit$all,
+lines(dca_vdata$net.benefit$threshold,
+      dca_vdata$net.benefit$all,
       type = "l", 
       lwd = 2, 
       col = "darkgray"
