@@ -376,32 +376,38 @@ We develop and show the results of the Fine and Gray subdistribution hazard regr
 dd <- datadist(rdata)
 options(datadist = "dd")
 options(prType = "html")
-print(fit_fg)
-# print(summary(fit_fg))
-options(datadist = NULL)
 
-# We also fit the FG model using riskRegression::FGR()
-# because it is useful to evaluate some of the prediction performance
-# measures later
-fit_fgr <- FGR(Hist(time, status_num) ~ age + size +
-  ncat + hr_status, cause = 1, data = rdata)
+fit_fg_rcs <- cph(Surv(Tstart, Tstop, status == 1) ~ 
+                    rcs(age, 3) + rcs(size, 3) +
+                    ncat + hr_status, 
+                  weights = weight.cens,
+                  x = T, 
+                  y = T, 
+                  surv = T, 
+                  data = rdata.w
+)
+print(fit_fg_rcs)
+print(summary(fit_fg_rcs))
+print(anova(fit_fg_rcs))
+options(datadist = NULL)
 ```
 
 #### Model development using riskRegression package and FGR() function
 
 ```{r, summary, fig.align='center',warning=FALSE}
-dd <- datadist(rdata)
-options(datadist = "dd")
-options(prType = "html")
-print(fit_fg)
-# print(summary(fit_fg))
-options(datadist = NULL)
-
 # We also fit the FG model using riskRegression::FGR()
 # because it is useful to evaluate some of the prediction performance
 # measures later
-fit_fgr <- FGR(Hist(time, status_num) ~ age + size +
-  ncat + hr_status, cause = 1, data = rdata)
+
+# First we need to save the rcs of age and size
+primary_event <- 1 # primary event is 1 (breast cancer recurrence)
+# set 2 to fit a model for non-recurrence mortality.
+
+fit_fgr <- FGR(Hist(time, status_num) ~ 
+                 age + size +
+                 ncat + hr_status, 
+               cause = primary_event, 
+               data = rdata)
 ```
 
 The coefficients of the models indicated that higher size, positive nodal status and ER- and/or PR- were associated with higher risk to develop a breast cancer recurrence.
