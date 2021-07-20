@@ -314,6 +314,10 @@ smfit_rdata <- summary(mfit_rdata, times = c(1, 2, 3, 4, 5))
 smfit_vdata <- summary(mfit_vdata, times = c(1, 2, 3, 4, 5))
 ```
 
+The R packages and functions `cmprsk::cuminc()` and
+`mstate::Cuminc()`are good and easy alternatives to estimate the
+cumulative incidence function.
+
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
