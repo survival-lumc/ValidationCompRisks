@@ -1,5 +1,5 @@
 ---
-title: "External validation of the performance of competing risks prediction models: a guide through modern methods -  Develop a risk prediction model using subdistribution hazard approach"
+title: "External validation of the performance of competing risks prediction models: a guide through modern methods -  Develop a risk prediction model using the subdistribution hazard approach"
 always_allow_html: true
 output:
   github_document:
@@ -19,7 +19,7 @@ The following libraries are needed to achieve the outlined goals, the code chunk
 # Knitr options
 knitr::opts_chunk$set(
   fig.retina = 3,
-  fig.path = "imgs/Prediction_CSC/"
+  fig.path = "imgs/Development_SDH/"
 )
 ```
 
@@ -100,7 +100,7 @@ gtsummary::tbl_summary(
   kableExtra::kable_styling("striped") 
 ```
 
-## Develop a competing risks prediction model using subdistribution hazard approach
+## Develop a competing risks prediction model using the subdistribution hazard approach
 
 
 ### Cumulative incidence curves
@@ -119,6 +119,7 @@ vdata$status1[vdata$status_num == 1] <- 1
 vdata$status1[vdata$status_num != 1] <- 0
 vdata$status2[vdata$status_num == 2] <- 2
 vdata$status2[vdata$status_num != 2] <- 0
+
 
 # Expand data to prepare for fitting the model 
 rdata.w <- crprep(
@@ -176,6 +177,8 @@ smfit_rdata <- summary(mfit_rdata, times = c(1, 2, 3, 4, 5))
 smfit_vdata <- summary(mfit_vdata, times = c(1, 2, 3, 4, 5))
 ```
 
+The R packages and functions `cmprsk::cuminc()` and `mstate::Cuminc()`are good and easy alternatives to estimate the cumulative incidence function. 
+
 ```{r, res_ci, fig.align='center',echo=FALSE}
 res_ci <- cbind(
   1 - smfit_rdata$surv,
@@ -209,17 +212,36 @@ The 5-year cumulative incidence of breast cancer recurrence was 14% (95% CI: 11-
 Here we investigate the potential non-linear relation between continuous predictors (i.e. age and size) and the outcomes. We apply three-knot restricted cubic splines using `rms::rcs()` function (details are given in e.g. Frank Harrell's book 'Regression Model Strategies (second edition)', page 27.
 
 ```{r,ff, warning=FALSE, fig.align='center'}
+
+# Defining knots of the restricted cubic splines ------------------
+# Extract knots position of the restricted cubic spline based on the
+# original distribution of the data
+
+# Age at breast cancer diagnosis
+rcs3_age <- rcspline.eval(rdata$age, nk = 3)
+attr(rcs3_age, "dim") <- NULL
+attr(rcs3_age, "knots") <- NULL
+pos_knots_age <- attributes(rcspline.eval(rdata$age, nk = 3))$knots
+rdata$age3 <- rcs3_age
+
+# Size of breast cancer
+rcs3_size <- rcspline.eval(rdata$size, nk = 3)
+attr(rcs3_size, "dim") <- NULL
+attr(rcs3_size, "knots") <- NULL
+pos_knots_size <- attributes(rcspline.eval(rdata$size, nk = 3))$knots
+rdata$size3 <- rcs3_size
+
 # FG model
 dd <- datadist(rdata)
 options(datadist = "dd")
 fit_fg_rcs <- cph(Surv(Tstart, Tstop, status == 1) ~ 
-                    rcs(age, 3) + rcs(size, 3) +
+                    rcs(age, pos_knots_age) + rcs(size, pos_knots_size) +
                     ncat + hr_status, 
                   weights = weight.cens,
                   x = T, 
                   y = T, 
                   surv = T, 
-                  data = rdata.w
+                  data = rdata.w1
 )
 P_fg_age_rcs <- Predict(fit_fg_rcs, "age")
 P_fg_size_rcs <- Predict(fit_fg_rcs, "size")
@@ -307,7 +329,7 @@ fit_fg <- cph(Surv(Tstart, Tstop, status == 1) ~ age + size +
               x = T, 
               y = T, 
               surv = T, 
-              data = rdata.w
+              data = rdata.w1
 )
 options(datadist = NULL)
 ```
@@ -340,7 +362,7 @@ We now examine the fits further by checking the proportionality of the subdistri
 
 
 ```{r,sph, message=FALSE, warning=FALSE,fig.align='center'}
-zp_fg <- cox.zph(fit_fg_rcs, transform = "identity")
+zp_fg <- cox.zph(fit_fg, transform = "identity")
 
 par(las = 1, xaxs = "i", yaxs = "i")
 # c(bottom, left, top, right)
@@ -365,54 +387,95 @@ kable(round(zp_fg$table, 3)) %>%
   kable_styling("striped", position = "center")
 ```
 
-The statistical tests and plots suggested a no potential violation of the proportional subdistribution hazard assumption.
+The statistical tests showed a potential violation of the proportional hazards assumption for size of breast cancer in the model for non-recurrence mortality. For simplicity we ignore this violation in the remainder.
 
 
 ### Model development - fit the risk prediction models
 We develop and show the results of the Fine and Gray subdistribution hazard regression model.
+In R, there are multiple alternatives to fit a competing risks model using the subdistribution hazard approach:
+
++ Using `survival::coxph()` after using `survival::finegray()`;  
++ Using `rcs::cph()` or `survival::coxph()` after expanding the data with `mstate::crprep()`;  
++ Using `riskRegression::FGR()` which is a formula interface for the function `crr` from the `cmprsk` package. 
+
+
+#### Model development using survival package and finegray() function
+```{r, finegray, fig.align='center',warning=FALSE}
+
+rdata_fg <- finegray(Surv(time, status) ~ ., 
+                     etype = "rec",
+                     data = rdata)
+
+fgfit <- coxph(Surv(fgstart, fgstop, fgstatus) ~ 
+                 age + size + ncat + hr_status,
+               weight = fgwt, 
+               data = rdata_fg)
+
+
+```
 
 #### Model development using mstate package and crprep() function
-```{r, summary, fig.align='center',warning=FALSE}
+```{r, mstate, fig.align='center',warning=FALSE}
+# Expand data to prepare for fitting the model 
+primary_event <- 1 # primary event is 1 (breast cancer recurrence)
+# set 2 to fit a model for non-recurrence mortality.
+rdata.w <- mstate::crprep(
+  Tstop = "time",
+  status = "status_num",
+  trans = c(1, 2),
+  id = "id",
+  keep = c("age", "size", "ncat", "hr_status"),
+  data = rdata
+)
+rdata.w1 <- rdata.w %>% filter(failcode == primary_event)
+
 dd <- datadist(rdata)
 options(datadist = "dd")
 options(prType = "html")
 
-fit_fg_rcs <- cph(Surv(Tstart, Tstop, status == 1) ~ 
-                    rcs(age, 3) + rcs(size, 3) +
-                    ncat + hr_status, 
+fit_fg <- cph(Surv(Tstart, Tstop, status == 1) ~
+                age + size + ncat + hr_status, 
                   weights = weight.cens,
                   x = T, 
                   y = T, 
                   surv = T, 
-                  data = rdata.w
+                  data = rdata.w1
 )
-print(fit_fg_rcs)
-print(summary(fit_fg_rcs))
-print(anova(fit_fg_rcs))
+print(fit_fg)
 options(datadist = NULL)
 ```
 
 #### Model development using riskRegression package and FGR() function
 
-```{r, summary, fig.align='center',warning=FALSE}
+```{r, riskRegression, fig.align='center',warning=FALSE}
 # We also fit the FG model using riskRegression::FGR()
 # because it is useful to evaluate some of the prediction performance
 # measures later
 
-# First we need to save the rcs of age and size
 primary_event <- 1 # primary event is 1 (breast cancer recurrence)
 # set 2 to fit a model for non-recurrence mortality.
 
 fit_fgr <- FGR(Hist(time, status_num) ~ 
                  age + size +
                  ncat + hr_status, 
-               cause = primary_event, 
+               cause = primary_event,
                data = rdata)
 ```
 
-The coefficients of the models indicated that higher size, positive nodal status and ER- and/or PR- were associated with higher risk to develop a breast cancer recurrence.
+```{r, comp_coeff, fig.align='center',warning=FALSE}
+res_coef <- cbind.data.frame( 
+                             "survival package" = fgfit$coefficients,
+                             "mstate + survival/rms packages" = 
+                               fit_fg$coefficients,
+                             "riskRegression package" = fit_fgr$crrFit$coef)
+k <- 4
+res_coef <- round(res_coef, k)
+kable(res_coef) %>% 
+  kable_styling("striped", position = "center")
+```
 
-The coefficients of the models indicated that larger tumor size, positive nodal status and negative hormone receptor status status were associated with higher risk to develop a breast cancer recurrence, while older patients and larger tumors are associated with higher risk of non recurrence mortality.
+
+The coefficients of the models indicated that higher size, positive nodal status and ER- and/or PR- were associated with higher risk to develop a breast cancer recurrence.
 
 
 ## Reproducibility ticket
