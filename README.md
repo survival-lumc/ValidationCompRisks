@@ -9,6 +9,8 @@ The repository contains the following code:
 
 Data are available [here](https://github.com/survival-lumc/ValidationCompRisks/tree/main/Data).  Additional functions useful to develop and validate competing risks prediction models are available [here](https://github.com/survival-lumc/ValidationCompRisks/tree/main/R).
 
+Minimal code to develop a competing risk prediction model using the subdistribution hazard approach (Fine & Gray) is [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Development_SDH_minimal.R). The corresponding more in-depth version of the minimal script is [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Development_SDH.md). The Rmarkdown source code (.Rmd) is [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Development_SDH.Rmd). 
+
 ## Usage
 
 If you are git user, you can clone the directory by using
