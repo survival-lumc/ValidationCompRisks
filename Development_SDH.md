@@ -766,9 +766,8 @@ GLOBAL
 </table>
 
 The statistical tests showed a potential violation of the proportional
-hazards assumption for size of breast cancer in the model for
-non-recurrence mortality. For simplicity we ignore this violation in the
-remainder.
+hazards assumption for size of breast cancer. For simplicity we ignore
+this violation in the remainder.
 
 ### Model development - fit the risk prediction models
 
