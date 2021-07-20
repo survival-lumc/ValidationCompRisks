@@ -33,6 +33,8 @@ rdata.w1 <- rdata.w[rdata.w$failcode == primary_event, ]
 
 
 # Cumulative incidence function ------------
+
+
 mfit_rdata <- survfit(
   Surv(Tstart, Tstop, status == 1) ~ 1,
   data = rdata.w1, weights = weight.cens
@@ -47,7 +49,9 @@ plot(mfit_rdata,
 )
 title("Development data")
 
-# Cumulative incidences -------------------
+# Annual cumulative incidences -------------------
+
+
 smfit_rdata <- summary(mfit_rdata, times = c(1, 2, 3, 4, 5))
 
 CIF <- cbind.data.frame(
@@ -60,6 +64,8 @@ CIF
 
 
 ### Check non-linearity of continuous predictors ----------------
+
+
 
 # Defining knots of the restricted cubic splines ------------------
 # Extract knots position of the restricted cubic spline based on the
@@ -123,6 +129,8 @@ res_AIC
 # and the event of interest (breast cancer recurrence).
 
 ### Checking proportional subdistribution hazards assumption ---------
+
+
 zp_fg <- cox.zph(fit_fg, transform = "identity")
 
 par(las = 1, xaxs = "i", yaxs = "i")
@@ -155,6 +163,8 @@ zp_fg$table
 
 
 ### Model development - fit the risk prediction models ---------------------
+
+
 
 fit_fg <- coxph(Surv(Tstart, Tstop, status == 1) ~
                 age + size + ncat + hr_status, 
