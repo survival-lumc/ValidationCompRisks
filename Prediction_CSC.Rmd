@@ -114,17 +114,6 @@ First, we draw the cumulative incidence curves of breast cancer recurrence.
 
 ```{r, cuminc, fig.align='center'}
 # Expand datasets -------------------------
-# Create indicator variables for the outcomes in the development set
-rdata$status1[rdata$status_num == 1] <- 1
-rdata$status1[rdata$status_num != 1] <- 0
-rdata$status2[rdata$status_num == 2] <- 2
-rdata$status2[rdata$status_num != 2] <- 0
-
-# Create indicator variables for the outcomes in the validation set
-vdata$status1[vdata$status_num == 1] <- 1
-vdata$status1[vdata$status_num != 1] <- 0
-vdata$status2[vdata$status_num == 2] <- 2
-vdata$status2[vdata$status_num != 2] <- 0
 
 # Expand data to prepare for fitting the model 
 rdata.w <- crprep(
