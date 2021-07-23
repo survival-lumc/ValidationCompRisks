@@ -4,7 +4,7 @@ always_allow_html: true
 output:
   github_document:
     toc: true
-    toc_depth: 4
+    toc_depth: 5
   keep_text: true
   pandoc_args: --webtex
 ---
@@ -589,7 +589,7 @@ We assess calibration by:
 
 + Numerical summaries of calibration:  
 
-  + The observed vs expected ratio (O/E ratio);  
+  + The observed vs expected ratio (O/E ratio) ;  
 
   + The squared bias, i.e., the average squared difference between actual risks and risk predictions;
 
@@ -601,6 +601,12 @@ We assess calibration by:
   
       + If on average the risk estimates equal the actual risks, the                 calibration intercept will be zero. A negative calibration intercept         indicates that the risk estimates are on average too high and a              positive intercept indicates that the risk estimates are on average          too low.   
       + A calibration slope between 0 and 1 indicates overfitting of the             model, i.e., too extreme predictions, both on the low and on the high         end. A calibration slope >1 indicates predictions do not show enough         variation.  
+      
+#### 2.1.1 Calibration using pseudovalues
+We calculate calibration plot and numerical summaries of calibration as
+ICI, E50, E90, Emax and root squared bias using pseudo value approach.
+
+##### 2.1.1.1 Calibration plot using pseudovalues
 
 ```{r, cal, fig.align='center',warning=FALSE,message=FALSE}
 # Models ----------
@@ -631,7 +637,7 @@ score_vdata <- Score(
   data = vdata, 
   conf.int = TRUE, 
   times = horizon,
-  metrics = c("auc", "brier"),
+#  metrics = c("auc", "brier"),
   summary = c("ipa"), 
   cause = primary_event,
   plots = "calibration"
@@ -652,6 +658,11 @@ calplot_pseudo <- plotCalibration(
   bty = "n"
 )
 title("Calibration plot using pseudovalues")
+```
+Calibration plot suggests that the prediction model seems to overestimate the actual risk, especially at the lower and higher values of the estimated risk.
+
+##### 2.1.1.2 Numerical summaries of calibration using pseudovalues
+```{r, num_cal_pseudo, fig.align='center',warning=FALSE,message=FALSE}
 
 # We can extract predicted and observed, observed will depend on degree of smoothing (bandwidth)
 dat_pseudo <- calplot_pseudo$plotFrames$csh_validation
@@ -666,6 +677,37 @@ numsum_pseudo <- c(
   "Emax" = max(abs(diff_pseudo)),
   "Root squared bias" = sqrt(mean(diff_pseudo^2))
 )
+```
+
+```{r, res_cal_pseudo, fig.align='center',warning=FALSE,message=FALSE,echo=FALSE}
+# rootmeansquared, E50, E90, Emax, int, slope,
+k <- 4
+res_num <-rbind(
+  "Calibration measures - pseudovalues" = numsum_pseudo)
+
+res_num <- round(res_num, k)
+kable(res_num) %>%
+  kable_styling("striped", position = "center")
+```
+Numerical calibration measures identified overestimation of the risk especially in the higher values of the estimated actual risk.
+
+#### 2.1.2 Calibration using the subdistribution hazard approach
+Here we assess calibration using the subistribution hazard approach (Austin et al.)
+
+##### 2.1.2.1 Calibration plot using the subdistribution hazard approach
+
+```{r, plot_sd, fig.align='center',warning=FALSE,message=FALSE}
+# Models ----------
+fit_csh <- CSC(Hist(time, status_num) ~ 
+                 age + size +
+                 ncat + hr_status, 
+               data = rdata, 
+               fitter = "cph")
+
+
+# useful objects
+primary_event <- 1 # Set to 2 if cause 2 was of interest 
+horizon <- 5 # Set time horizon for prediction (here 5 years)
 
 
 # Calibration plot (flexible regression approach) -------------------------
@@ -717,7 +759,13 @@ plot(
 )
 abline(a = 0, b = 1, lty = "dashed", col = "red")
 title("Calibration plot using subdistribution hazard approach")
+```
+Calibration plot suggests that the prediction model seems to overestimate the actual risk, especially at the lower and higher values of the estimated risk.
 
+##### 2.1.2.2 Numerical summaries of calibration using the subdistribution hazard approach
+Here we assess calibration using the subistribution hazard approach (Austin et al.)
+
+```{r, num_cal_sd, fig.align='center',warning=FALSE,message=FALSE}
 # Numerical summary measures
 diff_fgr <- dat_fgr$pred - dat_fgr$obs
 
@@ -756,7 +804,39 @@ numsum_fgr <- c(
 #   lwd = rep(2, 2),
 #   bty = "n"
 # )
+```
 
+```{r, res_cal_sd, fig.align='center',warning=FALSE,message=FALSE,echo=FALSE}
+k <- 4
+res_num <-rbind(
+  "Calibration measures - subdistribution " = numsum_fgr)
+
+res_num <- round(res_num, k)
+kable(res_num) %>%
+  kable_styling("striped", position = "center")
+```
+Numerical calibration measures identified overestimation of the risk especially in the higher values of the estimated actual risk.
+
+#### 2.1.3 Observed and Expected ratio
+```{r, oe_ratio, fig.align='center',warning=FALSE,message=FALSE}
+
+# Models ----------
+fit_csh <- CSC(Hist(time, status_num) ~ 
+                 age + size +
+                 ncat + hr_status, 
+               data = rdata, 
+               fitter = "cph")
+
+
+# useful objects
+primary_event <- 1 # Set to 2 if cause 2 was of interest 
+horizon <- 5 # Set time horizon for prediction (here 5 years)
+
+# Add estimated risk and complementary log-log of it to dataset
+pred <- predictRisk(fit_csh,
+                          cause = primary_event,
+                          newdata = vdata,
+                          times = horizon)
 
 ## Observed/Expected ratio --------------------------------------------
 # First calculate Aalen-Johansen estimate (as 'observed')
@@ -781,6 +861,53 @@ OE_summary <- cbind(
 )
 
 OE_summary <- round(OE_summary, k)
+```
+
+```{r, res_OE, echo=FALSE}
+# OE, rootmeansquared, E50, E90, Emax, int, slope,
+
+kable(OE_summary) %>%
+  kable_styling("striped", position = "center")
+```
+
+Observed and expected ratio shown slight overestimation of the risk predicted by the model.
+
+#### 2.1.4 Calibration intercept and slope using pseudovalues
+```{r, cal_intslope_pseudo, fig.align='center',warning=FALSE,message=FALSE}
+
+# Models ----------
+fit_csh <- CSC(Hist(time, status_num) ~ 
+                 age + size +
+                 ncat + hr_status, 
+               data = rdata, 
+               fitter = "cph")
+
+
+# useful objects
+primary_event <- 1 # Set to 2 if cause 2 was of interest 
+horizon <- 5 # Set time horizon for prediction (here 5 years)
+
+# Predicted risk estimation
+pred <- predictRisk(fit_csh,
+                    cause = primary_event,
+                    times = horizon,
+                    newdata = vdata)
+
+
+# Calibration plot (pseudo-obs approach) ----------------------------------
+# First compute riskRegression::Score()
+score_vdata <- Score(
+  list("csh_validation" = fit_csh),
+  formula = Hist(time, status_num) ~ 1, 
+  cens.model = "km", 
+  data = vdata, 
+  conf.int = TRUE, 
+  times = horizon,
+#  metrics = c("auc", "brier"),
+  summary = c("ipa"), 
+  cause = primary_event,
+  plots = "calibration"
+)
 
 
 ## Calibration intercept and slope --------------------------------------
@@ -822,36 +949,10 @@ betas <- fit_cal_slope$beta
 vcov_mat <- fit_cal_slope$vbeta
 wald <- drop(betas %*% solve(vcov_mat) %*% betas)
 # pchisq(wald, df = 2, lower.tail = FALSE)
-
 ```
 
-Calibration plots suggest that the prediction model seems to overestimate the actual risk, especially at the lower and higher values of the estimated risk.
 
-```{r, res_OE, echo=FALSE}
-# OE, rootmeansquared, E50, E90, Emax, int, slope,
-
-kable(OE_summary) %>%
-  kable_styling("striped", position = "center")
-```
-
-Observed and expected ratio shown slight overestimation of the risk predicted by the model.
-
-```{r, res_num, echo=FALSE}
-# OE, rootmeansquared, E50, E90, Emax, int, slope,
-k <- 4
-res_num <-rbind(
-  "Calibration measures - subdistribution " = numsum_fgr,
-  "Calibration measures - pseudovalues" = numsum_pseudo)
-
-res_num <- round(res_num, k)
-kable(res_num) %>%
-  kable_styling("striped", position = "center")
-```
-
-Numerical calibration measures identified overestimation of the risk especially in the higher values of the estimated actual risk.
-
-```{r, res_cal, echo=FALSE}
-# OE, rootmeansquared, E50, E90, Emax, int, slope,
+```{r, res_cal_intslope, echo=FALSE}
 k <- 2
 res_cal <-rbind(
 
