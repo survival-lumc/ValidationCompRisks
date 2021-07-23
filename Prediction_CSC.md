@@ -22,6 +22,24 @@ models: a guide through modern methods - Cause specific hazard models
 -   [Goal 2 - Assessing performance of a competing risks prediction
     model](#goal-2---assessing-performance-of-a-competing-risks-prediction-model)
     -   [2.1 Calibration](#21-calibration)
+        -   [2.1.1 Calibration using
+            pseudovalues](#211-calibration-using-pseudovalues)
+            -   [2.1.1.1 Calibration plot using
+                pseudovalues](#2111-calibration-plot-using-pseudovalues)
+            -   [2.1.1.2 Numerical summaries of calibration using
+                pseudovalues](#2112-numerical-summaries-of-calibration-using-pseudovalues)
+        -   [2.1.2 Calibration using the subdistribution hazard
+            approach](#212-calibration-using-the-subdistribution-hazard-approach)
+            -   [2.1.2.1 Calibration plot using the subdistribution
+                hazard
+                approach](#2121-calibration-plot-using-the-subdistribution-hazard-approach)
+            -   [2.1.2.2 Numerical summaries of calibration using the
+                subdistribution hazard
+                approach](#2122-numerical-summaries-of-calibration-using-the-subdistribution-hazard-approach)
+        -   [2.1.3 Observed and Expected
+            ratio](#213-observed-and-expected-ratio)
+        -   [2.1.4 Calibration intercept and slope using
+            pseudovalues](#214-calibration-intercept-and-slope-using-pseudovalues)
     -   [2.2 Discrimination](#22-discrimination)
         -   [2.2.1 C-index and time-dependent
             AUC](#221-c-index-and-time-dependent-auc)
@@ -1271,7 +1289,7 @@ We assess calibration by:
 
 -   Numerical summaries of calibration:
 
-    -   The observed vs expected ratio (O/E ratio);
+    -   The observed vs expected ratio (O/E ratio) ;
 
     -   The squared bias, i.e., the average squared difference between
         actual risks and risk predictions;
@@ -1294,6 +1312,13 @@ We assess calibration by:
             the model, i.e., too extreme predictions, both on the low
             and on the high end. A calibration slope &gt;1 indicates
             predictions do not show enough variation.
+
+#### 2.1.1 Calibration using pseudovalues
+
+We calculate calibration plot and numerical summaries of calibration as
+ICI, E50, E90, Emax and root squared bias using pseudo value approach.
+
+##### 2.1.1.1 Calibration plot using pseudovalues
 
 ``` r
 # Models ----------
@@ -1324,7 +1349,7 @@ score_vdata <- Score(
   data = vdata, 
   conf.int = TRUE, 
   times = horizon,
-  metrics = c("auc", "brier"),
+#  metrics = c("auc", "brier"),
   summary = c("ipa"), 
   cause = primary_event,
   plots = "calibration"
@@ -1348,6 +1373,11 @@ title("Calibration plot using pseudovalues")
 ```
 
 <img src="imgs/Prediction_CSC/cal-1.png" width="672" style="display: block; margin: auto;" />
+Calibration plot suggests that the prediction model seems to
+overestimate the actual risk, especially at the lower and higher values
+of the estimated risk.
+
+##### 2.1.1.2 Numerical summaries of calibration using pseudovalues
 
 ``` r
 # We can extract predicted and observed, observed will depend on degree of smoothing (bandwidth)
@@ -1363,6 +1393,76 @@ numsum_pseudo <- c(
   "Emax" = max(abs(diff_pseudo)),
   "Root squared bias" = sqrt(mean(diff_pseudo^2))
 )
+```
+
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+ICI
+</th>
+<th style="text-align:right;">
+E50
+</th>
+<th style="text-align:right;">
+E90
+</th>
+<th style="text-align:right;">
+Emax
+</th>
+<th style="text-align:right;">
+Root squared bias
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Calibration measures - pseudovalues
+</td>
+<td style="text-align:right;">
+0.0308
+</td>
+<td style="text-align:right;">
+0.0297
+</td>
+<td style="text-align:right;">
+0.0522
+</td>
+<td style="text-align:right;">
+0.1589
+</td>
+<td style="text-align:right;">
+0.0349
+</td>
+</tr>
+</tbody>
+</table>
+
+Numerical calibration measures identified overestimation of the risk
+especially in the higher values of the estimated actual risk.
+
+#### 2.1.2 Calibration using the subdistribution hazard approach
+
+Here we assess calibration using the subistribution hazard approach
+(Austin et al.)
+
+##### 2.1.2.1 Calibration plot using the subdistribution hazard approach
+
+``` r
+# Models ----------
+fit_csh <- CSC(Hist(time, status_num) ~ 
+                 age + size +
+                 ncat + hr_status, 
+               data = rdata, 
+               fitter = "cph")
+
+
+# useful objects
+primary_event <- 1 # Set to 2 if cause 2 was of interest 
+horizon <- 5 # Set time horizon for prediction (here 5 years)
 
 
 # Calibration plot (flexible regression approach) -------------------------
@@ -1416,7 +1516,15 @@ abline(a = 0, b = 1, lty = "dashed", col = "red")
 title("Calibration plot using subdistribution hazard approach")
 ```
 
-<img src="imgs/Prediction_CSC/cal-2.png" width="672" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_CSC/plot_sd-1.png" width="672" style="display: block; margin: auto;" />
+Calibration plot suggests that the prediction model seems to
+overestimate the actual risk, especially at the lower and higher values
+of the estimated risk.
+
+##### 2.1.2.2 Numerical summaries of calibration using the subdistribution hazard approach
+
+Here we assess calibration using the subistribution hazard approach
+(Austin et al.)
 
 ``` r
 # Numerical summary measures
@@ -1457,109 +1565,7 @@ numsum_fgr <- c(
 #   lwd = rep(2, 2),
 #   bty = "n"
 # )
-
-
-## Observed/Expected ratio --------------------------------------------
-# First calculate Aalen-Johansen estimate (as 'observed')
-obj <- summary(survfit(Surv(time, status) ~ 1, 
-                       data = vdata), 
-               times = horizon)
-
-aj <- list("obs" = obj$pstate[, primary_event + 1], 
-           "se" =  obj$std.err[, primary_event + 1])
-
-
-# Calculate O/E
-OE <- aj$obs / mean(pred)
-
-# For the confidence interval we use method proposed in Debray et al. (2017) doi:10.1136/bmj.i6460
-k <- 2
-alpha <- 0.05
-OE_summary <- cbind(
-  "OE" = OE,
-  "Lower .95" = exp(log(OE - qnorm(1 - alpha/2) * aj$se / aj$obs)),
-  "Upper .95" = exp(log(OE + qnorm(1 - alpha/2) * aj$se / aj$obs))
-)
-
-OE_summary <- round(OE_summary, k)
-
-
-## Calibration intercept and slope --------------------------------------
-# Use pseudo-observations calculated by Score() (can alternatively use pseudo::pseudoci)
-pseudos <- data.frame(score_vdata$Calibration$plotframe)
-
-# Note:
-# - 'pseudos' is the data.frame with ACTUAL pseudo-observations, not the smoothed ones
-# - Column ID is not the id in vdata; it is just a number assigned to each row of 
-# the original validation data sorted by time and event indicator
-pseudos$cll_pred <- log(-log(1 - pseudos$risk)) # add the cloglog risk ests 
-
-# Fit model for calibration intercept
-fit_cal_int <- geese(
-  pseudovalue ~ offset(cll_pred), 
-  data = pseudos,
-  id = ID, 
-  scale.fix = TRUE, 
-  family = gaussian,
-  mean.link = "cloglog",
-  corstr = "independence", 
-  jack = TRUE
-)
-
-# Fit model for calibration slope
-fit_cal_slope <- geese(
-  pseudovalue ~ offset(cll_pred) + cll_pred, 
-  data = pseudos,
-  id = ID, 
-  scale.fix = TRUE, 
-  family = gaussian,
-  mean.link = "cloglog",
-  corstr = "independence", 
-  jack = TRUE
-)
-
-# Perform joint test on intercept and slope
-betas <- fit_cal_slope$beta
-vcov_mat <- fit_cal_slope$vbeta
-wald <- drop(betas %*% solve(vcov_mat) %*% betas)
-# pchisq(wald, df = 2, lower.tail = FALSE)
 ```
-
-Calibration plots suggest that the prediction model seems to
-overestimate the actual risk, especially at the lower and higher values
-of the estimated risk.
-
-<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-OE
-</th>
-<th style="text-align:right;">
-Lower .95
-</th>
-<th style="text-align:right;">
-Upper .95
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-0.81
-</td>
-<td style="text-align:right;">
-0.62
-</td>
-<td style="text-align:right;">
-0.99
-</td>
-</tr>
-</tbody>
-</table>
-
-Observed and expected ratio shown slight overestimation of the risk
-predicted by the model.
 
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
 <thead>
@@ -1604,31 +1610,168 @@ Calibration measures - subdistribution
 0.0292
 </td>
 </tr>
-<tr>
-<td style="text-align:left;">
-Calibration measures - pseudovalues
-</td>
-<td style="text-align:right;">
-0.0308
-</td>
-<td style="text-align:right;">
-0.0297
-</td>
-<td style="text-align:right;">
-0.0522
-</td>
-<td style="text-align:right;">
-0.1589
-</td>
-<td style="text-align:right;">
-0.0349
-</td>
-</tr>
 </tbody>
 </table>
 
 Numerical calibration measures identified overestimation of the risk
 especially in the higher values of the estimated actual risk.
+
+#### 2.1.3 Observed and Expected ratio
+
+``` r
+# Models ----------
+fit_csh <- CSC(Hist(time, status_num) ~ 
+                 age + size +
+                 ncat + hr_status, 
+               data = rdata, 
+               fitter = "cph")
+
+
+# useful objects
+primary_event <- 1 # Set to 2 if cause 2 was of interest 
+horizon <- 5 # Set time horizon for prediction (here 5 years)
+
+# Add estimated risk and complementary log-log of it to dataset
+pred <- predictRisk(fit_csh,
+                          cause = primary_event,
+                          newdata = vdata,
+                          times = horizon)
+
+## Observed/Expected ratio --------------------------------------------
+# First calculate Aalen-Johansen estimate (as 'observed')
+obj <- summary(survfit(Surv(time, status) ~ 1, 
+                       data = vdata), 
+               times = horizon)
+
+aj <- list("obs" = obj$pstate[, primary_event + 1], 
+           "se" =  obj$std.err[, primary_event + 1])
+
+
+# Calculate O/E
+OE <- aj$obs / mean(pred)
+
+# For the confidence interval we use method proposed in Debray et al. (2017) doi:10.1136/bmj.i6460
+k <- 2
+alpha <- 0.05
+OE_summary <- cbind(
+  "OE" = OE,
+  "Lower .95" = exp(log(OE - qnorm(1 - alpha/2) * aj$se / aj$obs)),
+  "Upper .95" = exp(log(OE + qnorm(1 - alpha/2) * aj$se / aj$obs))
+)
+
+OE_summary <- round(OE_summary, k)
+```
+
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+OE
+</th>
+<th style="text-align:right;">
+Lower .95
+</th>
+<th style="text-align:right;">
+Upper .95
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+0.81
+</td>
+<td style="text-align:right;">
+0.62
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+</tr>
+</tbody>
+</table>
+
+Observed and expected ratio shown slight overestimation of the risk
+predicted by the model.
+
+#### 2.1.4 Calibration intercept and slope using pseudovalues
+
+``` r
+# Models ----------
+fit_csh <- CSC(Hist(time, status_num) ~ 
+                 age + size +
+                 ncat + hr_status, 
+               data = rdata, 
+               fitter = "cph")
+
+
+# useful objects
+primary_event <- 1 # Set to 2 if cause 2 was of interest 
+horizon <- 5 # Set time horizon for prediction (here 5 years)
+
+# Predicted risk estimation
+pred <- predictRisk(fit_csh,
+                    cause = primary_event,
+                    times = horizon,
+                    newdata = vdata)
+
+
+# Calibration plot (pseudo-obs approach) ----------------------------------
+# First compute riskRegression::Score()
+score_vdata <- Score(
+  list("csh_validation" = fit_csh),
+  formula = Hist(time, status_num) ~ 1, 
+  cens.model = "km", 
+  data = vdata, 
+  conf.int = TRUE, 
+  times = horizon,
+#  metrics = c("auc", "brier"),
+  summary = c("ipa"), 
+  cause = primary_event,
+  plots = "calibration"
+)
+
+
+## Calibration intercept and slope --------------------------------------
+# Use pseudo-observations calculated by Score() (can alternatively use pseudo::pseudoci)
+pseudos <- data.frame(score_vdata$Calibration$plotframe)
+
+# Note:
+# - 'pseudos' is the data.frame with ACTUAL pseudo-observations, not the smoothed ones
+# - Column ID is not the id in vdata; it is just a number assigned to each row of 
+# the original validation data sorted by time and event indicator
+pseudos$cll_pred <- log(-log(1 - pseudos$risk)) # add the cloglog risk ests 
+
+# Fit model for calibration intercept
+fit_cal_int <- geese(
+  pseudovalue ~ offset(cll_pred), 
+  data = pseudos,
+  id = ID, 
+  scale.fix = TRUE, 
+  family = gaussian,
+  mean.link = "cloglog",
+  corstr = "independence", 
+  jack = TRUE
+)
+
+# Fit model for calibration slope
+fit_cal_slope <- geese(
+  pseudovalue ~ offset(cll_pred) + cll_pred, 
+  data = pseudos,
+  id = ID, 
+  scale.fix = TRUE, 
+  family = gaussian,
+  mean.link = "cloglog",
+  corstr = "independence", 
+  jack = TRUE
+)
+
+# Perform joint test on intercept and slope
+betas <- fit_cal_slope$beta
+vcov_mat <- fit_cal_slope$vbeta
+wald <- drop(betas %*% solve(vcov_mat) %*% betas)
+# pchisq(wald, df = 2, lower.tail = FALSE)
+```
 
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
 <thead>
