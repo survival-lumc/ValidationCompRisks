@@ -8,52 +8,51 @@ models: a guide through modern methods - Cause specific hazard models
     -   [Descriptive statistics](#descriptive-statistics)
 -   [Goal 1 - develop a competing risks prediction
     model](#goal-1---develop-a-competing-risks-prediction-model)
-    -   [1.1 Cumulative incidence
-        curves](#11-cumulative-incidence-curves)
+    -   [1.1 Cumulative incidence curves](#cumulative-incidence-curves)
     -   [1.2 Check non-linearity of continuous
-        predictors](#12-check-non-linearity-of-continuous-predictors)
+        predictors](#check-non-linearity-of-continuous-predictors)
     -   [1.3 Checking proportional hazards
-        assumption](#13-checking-proportional-hazards-assumption)
-    -   [1.4 Examine the risk fit of the
-        models](#14-examine-the-risk-fit-of-the-models)
-    -   [1.5 Plots predictors vs predicted risk at 5 years in the
+        assumption](#checking-proportional-hazards-assumption)
+    -   [1.4 Examine the fit of the
+        models](#examine-the-fit-of-the-models)
+    -   [1.5 Plot of predictors vs estimated risk at 5 years in the
         validation
-        data](#15-plots-predictors-vs-predicted-risk-at-5-years-in-the-validation-data)
+        data](#plot-of-predictors-vs-estimated-risk-at-5-years-in-the-validation-data)
 -   [Goal 2 - Assessing performance of a competing risks prediction
     model](#goal-2---assessing-performance-of-a-competing-risks-prediction-model)
-    -   [2.1 Calibration](#21-calibration)
-        -   [2.1.1 Calibration using
-            pseudovalues](#211-calibration-using-pseudovalues)
-            -   [2.1.1.1 Calibration plot using
-                pseudovalues](#2111-calibration-plot-using-pseudovalues)
-            -   [2.1.1.2 Numerical summaries of calibration using
-                pseudovalues](#2112-numerical-summaries-of-calibration-using-pseudovalues)
+    -   [2.1 Calibration](#calibration)
+        -   [2.1.1 Calibration using pseudo
+            observations](#calibration-using-pseudo-observations)
+            -   [2.1.1.1 Calibration plot using pseudo
+                observations](#calibration-plot-using-pseudo-observations)
+            -   [2.1.1.2 Numerical summaries of calibration using pseudo
+                observations](#numerical-summaries-of-calibration-using-pseudo-observations)
         -   [2.1.2 Calibration using the subdistribution hazard
-            approach](#212-calibration-using-the-subdistribution-hazard-approach)
+            approach](#calibration-using-the-subdistribution-hazard-approach)
             -   [2.1.2.1 Calibration plot using the subdistribution
                 hazard
-                approach](#2121-calibration-plot-using-the-subdistribution-hazard-approach)
+                approach](#calibration-plot-using-the-subdistribution-hazard-approach)
             -   [2.1.2.2 Numerical summaries of calibration using the
                 subdistribution hazard
-                approach](#2122-numerical-summaries-of-calibration-using-the-subdistribution-hazard-approach)
+                approach](#numerical-summaries-of-calibration-using-the-subdistribution-hazard-approach)
         -   [2.1.3 Observed and Expected
-            ratio](#213-observed-and-expected-ratio)
-        -   [2.1.4 Calibration intercept and slope using
-            pseudovalues](#214-calibration-intercept-and-slope-using-pseudovalues)
-    -   [2.2 Discrimination](#22-discrimination)
+            ratio](#observed-and-expected-ratio)
+        -   [2.1.4 Calibration intercept and slope using pseudo
+            observations](#calibration-intercept-and-slope-using-pseudo-observations)
+    -   [2.2 Discrimination](#discrimination)
         -   [2.2.1 C-index and time-dependent
-            AUC](#221-c-index-and-time-dependent-auc)
+            AUC](#c-index-and-time-dependent-auc)
         -   [2.2.2 Plot Area under the curve(s) over the
-            time](#222-plot-area-under-the-curves-over-the-time)
-    -   [2.3 Overall prediction error](#23-overall-prediction-error)
+            time](#plot-area-under-the-curves-over-the-time)
+    -   [2.3 Overall prediction error](#overall-prediction-error)
 -   [Goal 3 - Clinical utility](#goal-3---clinical-utility)
 -   [Reproducibility ticket](#reproducibility-ticket)
 
 ## Steps
 
 The steps taken in this file are:  
-1. To develop a competing risks prediction model cause specific hazards
-approach;  
+1. To develop a competing risks prediction model using the cause
+specific hazards approach;  
 2. To assess the performance of the model in terms of calibration,
 discrimination and overall prediction error;  
 3. To assess the potential clinical utility the model using decision
@@ -61,10 +60,9 @@ curve analysis;
 
 ### Installing and loading packages and import data
 
-The following libraries are needed to achieve the outlined goals, the
-code chunk below will a) check whether you already have them installed,
-b) install them for you if not already present, and c) load the packages
-into the session.
+The following libraries are used in this file, the code chunk below will
+a) check whether you already have them installed, b) install them for
+you if not already present, and c) load the packages into the session.
 
 ``` r
 # Use pacman to check whether packages are installed, if not load
@@ -134,7 +132,7 @@ Age (years)
 </td>
 </tr>
 <tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+<td style="text-align:left; padding-left:  2em;" indentlevel="1">
 Mean (SD)
 </td>
 <td style="text-align:left;">
@@ -145,7 +143,7 @@ Mean (SD)
 </td>
 </tr>
 <tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+<td style="text-align:left; padding-left:  2em;" indentlevel="1">
 Median (Range)
 </td>
 <td style="text-align:left;">
@@ -165,7 +163,7 @@ Size (cm)
 </td>
 </tr>
 <tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+<td style="text-align:left; padding-left:  2em;" indentlevel="1">
 Mean (SD)
 </td>
 <td style="text-align:left;">
@@ -176,7 +174,7 @@ Mean (SD)
 </td>
 </tr>
 <tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+<td style="text-align:left; padding-left:  2em;" indentlevel="1">
 Median (Range)
 </td>
 <td style="text-align:left;">
@@ -196,7 +194,7 @@ Nodal status
 </td>
 </tr>
 <tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+<td style="text-align:left; padding-left:  2em;" indentlevel="1">
 negative
 </td>
 <td style="text-align:left;">
@@ -207,7 +205,7 @@ negative
 </td>
 </tr>
 <tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+<td style="text-align:left; padding-left:  2em;" indentlevel="1">
 positive
 </td>
 <td style="text-align:left;">
@@ -227,7 +225,7 @@ Hormon receptor status
 </td>
 </tr>
 <tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+<td style="text-align:left; padding-left:  2em;" indentlevel="1">
 ER and/or PR +
 </td>
 <td style="text-align:left;">
@@ -238,7 +236,7 @@ ER and/or PR +
 </td>
 </tr>
 <tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+<td style="text-align:left; padding-left:  2em;" indentlevel="1">
 ER-/PR-
 </td>
 <td style="text-align:left;">
@@ -299,14 +297,14 @@ oldpar <- par(mfrow = c(1, 2), mar = c(5, 5, 1, 1))
 plot(mfit_rdata,
      col = 1, lwd = 2,
      xlab = "Years since BC diagnosis",
-     ylab = "Cumulative incidence", bty = "n",
+     ylab = "Cumulative incidence recurrence", bty = "n",
      ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
 )
 title("Development data")
 plot(mfit_vdata,
      col = 1, lwd = 2,
      xlab = "Years since BC diagnosis",
-     ylab = "Cumulative incidence", bty = "n",
+     ylab = "Cumulative incidence recurrence", bty = "n",
      ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
 )
 title("Validation data")
@@ -500,7 +498,10 @@ Here we investigate the potential non-linear relation between continuous
 predictors (i.e. age and size) and the outcomes. We apply three-knot
 restricted cubic splines using `rms::rcs()` function (details are given
 in e.g. Frank Harrell’s book ‘Regression Model Strategies (second
-edition)’, page 27.
+edition)’, page 27. We assess the potential non-linearity graphically
+(plotting the two continuous predictors against the log relative hazards
+(XB or linear predictor) of both event types. Also, we compare the
+models with and without splines based on the AIC.
 
 ``` r
 # Models without splines
@@ -732,7 +733,7 @@ non-recurrence mortality).
 ### 1.3 Checking proportional hazards assumption
 
 We now examine the fits further by checking the proportionality of the
-cause-specific hazards of the models.
+cause-specific hazards.
 
 ``` r
 zp_csc1 <- cox.zph(fit_csc1, transform = "identity")
@@ -976,10 +977,7 @@ The statistical tests showed a potential violation of the proportional
 hazards assumption for nodal status in the model for non-recurrence
 mortality. For simplicity we ignore this violation in the remainder.
 
-### 1.4 Examine the risk fit of the models
-
-We show the results of the Cox proportional cause-specific hazards
-regression models
+### 1.4 Examine the fit of the models
 
 -   Cox proportional hazard model for recurrence
 
@@ -1088,7 +1086,7 @@ print(fit_csc1_cph)
 options(datadist = NULL)
 ```
 
--   Cox proportional non recurrence mortality-specific hazard model
+-   Cox proportional hazard model for non recurrence mortality
 
 ``` r
 dd <- datadist(rdata)
@@ -1202,7 +1200,12 @@ associated with higher risk to develop a breast cancer recurrence, while
 older patients and larger tumors are associated with higher risk of non
 recurrence mortality.
 
-### 1.5 Plots predictors vs predicted risk at 5 years in the validation data
+### 1.5 Plot of predictors vs estimated risk at 5 years in the validation data
+
+To get further insight into the effect of the predictors, we plot the
+values of the observed predictors in the validation set against the
+estimated absolute risk of breast cancer recurrence at 5 years. This
+gives an idea of the size of the effects.
 
 ``` r
 # Models -------------
@@ -1230,7 +1233,7 @@ plot(vdata$age,
      xlim = c(65, 100),
      ylim = c(0, .6),
      xlab = "Age, years",
-     ylab = "Predicted risk")
+     ylab = "Estimated risk")
 lines(lowess(vdata$age, vdata$pred), 
       col ='red',
       lwd = 2)
@@ -1271,21 +1274,20 @@ plot(vdata$ncat,
 
 ``` r
 par(oldpar)
-
-# NOTE: Do we need to comments these plots?
 ```
 
 ## Goal 2 - Assessing performance of a competing risks prediction model
 
-Here we evaluate the performance of the risk prediction models in terms
-of calibration, discrimination and overall prediction error.
+Here we evaluate the performance of the prediction model in terms of
+calibration, discrimination and overall prediction error.
 
 ### 2.1 Calibration
 
 We assess calibration by:
 
 -   The calibration plot as a graphical representation of calibration
-    using the pseudovalues and the subdistribution hazard approach;
+    using the pseudo observations and the subdistribution hazard
+    approach;
 
 -   Numerical summaries of calibration:
 
@@ -1301,7 +1303,7 @@ We assess calibration by:
         maximum of the absolute differences between actual risks and
         risk predictions;
 
-    -   Calibration intercept/slope estimated using pseudovalues:
+    -   Calibration intercept/slope estimated using pseudo observations:
 
         -   If on average the risk estimates equal the actual risks, the
             calibration intercept will be zero. A negative calibration
@@ -1313,12 +1315,12 @@ We assess calibration by:
             and on the high end. A calibration slope &gt;1 indicates
             predictions do not show enough variation.
 
-#### 2.1.1 Calibration using pseudovalues
+#### 2.1.1 Calibration using pseudo observations
 
 We calculate calibration plot and numerical summaries of calibration as
 ICI, E50, E90, Emax and root squared bias using pseudo value approach.
 
-##### 2.1.1.1 Calibration plot using pseudovalues
+##### 2.1.1.1 Calibration plot using pseudo observations
 
 ``` r
 # Models ----------
@@ -1369,7 +1371,7 @@ calplot_pseudo <- plotCalibration(
   xlab = "Predictions",
   bty = "n"
 )
-title("Calibration plot using pseudovalues")
+title("Calibration plot using pseudo observations")
 ```
 
 <img src="imgs/Prediction_CSC/cal-1.png" width="672" style="display: block; margin: auto;" />
@@ -1377,7 +1379,7 @@ Calibration plot suggests that the prediction model seems to
 overestimate the actual risk, especially at the lower and higher values
 of the estimated risk.
 
-##### 2.1.1.2 Numerical summaries of calibration using pseudovalues
+##### 2.1.1.2 Numerical summaries of calibration using pseudo observations
 
 ``` r
 # We can extract predicted and observed, observed will depend on degree of smoothing (bandwidth)
@@ -1420,7 +1422,7 @@ Root squared bias
 <tbody>
 <tr>
 <td style="text-align:left;">
-Calibration measures - pseudovalues
+Calibration measures - pseudo observations
 </td>
 <td style="text-align:right;">
 0.0308
@@ -1446,7 +1448,7 @@ especially in the higher values of the estimated actual risk.
 
 #### 2.1.2 Calibration using the subdistribution hazard approach
 
-Here we assess calibration using the subistribution hazard approach
+Here we assess calibration using the subdistribution hazard approach
 (Austin et al.)
 
 ##### 2.1.2.1 Calibration plot using the subdistribution hazard approach
@@ -1523,7 +1525,7 @@ of the estimated risk.
 
 ##### 2.1.2.2 Numerical summaries of calibration using the subdistribution hazard approach
 
-Here we assess calibration using the subistribution hazard approach
+Here we assess calibration using the subdistribution hazard approach
 (Austin et al.)
 
 ``` r
@@ -1694,7 +1696,7 @@ Upper .95
 Observed and expected ratio shown slight overestimation of the risk
 predicted by the model.
 
-#### 2.1.4 Calibration intercept and slope using pseudovalues
+#### 2.1.4 Calibration intercept and slope using pseudo observations
 
 ``` r
 # Models ----------
@@ -1874,7 +1876,7 @@ C_vdata <-  pec::cindex(
 )$AppCindex$CauseSpecificCox
 
 
-# Bootstraping Wolbers' C-index to calculate the bootstrap percentile confidence intervals
+# Bootstraping C-index to calculate the bootstrap percentile confidence intervals
 
 B <- 100
 set.seed(1234)
@@ -1980,7 +1982,7 @@ Upper .95
 <tbody>
 <tr>
 <td style="text-align:left;">
-Wolbers C
+C-index
 </td>
 <td style="text-align:right;">
 0.64
@@ -2003,7 +2005,7 @@ Wolbers C
 </tr>
 <tr>
 <td style="text-align:left;">
-Uno AUC
+Time dependent AUC
 </td>
 <td style="text-align:right;">
 0.65
@@ -2125,8 +2127,9 @@ title("Validation data", adj = 0)
 
 ### 2.3 Overall prediction error
 
-We calculate the Brier Score, and the scaled Brier scale and the
-corresponding confidence intervals.
+We calculate the Brier Score, and the scaled Brier scale (also indicated
+by scaled Brier score or IPA) and the corresponding confidence
+intervals.
 
 Some confidence intervals are calculated using the bootstrap percentile
 method.
@@ -2491,11 +2494,8 @@ par(oldpar)
 ```
 
 If we choose a threshold of 20%, the model had a net benefit of 0.011 in
-the development data. This means that the model would identify 11
-patients per 1000 who will have beast cancer recurrence within 5 years
-since diagnosis where adjuvant chemotherapy is really needed. In the
-validation data, the model had a net benefit of 0.014 choosing a
-threshold of 20%.
+the development data. In the validation data, the model had a net
+benefit of 0.014 choosing a threshold of 20%.
 
 ## Reproducibility ticket
 
@@ -2503,77 +2503,74 @@ threshold of 20%.
 sessionInfo()
 ```
 
-    ## R version 4.0.5 (2021-03-31)
+    ## R version 4.0.3 (2020-10-10)
     ## Platform: x86_64-w64-mingw32/x64 (64-bit)
-    ## Running under: Windows 10 x64 (build 18363)
+    ## Running under: Windows 10 x64 (build 19042)
     ## 
     ## Matrix products: default
     ## 
     ## locale:
-    ## [1] LC_COLLATE=English_United States.1252 
-    ## [2] LC_CTYPE=English_United States.1252   
-    ## [3] LC_MONETARY=English_United States.1252
-    ## [4] LC_NUMERIC=C                          
-    ## [5] LC_TIME=English_United States.1252    
+    ## [1] LC_COLLATE=English_Netherlands.1252  LC_CTYPE=English_Netherlands.1252   
+    ## [3] LC_MONETARY=English_Netherlands.1252 LC_NUMERIC=C                        
+    ## [5] LC_TIME=English_Netherlands.1252    
     ## 
     ## attached base packages:
     ## [1] splines   stats     graphics  grDevices utils     datasets  methods  
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] devtools_2.4.2            usethis_2.0.1            
+    ##  [1] devtools_2.3.2            usethis_2.0.1            
     ##  [3] webshot_0.5.2             gridExtra_2.3            
-    ##  [5] rsample_0.0.9             forcats_0.5.1            
-    ##  [7] stringr_1.4.0             dplyr_1.0.5              
+    ##  [5] rsample_0.0.8             forcats_0.5.1            
+    ##  [7] stringr_1.4.0             dplyr_1.0.3              
     ##  [9] purrr_0.3.4               readr_1.4.0              
-    ## [11] tidyr_1.1.3               tibble_3.1.0             
-    ## [13] tidyverse_1.3.0           boot_1.3-27              
-    ## [15] gtsummary_1.3.7           kableExtra_1.3.4         
+    ## [11] tidyr_1.1.2               tibble_3.0.6             
+    ## [13] tidyverse_1.3.0           boot_1.3-25              
+    ## [15] gtsummary_1.3.7           kableExtra_1.3.1         
     ## [17] knitr_1.31                plotrix_3.8-1            
     ## [19] riskRegression_2020.12.08 pec_2020.11.17           
     ## [21] prodlim_2019.11.13        pseudo_1.4.3             
     ## [23] geepack_1.3-2             KMsurv_0.1-5             
-    ## [25] mstate_0.3.1              rms_6.2-0                
-    ## [27] SparseM_1.81              Hmisc_4.5-0              
+    ## [25] mstate_0.3.1              rms_6.1-0                
+    ## [27] SparseM_1.78              Hmisc_4.4-2              
     ## [29] ggplot2_3.3.3             Formula_1.2-4            
-    ## [31] lattice_0.20-41           survival_3.2-11          
+    ## [31] lattice_0.20-41           survival_3.2-7           
     ## [33] pacman_0.5.1             
     ## 
     ## loaded via a namespace (and not attached):
-    ##   [1] readxl_1.3.1        backports_1.2.1     systemfonts_1.0.1  
-    ##   [4] listenv_0.8.0       TH.data_1.0-10      digest_0.6.27      
-    ##   [7] foreach_1.5.1       htmltools_0.5.1.1   fansi_0.4.2        
-    ##  [10] magrittr_2.0.1      checkmate_2.0.0     memoise_2.0.0      
-    ##  [13] cluster_2.1.1       remotes_2.3.0       globals_0.14.0     
-    ##  [16] modelr_0.1.8        mets_1.2.8.1        matrixStats_0.58.0 
-    ##  [19] sandwich_3.0-0      svglite_2.0.0       prettyunits_1.1.1  
-    ##  [22] jpeg_0.1-8.1        colorspace_2.0-0    rvest_1.0.0        
-    ##  [25] haven_2.3.1         xfun_0.22           callr_3.6.0        
-    ##  [28] crayon_1.4.1        jsonlite_1.7.2      zoo_1.8-9          
-    ##  [31] iterators_1.0.13    glue_1.4.2          gtable_0.3.0       
-    ##  [34] MatrixModels_0.5-0  pkgbuild_1.2.0      scales_1.1.1       
-    ##  [37] mvtnorm_1.1-1       DBI_1.1.1           Rcpp_1.0.6         
-    ##  [40] viridisLite_0.3.0   cmprsk_2.2-10       htmlTable_2.1.0    
-    ##  [43] foreign_0.8-81      lava_1.6.9          htmlwidgets_1.5.3  
-    ##  [46] httr_1.4.2          RColorBrewer_1.1-2  ellipsis_0.3.1     
-    ##  [49] pkgconfig_2.0.3     nnet_7.3-15         dbplyr_2.1.1       
-    ##  [52] here_1.0.1          utf8_1.2.1          tidyselect_1.1.0   
-    ##  [55] rlang_0.4.10        munsell_0.5.0       cellranger_1.1.0   
-    ##  [58] tools_4.0.5         cachem_1.0.4        cli_2.4.0          
-    ##  [61] generics_0.1.0      broom_0.7.6         evaluate_0.14      
-    ##  [64] fastmap_1.1.0       yaml_2.2.1          processx_3.5.1     
-    ##  [67] fs_1.5.0            timereg_1.9.8       future_1.21.0      
-    ##  [70] nlme_3.1-152        quantreg_5.85       xml2_1.3.2         
-    ##  [73] compiler_4.0.5      rstudioapi_0.13     png_0.1-7          
-    ##  [76] testthat_3.0.4      gt_0.2.2            reprex_2.0.0       
-    ##  [79] broom.helpers_1.2.1 stringi_1.5.3       highr_0.8          
-    ##  [82] ps_1.6.0            desc_1.3.0          Matrix_1.3-2       
-    ##  [85] vctrs_0.3.7         pillar_1.5.1        lifecycle_1.0.0    
-    ##  [88] furrr_0.2.2         data.table_1.14.0   conquer_1.0.2      
-    ##  [91] R6_2.5.0            latticeExtra_0.6-29 parallelly_1.24.0  
-    ##  [94] sessioninfo_1.1.1   codetools_0.2-18    polspline_1.1.19   
-    ##  [97] MASS_7.3-53.1       assertthat_0.2.1    pkgload_1.2.1      
-    ## [100] rprojroot_2.0.2     withr_2.4.1         multcomp_1.4-16    
-    ## [103] parallel_4.0.5      hms_1.0.0           grid_4.0.5         
-    ## [106] rpart_4.1-15        rmarkdown_2.7       numDeriv_2016.8-1.1
-    ## [109] lubridate_1.7.10    base64enc_0.1-3
+    ##   [1] TH.data_1.0-10      colorspace_2.0-0    ellipsis_0.3.1     
+    ##   [4] rprojroot_2.0.2     htmlTable_2.1.0     base64enc_0.1-3    
+    ##   [7] fs_1.5.0            rstudioapi_0.13     listenv_0.8.0      
+    ##  [10] furrr_0.2.2         remotes_2.3.0       MatrixModels_0.4-1 
+    ##  [13] mvtnorm_1.1-1       lubridate_1.7.9.2   xml2_1.3.2         
+    ##  [16] codetools_0.2-16    cachem_1.0.1        pkgload_1.1.0      
+    ##  [19] jsonlite_1.7.2      gt_0.2.2            broom_0.7.4        
+    ##  [22] cluster_2.1.0       dbplyr_2.1.0        png_0.1-7          
+    ##  [25] compiler_4.0.3      httr_1.4.2          backports_1.2.0    
+    ##  [28] fastmap_1.1.0       assertthat_0.2.1    Matrix_1.2-18      
+    ##  [31] cli_2.3.0           prettyunits_1.1.1   htmltools_0.5.1.1  
+    ##  [34] quantreg_5.83       tools_4.0.3         gtable_0.3.0       
+    ##  [37] glue_1.4.2          Rcpp_1.0.6          cellranger_1.1.0   
+    ##  [40] vctrs_0.3.6         nlme_3.1-149        conquer_1.0.2      
+    ##  [43] iterators_1.0.13    broom.helpers_1.2.1 xfun_0.20          
+    ##  [46] ps_1.5.0            globals_0.14.0      testthat_3.0.1     
+    ##  [49] rvest_0.3.6         lifecycle_0.2.0     future_1.21.0      
+    ##  [52] polspline_1.1.19    MASS_7.3-53         zoo_1.8-8          
+    ##  [55] scales_1.1.1        hms_1.0.0           parallel_4.0.3     
+    ##  [58] sandwich_3.0-0      RColorBrewer_1.1-2  yaml_2.2.1         
+    ##  [61] memoise_2.0.0       rpart_4.1-15        latticeExtra_0.6-29
+    ##  [64] stringi_1.5.3       highr_0.8           desc_1.2.0         
+    ##  [67] foreach_1.5.1       checkmate_2.0.0     pkgbuild_1.2.0     
+    ##  [70] lava_1.6.8.1        mets_1.2.8.1        rlang_0.4.10       
+    ##  [73] pkgconfig_2.0.3     matrixStats_0.58.0  evaluate_0.14      
+    ##  [76] htmlwidgets_1.5.3   cmprsk_2.2-10       processx_3.4.5     
+    ##  [79] tidyselect_1.1.0    here_1.0.1          parallelly_1.23.0  
+    ##  [82] magrittr_2.0.1      R6_2.5.0            generics_0.1.0     
+    ##  [85] multcomp_1.4-15     DBI_1.1.1           pillar_1.4.7       
+    ##  [88] haven_2.3.1         foreign_0.8-80      withr_2.4.1        
+    ##  [91] nnet_7.3-14         modelr_0.1.8        crayon_1.4.0       
+    ##  [94] rmarkdown_2.6       timereg_1.9.8       jpeg_0.1-8.1       
+    ##  [97] grid_4.0.3          readxl_1.3.1        data.table_1.13.6  
+    ## [100] callr_3.5.1         reprex_1.0.0        digest_0.6.27      
+    ## [103] numDeriv_2016.8-1.1 munsell_0.5.0       viridisLite_0.3.0  
+    ## [106] sessioninfo_1.1.1
