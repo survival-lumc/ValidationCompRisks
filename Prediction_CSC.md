@@ -1202,10 +1202,10 @@ recurrence mortality.
 
 ### 1.5 Plot of predictors vs estimated risk at 5 years in the validation data
 
-To get further insight into the effect of the predictors, we plot the
-values of the observed predictors in the validation set against the
-estimated absolute risk of breast cancer recurrence at 5 years. This
-gives an idea of the size of the effects.
+To get further insight into the effect of the covariates, we plot the
+covariate values observed in the validation set against the estimated
+absolute risk of breast cancer recurrence at 5 years. This gives an idea
+of the size of the effects.
 
 ``` r
 # Models -------------
