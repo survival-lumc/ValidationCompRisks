@@ -11,7 +11,7 @@
 #' @author Daniele Giardiello
 #'
 #' @examples
-royston_R2D_cmprisk <- function(pred,
+royston_R2D_cmprsk <- function(pred,
                                 data, 
                                 time,
                                 status,
