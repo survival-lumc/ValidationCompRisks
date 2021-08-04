@@ -13,7 +13,7 @@ output:
   
 The steps taken in this file are:   
 1. To develop a competing risks prediction model using the cause specific hazards approach;  
-2. To assess the performance of the model in terms of calibration, discrimination and overall prediction error;  
+2. To assess the performance of the model in terms of calibration, discrimination and overall prediction error; We calculate the apparent (not the true internal) validation and the external validation;   
 3. To assess the potential clinical utility the model using decision curve analysis;
 
 ### Installing and loading packages and import data
@@ -37,6 +37,7 @@ library(pacman)
 pacman::p_load(
   survival,
   rms,
+  cmprsk,
   mstate,
   pseudo,
   pec,
@@ -992,6 +993,9 @@ We here calculate
 + The 5-year time-dependent AUC. More details are in the manuscript and in its references;  
   + Plot time-dependent AUC over the time;
   
++ Royston-Sauerbrei D statistic and R<sup>2</sup><sub>D</sub> as a measure of prognostic separation;  
+
+  
 #### 2.2.1 C-index and time-dependent AUC
 
 ```{r, discrimination,warning=FALSE,message=FALSE}
@@ -1221,6 +1225,79 @@ lines(AUC_vdata$times,
       lty = 2)
 title("Validation data", adj = 0)
 ```
+
+#### 2.2.3 Royston-Sauerbrei D statistic and R<sup>2</sup><sub>D</sub>
+We calculate Royston-Sauerbrei D statistic and R<sup>2</sup><sub>D</sub> as a measure of explained variation
+
+```{r, function_D, message=FALSE,warning=FALSE, echo=FALSE}
+# function to calculate D and R2D
+source(here::here("R/roystonD.R"))
+```
+
+```{r, royston_R2D, fig.align='center', message=FALSE, warning=FALSE}
+# Models ----------
+fit_csh <- CSC(Hist(time, status_num) ~ 
+                 age + size +
+                 ncat + hr_status, 
+               data = rdata, 
+               fitter = "cph")
+
+
+# useful objects
+primary_event <- 1 # Set to 2 if cause 2 was of interest 
+horizon <- 5 # Set time horizon for prediction (here 5 years)
+
+# Predicted risk estimation
+rdata$pred <- predictRisk(fit_csh,
+                    cause = primary_event,
+                    times = horizon,
+                    newdata = rdata)
+
+vdata$pred <- predictRisk(fit_csh,
+                    cause = primary_event,
+                    times = horizon,
+                    newdata = vdata)
+
+# Rank based on predicted values at 5 years
+
+rdata$rank <- rank(rdata$pred,
+                   na.last = TRUE,
+                   ties.method = "first") 
+
+vdata$rank <- rank(vdata$pred,
+                   na.last = TRUE,
+                   ties.method = "first") 
+
+
+res_rdata <- royston_R2D_cmprsk(
+  pred = rdata$pred,
+  data = rdata,
+  primary_event = 1,
+  time = rdata$time,
+  status = rdata$status_num)
+
+res_vdata <- royston_R2D_cmprsk(
+  pred = vdata$pred,
+  data = vdata,
+  primary_event = 1,
+  time = vdata$time,
+  status = vdata$status_num)
+```
+
+```{r, res_D_R2D, fig.align='center',echo=FALSE}
+k <- 2
+res_D <- rbind(
+  "Development data" = res_rdata,
+  "Validation data" = res_vdata
+)
+
+res_D <- round(res_D, k)
+kable(res_D) %>%
+  kable_styling("striped", position = "center")
+```
+
+The R<sup>2</sup><sub>D</sub> showed how much of the observed variation in the outcome is explained by the prognostic model. The model explained 15% and 26% of the observed variation in the development and validation data, respectively.
+
 
 ### 2.3 Overall prediction error
 
