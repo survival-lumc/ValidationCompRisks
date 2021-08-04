@@ -36,7 +36,7 @@ royston_R2D_cmprsk <- function(pred,
     "Royston D" = unname(fg$coef),
     "Lower .95" = fg$coef - qnorm(1 - alpha /2) * sqrt(fg$var),
     "Upper .95" = fg$coef + qnorm(1 - alpha /2) * sqrt(fg$var),
-    "R2D" =  unname((fg$coef^2 / Kappa^2)/((pi^2 / 6)+(D^2 / Kappa^2)))  
+    "R2D" =  unname((fg$coef^2 / Kappa^2)/((pi^2 / 6)+(fg$coef^2 / Kappa^2)))  
   )
   
   return(res)
