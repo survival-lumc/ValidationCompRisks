@@ -6,9 +6,11 @@ The repository contains the following code:
 
 + [Prediction_CSC_minimal.R](Prediction_CSC_minimal.R) : the companion (minimal) script for the manuscript, illustrating external validation of a prediction model. The file uses a cause specific hazards prediction model. To reproduce all mean tables and figures of the manuscript, this script is sufficient. 
 
-+ [Prediction_CSC.md](Prediction_CSC.md) :a markdown document containing a more in-depth version script, with details on model development, descriptive tables and plots. The RMarkdown source code (.Rmd) is [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Prediction_CSC.Rmd).
++ [Prediction_CSC.md](Prediction_CSC.md) : a markdown document containing a more in-depth version script, with details on model development, descriptive tables and plots. The RMarkdown source code (.Rmd) is [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Prediction_CSC.Rmd).
 
 + Additional code to alternatively develop a competing risk prediction model using the subdistribution hazard approach (Fine & Gray) is [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Development_SDH.md). The Rmarkdown source code (.Rmd) is [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Development_SDH.Rmd). A more concise R source code (.R) is [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Development_SDH_minimal.R).
+
++ [sharing_CSC_model.R](sharing_CSC_model.R) : example/template of how to share a cause-specific hazards prediction model for external validation, without having to share the original development data.
 
 
 Data are available [here](https://github.com/survival-lumc/ValidationCompRisks/tree/main/Data).  Additional functions useful to develop and validate competing risks prediction models are available [here](https://github.com/survival-lumc/ValidationCompRisks/tree/main/R).
@@ -30,6 +32,6 @@ Afterwards, you can double-click the `ValidationCompRisks.Rproj` file to open an
 | Name                                                         | Affiliation                           | Role                                            |
 | ------------------------------------------------------------ | ------------------------------------- | ----------------------------------------------- |
 | [Daniele Giardiello](https://github.com/danielegiardiello/)  | The Netherlands Cancer Institute (NL) | Author .Rmd files/maintainer                    |
-| [Edouard Bonneville](https://www.lumc.nl/org/bds/medewerkers/1968807) | Leiden University Medical Center (NL) | Author minimal .R script/review of .Rmd scripts |
+| [Edouard Bonneville](https://www.lumc.nl/org/bds/medewerkers/1968807) | Leiden University Medical Center (NL) | Author minimal .R and CSC sharing scripts/review of .Rmd scripts |
 | [Nan van Geloven](https://www.lumc.nl/org/bds/medewerkers/1216536?setlanguage=English&setcountry=en) | Leiden University Medical Center (NL) | Review of both .R and .Rmd scripts              |
 
