@@ -16,15 +16,16 @@ vdata <- readRDS("Data/vdata.rds")
 # Fit model
 fit_csh <- riskRegression::CSC(
   formula = Hist(time, status_num) ~ age + size + ncat + hr_status, 
-  data = rdata
+  data = rdata, 
+  fitter = "coxph" # even if model was built with rms, share with coxph
 )
 
-# The bare minimum to share: coefficients, baseline hazards and model formulas
+# The bare minimum to share: coefficients, baseline hazards and model 'terms'
 # (No data sharing is needed)
 model_info <- list(
   "coefficients" = stats::coef(fit_csh),
   "baseline_hazards" = lapply(fit_csh$models, function(mod) survival::basehaz(mod, centered = FALSE)),
-  "model_formulas" = lapply(fit_csh$models, function(mod) mod[["formula"]])
+  "model_terms" = lapply(fit_csh$models, function(mod) mod[["terms"]])
 )
 
 # Can be saved to then be shared as:
@@ -43,7 +44,7 @@ predictRisk_shared_CSC <- function(model_info, # List object (see above)
   # -- Basic checks
   
   # Check model_info components
-  info_names <- c("coefficients", "baseline_hazards", "model_formulas")
+  info_names <- c("coefficients", "baseline_hazards", "model_terms")
   if (any(!(names(model_info) %in% info_names))) {
     stop(paste0("Names of model_info components should be: ", paste(info_names, collapse = ", ")))
   }
@@ -51,16 +52,6 @@ predictRisk_shared_CSC <- function(model_info, # List object (see above)
   if (length(n_causes) > 1) {
     stop("The elements of model_info should all be of length equal to number of competing risks!")
   } 
-  
-  # Check predictor variables in newdata
-  predictor_vars <- Reduce(
-    f = "intersect",
-    x = lapply(model_info$model_formulas, function(form) all.vars(stats::update(form, 1 ~ .)))
-  )
-  if (any(!(predictor_vars %in% colnames(newdata)))) {
-    which_missing <- predictor_vars[!(predictor_vars %in% colnames(newdata))]
-    stop(paste0("newdata does not contain the following predictors: ", paste(which_missing, collapse = ", ")))
-  }
 
   # -- Absolute risk prediction
   
@@ -68,7 +59,7 @@ predictRisk_shared_CSC <- function(model_info, # List object (see above)
   
   # Calculate linear predictors for all causes in new dataset
   linpreds <- lapply(causes_ind, function(cause) {
-    mod_matrix <- stats::model.matrix(model_info$model_formulas[[cause]], data = newdata)
+    mod_matrix <- stats::model.matrix(model_info$model_terms[[cause]], data = newdata)
     unname(drop(mod_matrix[, -1] %*% model_info$coefficients[[cause]]))
   })
   
