@@ -88,6 +88,66 @@ numsum_pseudo <- c(
 numsum_pseudo
 
 
+# Calibration plot (pseudo-obs approach, loess smoothing) -----------------
+
+
+# This approach will also yield confidence intervals:
+
+# Use pseudo-observations calculated by Score() (can alternatively use pseudo::pseudoci)
+pseudos <- data.frame(score_vdata$Calibration$plotframe)
+pseudos <- pseudos[order(pseudos$risk), ]
+
+# Note:
+# - 'pseudos' is the data.frame with ACTUAL pseudo-observations, not the smoothed ones
+# - Column ID is not the id in vdata; it is just a number assigned to each row of 
+# the original validation data sorted by time and event indicator
+head(pseudos$pseudovalue) # the pseudo-observations
+
+# Use linear loess (weighted local regression with polynomial degree = 1) smoothing
+smooth_pseudos <- predict(
+  stats::loess(pseudovalue ~ risk, data = pseudos, degree = 1, span = 0.33), 
+  se = TRUE
+)
+
+# Make calibration plot
+plot(
+  x = pseudos$risk, 
+  y = pseudos$pseudovalue,
+  xlim = c(0, 0.6),
+  ylim = c(0, 0.6), 
+  xlab = "Predictions",
+  ylab = "Estimated actual risk"
+)
+abline(a = 0, b = 1, col = "gray")
+lines(
+  x = pseudos$risk,
+  y = smooth_pseudos$fit
+)
+lines(
+  pseudos$risk, 
+  smooth_pseudos$fit - qt(0.975, smooth_pseudos$df) * smooth_pseudos$se, 
+  lty = 2
+)
+lines(
+  pseudos$risk, 
+  smooth_pseudos$fit + qt(0.975, smooth_pseudos$df) * smooth_pseudos$se, 
+  lty = 2
+)
+
+
+# Make numerical summaries
+diff_pseudo_smooth <- pseudos$risk - smooth_pseudos$fit
+
+numsum_pseudo_smooth <- c(
+  "ICI" = mean(abs(diff_pseudo_smooth)),
+  setNames(quantile(abs(diff_pseudo_smooth), c(0.5, 0.9)), c("E50", "E90")),
+  "Emax" = max(abs(diff_pseudo_smooth)),
+  "squared_bias" = mean(diff_pseudo_smooth^2)
+)
+numsum_pseudo_smooth
+
+
+
 # Calibration plot (flexible regression approach) -------------------------
 
 
@@ -131,7 +191,7 @@ plot(
   xlab = "Predictions",
   ylab = "Estimated actual risk"
 )
-abline(a = 0, b = 1, lty = "dashed", col = "red")
+abline(a = 0, b = 1, col = "gray")
 
 # Numerical summary measures
 diff_fgr <- dat_fgr$pred - dat_fgr$obs
@@ -144,27 +204,31 @@ numsum_fgr <- c(
 )
 numsum_fgr
 
-# Plot calibration plots from both methods together
+
+# Plot calibration plots all methods together
 plot(
-  x = dat_fgr$pred, 
-  y = dat_fgr$obs, 
-  type = "l", 
-  xlim = c(0, 0.6), 
-  ylim = c(0, 0.6),
-  col = "blue",
-  lwd = 2,
+  x = pseudos$risk, 
+  y = pseudos$pseudovalue,
+  xlim = c(0, 0.6),
+  ylim = c(0, 0.6), 
   xlab = "Predictions",
   ylab = "Estimated actual risk"
 )
-lines(x = dat_pseudo$Pred, y = dat_pseudo$Obs, col = "lightblue", lwd = 2)
-abline(a = 0, b = 1, lty = "dashed", col = "red")
+abline(a = 0, b = 1, col = "gray")
+lines(x = pseudos$risk, y = smooth_pseudos$fit, lwd = 2, lty = 3, col = "blue")
+lines(x = dat_pseudo$Pred, y = dat_pseudo$Obs, col = "lightblue", lwd = 2, lty = 1)
+lines(x = dat_fgr$pred, y = dat_fgr$obs, col = "black", lwd = 2, lty = 4)
 legend(
-  x = 0, 
-  y = 0.6, 
-  legend = c("Subdistribution", "Pseudo-observations"),
-  col = c("blue", "lightblue"),
-  lty = rep(1, 2),
-  lwd = rep(2, 2),
+  x = -0.025, 
+  y = 0.65, 
+  legend = c(
+    "Subdistribution", 
+    "Pseudo-obs (NN smoothing)",
+    "Pseudo-obs (LOESS smoothing)"
+  ),
+  col = c("black", "lightblue", "blue"),
+  lty = c(4, 1, 3),
+  lwd = rep(2, 3),
   bty = "n"
 )
 
@@ -191,15 +255,8 @@ OE_summary
 # Calibration intercept/slope ---------------------------------------------
 
 
-# Use pseudo-observations calculated by Score() (can alternatively use pseudo::pseudoci)
-pseudos <- data.frame(score_vdata$Calibration$plotframe)
-
-# Note:
-# - 'pseudos' is the data.frame with ACTUAL pseudo-observations, not the smoothed ones
-# - Column ID is not the id in vdata; it is just a number assigned to each row of 
-# the original validation data sorted by time and event indicator
-head(pseudos$pseudovalue) # the pseudo-observations
-pseudos$cll_pred <- log(-log(1 - pseudos$risk)) # add the cloglog risk ests 
+# Add the cloglog risk estimates to dataset with pseudo-observations
+pseudos$cll_pred <- log(-log(1 - pseudos$risk))  
 
 # Fit model for calibration intercept
 fit_cal_int <- geese(
