@@ -1164,9 +1164,9 @@ AUC_vdata <- Score(
   list("csh_validation" = fit_csh),
   formula = Hist(time, status_num) ~ 1, 
   cens.model = "km", 
-  data = rdata, 
+  data = vdata, 
   conf.int = TRUE, 
-  times = quantile(vdata$time, probs = seq(0.02, 0.28, 0.02)),
+  times = c(quantile(vdata$time, probs = seq(0.02, 0.29, 0.01))),
   metrics = c("auc"),
   cause = primary_event
 )
