@@ -1154,7 +1154,7 @@ AUC_rdata <- Score(
   cens.model = "km", 
   data = rdata, 
   conf.int = TRUE, 
-  times = quantile(rdata$time, probs = seq(0.02, 0.34, 0.02)),
+  times = seq(0.4, 5.1, 0.2),
   metrics = c("auc"),
   cause = primary_event
 )
@@ -1166,7 +1166,7 @@ AUC_vdata <- Score(
   cens.model = "km", 
   data = vdata, 
   conf.int = TRUE, 
-  times = c(quantile(vdata$time, probs = seq(0.02, 0.29, 0.01))),
+  times = seq(0.5, 5.01, 0.1),
   metrics = c("auc"),
   cause = primary_event
 )
