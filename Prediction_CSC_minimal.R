@@ -128,6 +128,7 @@ plot(
   xlim = c(0, 0.6), 
   ylim = c(spike_bounds[1], 0.6),
   yaxt = "n",
+  frame.plot = FALSE,
   xlab = "Estimated risks",
   ylab = "Observed outcome proportions", 
   type = "n"
@@ -198,6 +199,7 @@ plot(
   x = dat_fgr$pred, 
   y = dat_fgr$obs, 
   type = "l",
+  frame.plot = FALSE,
   xlim = c(0, 0.6), 
   ylim = c(0, 0.6),
   xlab = "Estimated risks",
@@ -225,6 +227,7 @@ plot(
   ylim = c(spike_bounds[1] + 0.025, 0.6),
   yaxt = "n",
   type = "n",
+  frame.plot = FALSE,
   xlab = "Estimated risks",
   ylab = "Observed outcome proportions"
 )
