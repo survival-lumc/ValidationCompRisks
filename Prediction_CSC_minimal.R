@@ -69,7 +69,8 @@ calplot_pseudo <- plotCalibration(
   xlim = c(0, 0.6), 
   ylim = c(0, 0.6), 
   rug = TRUE, 
-  xlab = "Predictions"
+  xlab = "Estimated risks", 
+  ylab = "Observed outcome proportions"
 )
 
 # We can extract predicted and observed, observed will depend on degree of smoothing (bandwidth)
@@ -109,29 +110,45 @@ smooth_pseudos <- predict(
   se = TRUE
 )
 
-# Make calibration plot
+# Calibration plot (reported in manuscript):
+
+# First, prepare histogram of estimated risks for x-axis
+spike_bounds <- c(-0.1, -0.025)
+bin_breaks <- seq(0, 0.6, length.out = 100 + 1)
+freqs <- table(cut(pred, breaks = bin_breaks))
+bins <- bin_breaks[-1]
+freqs_valid <- freqs[freqs > 0]
+freqs_rescaled <- spike_bounds[1] + (spike_bounds[2] - spike_bounds[1]) * 
+  (freqs_valid - min(freqs_valid)) / (max(freqs_valid) - min(freqs_valid))
+
+# Produce plot
 plot(
   x = pseudos$risk, 
   y = pseudos$pseudovalue,
-  xlim = c(0, 0.6),
-  ylim = c(0, 0.6), 
-  xlab = "Predictions",
-  ylab = "Estimated actual risk"
+  xlim = c(0, 0.6), 
+  ylim = c(spike_bounds[1], 0.6),
+  yaxt = "n",
+  xlab = "Estimated risks",
+  ylab = "Observed outcome proportions", 
+  type = "n"
+)
+axis(2, seq(0, 0.6, by = 0.1), labels = seq(0, 0.6, by = 0.1))
+polygon(
+  x = c(pseudos$risk, rev(pseudos$risk)),
+  y = c(
+    smooth_pseudos$fit - qt(0.975, smooth_pseudos$df) * smooth_pseudos$se,
+    rev(smooth_pseudos$fit + qt(0.975, smooth_pseudos$df) * smooth_pseudos$se)
+  ),
+  border = FALSE,
+  col = "lightgray"
 )
 abline(a = 0, b = 1, col = "gray")
-lines(
-  x = pseudos$risk,
-  y = smooth_pseudos$fit
-)
-lines(
-  pseudos$risk, 
-  smooth_pseudos$fit - qt(0.975, smooth_pseudos$df) * smooth_pseudos$se, 
-  lty = 2
-)
-lines(
-  pseudos$risk, 
-  smooth_pseudos$fit + qt(0.975, smooth_pseudos$df) * smooth_pseudos$se, 
-  lty = 2
+lines(x = pseudos$risk, y = smooth_pseudos$fit, lwd = 2)
+segments(
+  x0 = bins[freqs > 0], 
+  y0 = spike_bounds[1], 
+  x1 = bins[freqs > 0], 
+  y1 = freqs_rescaled
 )
 
 
@@ -145,7 +162,6 @@ numsum_pseudo_smooth <- c(
   "squared_bias" = mean(diff_pseudo_smooth^2)
 )
 numsum_pseudo_smooth
-
 
 
 # Calibration plot (flexible regression approach) -------------------------
@@ -168,11 +184,7 @@ form_fgr <- reformulate(
 )
 
 # Regress subdistribution of event of interest on cloglog of estimated risks
-calib_fgr <- FGR(
-  formula = form_fgr,
-  cause = primary_event,
-  data = vdata_bis
-)
+calib_fgr <- FGR(formula = form_fgr, cause = primary_event, data = vdata_bis)
 
 # Add observed and predicted together in a data frame 
 dat_fgr <- cbind.data.frame(
@@ -188,8 +200,8 @@ plot(
   type = "l",
   xlim = c(0, 0.6), 
   ylim = c(0, 0.6),
-  xlab = "Predictions",
-  ylab = "Estimated actual risk"
+  xlab = "Estimated risks",
+  ylab = "Observed outcome proportions"
 )
 abline(a = 0, b = 1, col = "gray")
 
@@ -210,10 +222,13 @@ plot(
   x = pseudos$risk, 
   y = pseudos$pseudovalue,
   xlim = c(0, 0.6),
-  ylim = c(0, 0.6), 
-  xlab = "Predictions",
-  ylab = "Estimated actual risk"
+  ylim = c(spike_bounds[1] + 0.025, 0.6),
+  yaxt = "n",
+  type = "n",
+  xlab = "Estimated risks",
+  ylab = "Observed outcome proportions"
 )
+axis(2, seq(0, 0.6, by = 0.1), labels = seq(0, 0.6, by = 0.1))
 abline(a = 0, b = 1, col = "gray")
 lines(x = pseudos$risk, y = smooth_pseudos$fit, lwd = 2, lty = 3, col = "blue")
 lines(x = dat_pseudo$Pred, y = dat_pseudo$Obs, col = "lightblue", lwd = 2, lty = 1)
@@ -230,6 +245,12 @@ legend(
   lty = c(4, 1, 3),
   lwd = rep(2, 3),
   bty = "n"
+)
+segments(
+  x0 = bins[freqs > 0], 
+  y0 = spike_bounds[1] + 0.025, 
+  x1 = bins[freqs > 0], 
+  y1 = freqs_rescaled + 0.025
 )
 
 
