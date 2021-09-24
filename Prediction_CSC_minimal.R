@@ -113,7 +113,7 @@ smooth_pseudos <- predict(
 # Calibration plot (reported in manuscript):
 
 # First, prepare histogram of estimated risks for x-axis
-spike_bounds <- c(-0.1, -0.025)
+spike_bounds <- c(-0.075, 0)
 bin_breaks <- seq(0, 0.6, length.out = 100 + 1)
 freqs <- table(cut(pred, breaks = bin_breaks))
 bins <- bin_breaks[-1]
@@ -137,7 +137,7 @@ axis(2, seq(0, 0.6, by = 0.1), labels = seq(0, 0.6, by = 0.1))
 polygon(
   x = c(pseudos$risk, rev(pseudos$risk)),
   y = c(
-    smooth_pseudos$fit - qt(0.975, smooth_pseudos$df) * smooth_pseudos$se,
+    pmax(smooth_pseudos$fit - qt(0.975, smooth_pseudos$df) * smooth_pseudos$se, 0),
     rev(smooth_pseudos$fit + qt(0.975, smooth_pseudos$df) * smooth_pseudos$se)
   ),
   border = FALSE,
