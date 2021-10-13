@@ -1,17 +1,12 @@
 # Load libraries and data -------------------------------------------------
 
 
-# General packages
-pkgs <- c("survival", "pec", "splines", "geepack")
+# General packages (riskRegression version should be >= 2021.10.10)
+pkgs <- c("survival", "pec", "splines", "geepack", "riskRegression")
 vapply(pkgs, function(pkg) {
   if (!require(pkg, character.only = TRUE)) install.packages(pkg)
   require(pkg, character.only = TRUE, quietly = TRUE)
 }, FUN.VALUE = logical(length = 1L))
-
-# Install latest development version of riskRegression
-if (!require("devtools", character.only = TRUE)) install.packages("devtools")
-if (!require("riskRegression", character.only = TRUE)) devtools::install_github("tagteam/riskRegression")
-require("riskRegression", character.only = TRUE)
 
 # Load datasets
 rdata <- readRDS("Data/rdata.rds")
