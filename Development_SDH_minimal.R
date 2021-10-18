@@ -2,16 +2,12 @@
 
 
 # General packages
-pkgs <- c("survival", "mstate", "rms")
+pkgs <- c("survival", "mstate", "rms", "riskRegression")
 vapply(pkgs, function(pkg) {
   if (!require(pkg, character.only = TRUE)) install.packages(pkg)
   require(pkg, character.only = TRUE, quietly = TRUE)
 }, FUN.VALUE = logical(length = 1L))
 
-# Install latest development version of riskRegression
-if (!require("devtools", character.only = TRUE)) install.packages("devtools")
-if (!require("riskRegression", character.only = TRUE)) devtools::install_github("tagteam/riskRegression")
-require("riskRegression", character.only = TRUE)
 
 # Load datasets
 rdata <- readRDS("Data/rdata.rds")
