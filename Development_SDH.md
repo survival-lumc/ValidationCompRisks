@@ -52,13 +52,10 @@ pacman::p_load(
   tidyverse,
   rsample,
   gridExtra,
-  webshot
+  webshot,
+  riskRegression
 )
 
-# Install latest development version of riskRegression
-if (!require("devtools", character.only = TRUE)) install.packages("devtools")
-if (!require("riskRegression", character.only = TRUE)) devtools::install_github("tagteam/riskRegression")
-require("riskRegression", character.only = TRUE)
 
 # Import data ------------------
 rdata <- readRDS(here::here("Data/rdata.rds"))
@@ -1019,7 +1016,7 @@ sessionInfo()
 
     ## R version 4.0.5 (2021-03-31)
     ## Platform: x86_64-w64-mingw32/x64 (64-bit)
-    ## Running under: Windows 10 x64 (build 18363)
+    ## Running under: Windows 10 x64 (build 19043)
     ## 
     ## Matrix products: default
     ## 
@@ -1035,59 +1032,54 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] devtools_2.4.2            usethis_2.0.1            
-    ##  [3] webshot_0.5.2             gridExtra_2.3            
-    ##  [5] rsample_0.0.9             forcats_0.5.1            
-    ##  [7] stringr_1.4.0             dplyr_1.0.5              
-    ##  [9] purrr_0.3.4               readr_1.4.0              
-    ## [11] tidyr_1.1.3               tibble_3.1.0             
-    ## [13] tidyverse_1.3.0           boot_1.3-27              
-    ## [15] gtsummary_1.3.7           kableExtra_1.3.4         
-    ## [17] knitr_1.31                plotrix_3.8-1            
-    ## [19] riskRegression_2020.12.08 pec_2020.11.17           
-    ## [21] prodlim_2019.11.13        pseudo_1.4.3             
-    ## [23] geepack_1.3-2             KMsurv_0.1-5             
-    ## [25] mstate_0.3.1              rms_6.2-0                
-    ## [27] SparseM_1.81              Hmisc_4.5-0              
-    ## [29] ggplot2_3.3.3             Formula_1.2-4            
-    ## [31] lattice_0.20-41           survival_3.2-11          
-    ## [33] pacman_0.5.1             
+    ##  [1] webshot_0.5.2             gridExtra_2.3            
+    ##  [3] rsample_0.0.9             forcats_0.5.1            
+    ##  [5] stringr_1.4.0             dplyr_1.0.5              
+    ##  [7] purrr_0.3.4               readr_1.4.0              
+    ##  [9] tidyr_1.1.3               tibble_3.1.0             
+    ## [11] tidyverse_1.3.0           boot_1.3-27              
+    ## [13] gtsummary_1.3.7           kableExtra_1.3.4         
+    ## [15] knitr_1.31                plotrix_3.8-1            
+    ## [17] riskRegression_2020.12.08 pec_2020.11.17           
+    ## [19] prodlim_2019.11.13        pseudo_1.4.3             
+    ## [21] geepack_1.3-2             KMsurv_0.1-5             
+    ## [23] mstate_0.3.1              rms_6.2-0                
+    ## [25] SparseM_1.81              Hmisc_4.5-0              
+    ## [27] ggplot2_3.3.3             Formula_1.2-4            
+    ## [29] lattice_0.20-41           survival_3.2-11          
+    ## [31] pacman_0.5.1             
     ## 
     ## loaded via a namespace (and not attached):
-    ##   [1] readxl_1.3.1        backports_1.2.1     systemfonts_1.0.1  
-    ##   [4] listenv_0.8.0       TH.data_1.0-10      digest_0.6.27      
-    ##   [7] foreach_1.5.1       htmltools_0.5.1.1   fansi_0.4.2        
-    ##  [10] magrittr_2.0.1      checkmate_2.0.0     memoise_2.0.0      
-    ##  [13] cluster_2.1.1       remotes_2.3.0       globals_0.14.0     
-    ##  [16] modelr_0.1.8        mets_1.2.8.1        matrixStats_0.58.0 
-    ##  [19] sandwich_3.0-0      svglite_2.0.0       prettyunits_1.1.1  
-    ##  [22] jpeg_0.1-8.1        colorspace_2.0-0    rvest_1.0.0        
-    ##  [25] haven_2.3.1         xfun_0.22           callr_3.6.0        
-    ##  [28] crayon_1.4.1        jsonlite_1.7.2      zoo_1.8-9          
-    ##  [31] iterators_1.0.13    glue_1.4.2          gtable_0.3.0       
-    ##  [34] MatrixModels_0.5-0  pkgbuild_1.2.0      scales_1.1.1       
-    ##  [37] mvtnorm_1.1-1       DBI_1.1.1           Rcpp_1.0.6         
-    ##  [40] viridisLite_0.3.0   cmprsk_2.2-10       htmlTable_2.1.0    
-    ##  [43] foreign_0.8-81      lava_1.6.9          htmlwidgets_1.5.3  
-    ##  [46] httr_1.4.2          RColorBrewer_1.1-2  ellipsis_0.3.1     
-    ##  [49] pkgconfig_2.0.3     nnet_7.3-15         dbplyr_2.1.1       
-    ##  [52] here_1.0.1          utf8_1.2.1          tidyselect_1.1.0   
-    ##  [55] rlang_0.4.10        munsell_0.5.0       cellranger_1.1.0   
-    ##  [58] tools_4.0.5         cachem_1.0.4        cli_2.4.0          
-    ##  [61] generics_0.1.0      broom_0.7.6         evaluate_0.14      
-    ##  [64] fastmap_1.1.0       yaml_2.2.1          processx_3.5.1     
-    ##  [67] fs_1.5.0            timereg_1.9.8       future_1.21.0      
-    ##  [70] nlme_3.1-152        quantreg_5.85       xml2_1.3.2         
-    ##  [73] compiler_4.0.5      rstudioapi_0.13     png_0.1-7          
-    ##  [76] testthat_3.0.4      gt_0.2.2            reprex_2.0.0       
-    ##  [79] broom.helpers_1.2.1 stringi_1.5.3       highr_0.8          
-    ##  [82] ps_1.6.0            desc_1.3.0          Matrix_1.3-2       
-    ##  [85] vctrs_0.3.7         pillar_1.5.1        lifecycle_1.0.0    
-    ##  [88] furrr_0.2.2         data.table_1.14.0   conquer_1.0.2      
-    ##  [91] R6_2.5.0            latticeExtra_0.6-29 parallelly_1.24.0  
-    ##  [94] sessioninfo_1.1.1   codetools_0.2-18    polspline_1.1.19   
-    ##  [97] MASS_7.3-53.1       assertthat_0.2.1    pkgload_1.2.1      
-    ## [100] rprojroot_2.0.2     withr_2.4.1         multcomp_1.4-16    
-    ## [103] parallel_4.0.5      hms_1.0.0           grid_4.0.5         
-    ## [106] rpart_4.1-15        rmarkdown_2.7       numDeriv_2016.8-1.1
-    ## [109] lubridate_1.7.10    base64enc_0.1-3
+    ##  [1] TH.data_1.0-10      colorspace_2.0-0    ellipsis_0.3.1     
+    ##  [4] rprojroot_2.0.2     htmlTable_2.1.0     base64enc_0.1-3    
+    ##  [7] fs_1.5.0            rstudioapi_0.13     listenv_0.8.0      
+    ## [10] furrr_0.2.2         MatrixModels_0.5-0  lubridate_1.7.10   
+    ## [13] fansi_0.4.2         mvtnorm_1.1-1       xml2_1.3.2         
+    ## [16] codetools_0.2-18    jsonlite_1.7.2      gt_0.2.2           
+    ## [19] broom_0.7.6         cluster_2.1.1       dbplyr_2.1.1       
+    ## [22] png_0.1-7           compiler_4.0.5      httr_1.4.2         
+    ## [25] backports_1.2.1     assertthat_0.2.1    Matrix_1.3-2       
+    ## [28] cli_2.4.0           htmltools_0.5.1.1   quantreg_5.85      
+    ## [31] tools_4.0.5         gtable_0.3.0        glue_1.4.2         
+    ## [34] Rcpp_1.0.6          cellranger_1.1.0    vctrs_0.3.7        
+    ## [37] svglite_2.0.0       nlme_3.1-152        conquer_1.0.2      
+    ## [40] iterators_1.0.13    broom.helpers_1.2.1 xfun_0.22          
+    ## [43] globals_0.14.0      rvest_1.0.0         lifecycle_1.0.0    
+    ## [46] future_1.21.0       polspline_1.1.19    MASS_7.3-53.1      
+    ## [49] zoo_1.8-9           scales_1.1.1        hms_1.0.0          
+    ## [52] parallel_4.0.5      sandwich_3.0-0      RColorBrewer_1.1-2 
+    ## [55] yaml_2.2.1          rpart_4.1-15        latticeExtra_0.6-29
+    ## [58] stringi_1.5.3       highr_0.8           foreach_1.5.1      
+    ## [61] checkmate_2.0.0     lava_1.6.9          mets_1.2.8.1       
+    ## [64] rlang_0.4.10        pkgconfig_2.0.3     systemfonts_1.0.1  
+    ## [67] matrixStats_0.58.0  evaluate_0.14       htmlwidgets_1.5.3  
+    ## [70] cmprsk_2.2-10       tidyselect_1.1.0    here_1.0.1         
+    ## [73] parallelly_1.24.0   magrittr_2.0.1      R6_2.5.0           
+    ## [76] generics_0.1.0      multcomp_1.4-16     DBI_1.1.1          
+    ## [79] pillar_1.5.1        haven_2.3.1         foreign_0.8-81     
+    ## [82] withr_2.4.1         nnet_7.3-15         modelr_0.1.8       
+    ## [85] crayon_1.4.1        utf8_1.2.1          rmarkdown_2.7      
+    ## [88] timereg_1.9.8       jpeg_0.1-8.1        usethis_2.0.1      
+    ## [91] readxl_1.3.1        grid_4.0.5          data.table_1.14.0  
+    ## [94] reprex_2.0.0        digest_0.6.27       numDeriv_2016.8-1.1
+    ## [97] munsell_0.5.0       viridisLite_0.3.0
