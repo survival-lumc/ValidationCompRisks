@@ -38,6 +38,7 @@ pacman::p_load(
   survival,
   rms,
   cmprsk,
+  riskRegression,
   mstate,
   pseudo,
   pec,
@@ -53,11 +54,6 @@ pacman::p_load(
   gridExtra,
   webshot
 )
-
-# Install latest development version of riskRegression
-if (!require("devtools", character.only = TRUE)) install.packages("devtools")
-if (!require("riskRegression", character.only = TRUE)) devtools::install_github("tagteam/riskRegression")
-require("riskRegression", character.only = TRUE)
 
 # Import data ------------------
 rdata <- readRDS(here::here("Data/rdata.rds"))
