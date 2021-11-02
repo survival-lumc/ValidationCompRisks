@@ -5,18 +5,15 @@ R Code repository for the manuscript Validation of prediction models in presence
 The repository contains the following code:
 
 
-+ **[Prediction_CSC_minimal.R](Prediction_CSC_minimal.R) : the companion R script for the manuscript. This script reproduces all main tables and figures of the manuscript. The file evaluates the performance of a cause specific hazards prediction model.**
++ **[Prediction_CSC_minimal.R](Prediction_CSC_minimal.R) : the companion R script for the manuscript. This script reproduces all main tables and figures of the manuscript. The file evaluates the performance of a cause specific hazards prediction model. Data are available [here](https://github.com/survival-lumc/ValidationCompRisks/tree/main/Data).**
 
-+ [Prediction_CSC.md](Prediction_CSC.md) : a markdown document containing a more in-depth version of the script, with details on model development, descriptive tables and supplementary plots. This document requires installing several add-on packages that are not needed to run the minimal script. The RMarkdown source code (.Rmd) is [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Prediction_CSC.Rmd). 
-
++ [Prediction_CSC.md](Prediction_CSC.md) : a markdown document containing a more in-depth version of the script, with details on model development, descriptive tables and supplementary plots. This document requires installing several add-on packages that are not needed to run the minimal script. The RMarkdown source code (.Rmd) is [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Prediction_CSC.Rmd). Additional functions useful for this script are available [here](https://github.com/survival-lumc/ValidationCompRisks/tree/main/R). 
 
 
 +	Additional code to alternatively develop a competing risk prediction model using the subdistribution hazard approach (Fine & Gray) is [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Development_SDH.md). The Rmarkdown source code (.Rmd) is [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Development_SDH.Rmd). A more concise R source code (.R) is [here](https://github.com/survival-lumc/ValidationCompRisks/blob/main/Development_SDH_minimal.R).
 
 + [sharing_CSC_model.R](sharing_CSC_model.R) : example/template of how to share a cause-specific hazards prediction model for external validation, without having to share the original development data.
 
-
-Data are available [here](https://github.com/survival-lumc/ValidationCompRisks/tree/main/Data).  Additional functions useful to develop and validate competing risks prediction models are available [here](https://github.com/survival-lumc/ValidationCompRisks/tree/main/R).
 
 ## Usage
 
