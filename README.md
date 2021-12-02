@@ -31,7 +31,7 @@ Afterwards, you can double-click the `ValidationCompRisks.Rproj` file to open an
 
 | Name                                                         | Affiliation                           | Role                                            |
 | ------------------------------------------------------------ | ------------------------------------- | ----------------------------------------------- |
-| [Daniele Giardiello](https://github.com/danielegiardiello/)  | The Netherlands Cancer Institute (NL) | Author .Rmd files/maintainer                    |
+| [Daniele Giardiello](https://github.com/danielegiardiello/)  | The Netherlands Cancer Institute (NL) <br /> Leiden University Medical Center (NL) <br /> EURAC research (IT) | Author .Rmd files/maintainer                    |
 | [Edouard Bonneville](https://www.lumc.nl/org/bds/medewerkers/1968807) | Leiden University Medical Center (NL) | Author minimal .R and CSC sharing scripts/review of .Rmd scripts |
 | [Nan van Geloven](https://www.lumc.nl/org/bds/medewerkers/1216536?setlanguage=English&setcountry=en) | Leiden University Medical Center (NL) | Review of both .R and .Rmd scripts              |
 
