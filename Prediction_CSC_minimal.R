@@ -71,18 +71,6 @@ calplot_pseudo <- plotCalibration(
 # We can extract predicted and observed, observed will depend on degree of smoothing (bandwidth)
 dat_pseudo <- calplot_pseudo$plotFrames$csh_validation
 
-# Calculate difference between predicted and observed (make sure to use all estimated risks, not just unique ones)
-diff_pseudo <- pred - dat_pseudo$Obs[match(pred, dat_pseudo$Pred)]
-
-# Collect all numerical summary measures
-numsum_pseudo <- c(
-  "ICI" = mean(abs(diff_pseudo)),
-  setNames(quantile(abs(diff_pseudo), c(0.5, 0.9)), c("E50", "E90")),
-  "Emax" = max(abs(diff_pseudo)),
-  "squared_bias" = mean(diff_pseudo^2)
-)
-numsum_pseudo
-
 
 # Calibration plot (pseudo-obs approach, loess smoothing) -----------------
 
@@ -148,18 +136,6 @@ segments(
 )
 
 
-# Make numerical summaries
-diff_pseudo_smooth <- pseudos$risk - smooth_pseudos$fit
-
-numsum_pseudo_smooth <- c(
-  "ICI" = mean(abs(diff_pseudo_smooth)),
-  setNames(quantile(abs(diff_pseudo_smooth), c(0.5, 0.9)), c("E50", "E90")),
-  "Emax" = max(abs(diff_pseudo_smooth)),
-  "squared_bias" = mean(diff_pseudo_smooth^2)
-)
-numsum_pseudo_smooth
-
-
 # Calibration plot (flexible regression approach) -------------------------
 
 
@@ -201,17 +177,6 @@ plot(
   ylab = "Observed outcome proportions"
 )
 abline(a = 0, b = 1, col = "gray")
-
-# Numerical summary measures
-diff_fgr <- dat_fgr$pred - dat_fgr$obs
-
-numsum_fgr <- c(
-  "ICI" = mean(abs(diff_fgr)),
-  setNames(quantile(abs(diff_fgr), c(0.5, 0.9)), c("E50", "E90")),
-  "Emax" = max(abs(diff_fgr)),
-  "squared_bias" = mean(diff_fgr^2)
-)
-numsum_fgr
 
 
 # Plot calibration plots all methods together
@@ -504,3 +469,4 @@ c(
   "ipa_5y" = score_vdata$Brier$score[model == "csh_validation"][["IPA"]], 
   quantile(df_boots$ipa, probs = c(0.025, 0.975))
 )
+

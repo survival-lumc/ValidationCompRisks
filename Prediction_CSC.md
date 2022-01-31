@@ -257,6 +257,11 @@ ER-/PR-
 First, we draw the cumulative incidence curves of breast cancer
 recurrence.
 
+<details>
+<summary>
+Click to expand!
+</summary>
+
 ``` r
 # Expand datasets -------------------------
 
@@ -319,6 +324,8 @@ par(oldpar)
 smfit_rdata <- summary(mfit_rdata, times = c(1, 2, 3, 4, 5))
 smfit_vdata <- summary(mfit_vdata, times = c(1, 2, 3, 4, 5))
 ```
+
+</details>
 
 The R packages and functions `cmprsk::cuminc()` and
 `mstate::Cuminc()`are good and easy alternatives to estimate the
@@ -826,7 +833,7 @@ ncat
 </tr>
 <tr>
 <td style="text-align:left;">
-hr\_status
+hr_status
 </td>
 <td style="text-align:right;">
 0.078
@@ -945,7 +952,7 @@ ncat
 </tr>
 <tr>
 <td style="text-align:left;">
-hr\_status
+hr_status
 </td>
 <td style="text-align:right;">
 0.020
@@ -1313,7 +1320,7 @@ We assess calibration by:
             estimates are on average too low.  
         -   A calibration slope between 0 and 1 indicates overfitting of
             the model, i.e., too extreme predictions, both on the low
-            and on the high end. A calibration slope &gt;1 indicates
+            and on the high end. A calibration slope >1 indicates
             predictions do not show enough variation.
 
 #### 2.1.1 Calibration using pseudo observations
@@ -1429,13 +1436,13 @@ Calibration measures - pseudo observations
 0.0308
 </td>
 <td style="text-align:right;">
-0.0297
+0.0298
 </td>
 <td style="text-align:right;">
-0.0522
+0.0524
 </td>
 <td style="text-align:right;">
-0.1589
+0.1584
 </td>
 <td style="text-align:right;">
 0.0349
@@ -2401,19 +2408,19 @@ Brier
 0.11
 </td>
 <td style="text-align:right;">
-0.07
+0.10
 </td>
 <td style="text-align:right;">
-0.16
+0.13
 </td>
 <td style="text-align:right;">
 0.09
 </td>
 <td style="text-align:right;">
-0.04
+0.07
 </td>
 <td style="text-align:right;">
-0.13
+0.10
 </td>
 </tr>
 <tr>
@@ -2623,18 +2630,16 @@ benefit of 0.014 choosing a threshold of 20%.
 sessionInfo()
 ```
 
-    ## R version 4.0.5 (2021-03-31)
+    ## R version 4.1.0 (2021-05-18)
     ## Platform: x86_64-w64-mingw32/x64 (64-bit)
-    ## Running under: Windows 10 x64 (build 19043)
+    ## Running under: Windows 10 x64 (build 18363)
     ## 
     ## Matrix products: default
     ## 
     ## locale:
-    ## [1] LC_COLLATE=English_United States.1252 
-    ## [2] LC_CTYPE=English_United States.1252   
-    ## [3] LC_MONETARY=English_United States.1252
-    ## [4] LC_NUMERIC=C                          
-    ## [5] LC_TIME=English_United States.1252    
+    ## [1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252   
+    ## [3] LC_MONETARY=Dutch_Netherlands.1252 LC_NUMERIC=C                      
+    ## [5] LC_TIME=Dutch_Netherlands.1252    
     ## 
     ## attached base packages:
     ## [1] splines   stats     graphics  grDevices utils     datasets  methods  
@@ -2642,53 +2647,57 @@ sessionInfo()
     ## 
     ## other attached packages:
     ##  [1] webshot_0.5.2             gridExtra_2.3            
-    ##  [3] rsample_0.0.9             forcats_0.5.1            
-    ##  [5] stringr_1.4.0             dplyr_1.0.5              
+    ##  [3] rsample_0.1.1             forcats_0.5.1            
+    ##  [5] stringr_1.4.0             dplyr_1.0.7              
     ##  [7] purrr_0.3.4               readr_1.4.0              
-    ##  [9] tidyr_1.1.3               tibble_3.1.0             
-    ## [11] tidyverse_1.3.0           boot_1.3-27              
-    ## [13] gtsummary_1.3.7           kableExtra_1.3.4         
-    ## [15] knitr_1.31                plotrix_3.8-1            
-    ## [17] pec_2020.11.17            prodlim_2019.11.13       
+    ##  [9] tidyr_1.1.3               tibble_3.1.2             
+    ## [11] tidyverse_1.3.1           boot_1.3-28              
+    ## [13] gtsummary_1.5.0           kableExtra_1.3.4         
+    ## [15] knitr_1.36                plotrix_3.8-2            
+    ## [17] pec_2021.10.11            prodlim_2019.11.13       
     ## [19] pseudo_1.4.3              geepack_1.3-2            
-    ## [21] KMsurv_0.1-5              mstate_0.3.1             
-    ## [23] riskRegression_2020.12.08 cmprsk_2.2-10            
+    ## [21] KMsurv_0.1-5              mstate_0.3.2             
+    ## [23] riskRegression_2021.10.10 cmprsk_2.2-11            
     ## [25] rms_6.2-0                 SparseM_1.81             
-    ## [27] Hmisc_4.5-0               ggplot2_3.3.3            
-    ## [29] Formula_1.2-4             lattice_0.20-41          
+    ## [27] Hmisc_4.6-0               ggplot2_3.3.5            
+    ## [29] Formula_1.2-4             lattice_0.20-44          
     ## [31] survival_3.2-11           pacman_0.5.1             
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] TH.data_1.0-10      colorspace_2.0-0    ellipsis_0.3.1     
-    ##  [4] rprojroot_2.0.2     htmlTable_2.1.0     base64enc_0.1-3    
-    ##  [7] fs_1.5.0            rstudioapi_0.13     listenv_0.8.0      
-    ## [10] furrr_0.2.2         MatrixModels_0.5-0  fansi_0.4.2        
-    ## [13] mvtnorm_1.1-1       lubridate_1.7.10    xml2_1.3.2         
-    ## [16] codetools_0.2-18    jsonlite_1.7.2      gt_0.2.2           
-    ## [19] broom_0.7.6         cluster_2.1.1       dbplyr_2.1.1       
-    ## [22] png_0.1-7           compiler_4.0.5      httr_1.4.2         
-    ## [25] backports_1.2.1     assertthat_0.2.1    Matrix_1.3-2       
-    ## [28] cli_2.4.0           htmltools_0.5.1.1   quantreg_5.85      
-    ## [31] tools_4.0.5         gtable_0.3.0        glue_1.4.2         
-    ## [34] Rcpp_1.0.6          cellranger_1.1.0    vctrs_0.3.7        
-    ## [37] svglite_2.0.0       nlme_3.1-152        conquer_1.0.2      
-    ## [40] iterators_1.0.13    broom.helpers_1.2.1 xfun_0.22          
-    ## [43] globals_0.14.0      rvest_1.0.0         lifecycle_1.0.0    
-    ## [46] future_1.21.0       polspline_1.1.19    MASS_7.3-53.1      
-    ## [49] zoo_1.8-9           scales_1.1.1        hms_1.0.0          
-    ## [52] parallel_4.0.5      sandwich_3.0-0      RColorBrewer_1.1-2 
-    ## [55] yaml_2.2.1          rpart_4.1-15        latticeExtra_0.6-29
-    ## [58] stringi_1.5.3       highr_0.8           foreach_1.5.1      
-    ## [61] checkmate_2.0.0     lava_1.6.9          mets_1.2.8.1       
-    ## [64] rlang_0.4.10        pkgconfig_2.0.3     systemfonts_1.0.1  
-    ## [67] matrixStats_0.58.0  evaluate_0.14       htmlwidgets_1.5.3  
-    ## [70] tidyselect_1.1.0    here_1.0.1          parallelly_1.24.0  
-    ## [73] magrittr_2.0.1      R6_2.5.0            generics_0.1.0     
-    ## [76] multcomp_1.4-16     DBI_1.1.1           pillar_1.5.1       
-    ## [79] haven_2.3.1         foreign_0.8-81      withr_2.4.1        
-    ## [82] nnet_7.3-15         modelr_0.1.8        crayon_1.4.1       
-    ## [85] utf8_1.2.1          rmarkdown_2.7       timereg_1.9.8      
-    ## [88] jpeg_0.1-8.1        usethis_2.0.1       readxl_1.3.1       
-    ## [91] grid_4.0.5          data.table_1.14.0   reprex_2.0.0       
-    ## [94] digest_0.6.27       numDeriv_2016.8-1.1 munsell_0.5.0      
-    ## [97] viridisLite_0.3.0
+    ##   [1] readxl_1.3.1         backports_1.2.1      systemfonts_1.0.3   
+    ##   [4] plyr_1.8.6           listenv_0.8.0        TH.data_1.1-0       
+    ##   [7] digest_0.6.27        foreach_1.5.1        htmltools_0.5.2     
+    ##  [10] fansi_0.5.0          magrittr_2.0.1       checkmate_2.0.0     
+    ##  [13] cluster_2.1.2        recipes_0.1.17       globals_0.14.0      
+    ##  [16] modelr_0.1.8         mets_1.2.9           gower_0.2.2         
+    ##  [19] matrixStats_0.61.0   sandwich_3.0-1       svglite_2.0.0       
+    ##  [22] jpeg_0.1-9           colorspace_2.0-2     rvest_1.0.2         
+    ##  [25] haven_2.4.1          xfun_0.27            crayon_1.4.2        
+    ##  [28] jsonlite_1.7.2       zoo_1.8-9            iterators_1.0.13    
+    ##  [31] glue_1.4.2           gtable_0.3.0         ipred_0.9-12        
+    ##  [34] MatrixModels_0.5-0   future.apply_1.8.1   scales_1.1.1        
+    ##  [37] mvtnorm_1.1-3        DBI_1.1.1            Rcpp_1.0.7          
+    ##  [40] viridisLite_0.4.0    htmlTable_2.3.0      foreign_0.8-81      
+    ##  [43] stats4_4.1.0         lava_1.6.10          htmlwidgets_1.5.4   
+    ##  [46] httr_1.4.2           RColorBrewer_1.1-2   ellipsis_0.3.2      
+    ##  [49] pkgconfig_2.0.3      nnet_7.3-16          dbplyr_2.1.1        
+    ##  [52] here_1.0.1           utf8_1.2.1           caret_6.0-90        
+    ##  [55] tidyselect_1.1.1     rlang_0.4.11         reshape2_1.4.4      
+    ##  [58] munsell_0.5.0        cellranger_1.1.0     tools_4.1.0         
+    ##  [61] cli_3.0.0            generics_0.1.1       broom_0.7.11        
+    ##  [64] evaluate_0.14        fastmap_1.1.0        yaml_2.2.1          
+    ##  [67] ModelMetrics_1.2.2.2 fs_1.5.0             timereg_2.0.1       
+    ##  [70] future_1.23.0        nlme_3.1-153         quantreg_5.86       
+    ##  [73] xml2_1.3.2           compiler_4.1.0       rstudioapi_0.13     
+    ##  [76] png_0.1-7            gt_0.3.1             reprex_2.0.1        
+    ##  [79] broom.helpers_1.6.0  stringi_1.6.1        highr_0.9           
+    ##  [82] Matrix_1.3-4         vctrs_0.3.8          furrr_0.2.3         
+    ##  [85] pillar_1.6.4         lifecycle_1.0.1      data.table_1.14.2   
+    ##  [88] conquer_1.2.0        R6_2.5.1             latticeExtra_0.6-29 
+    ##  [91] parallelly_1.28.1    codetools_0.2-18     polspline_1.1.19    
+    ##  [94] MASS_7.3-54          assertthat_0.2.1     rprojroot_2.0.2     
+    ##  [97] withr_2.4.2          multcomp_1.4-17      parallel_4.1.0      
+    ## [100] hms_1.1.1            grid_4.1.0           rpart_4.1-15        
+    ## [103] timeDate_3043.102    class_7.3-19         rmarkdown_2.11      
+    ## [106] pROC_1.18.0          numDeriv_2016.8-1.1  lubridate_1.7.10    
+    ## [109] base64enc_0.1-3
