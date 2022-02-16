@@ -116,3 +116,8 @@ score_vdata <- Score(
 
 #.. We need to do all of this since predictRisk() needs coxph models to be run
 # with x = TRUE, meaning data has to be passed on 
+
+# Steps for future development:
+# - Account for further stratification/offsets in model
+# - Adjust script so it work also with simple survival models
+# - .. combined and test within a package 
