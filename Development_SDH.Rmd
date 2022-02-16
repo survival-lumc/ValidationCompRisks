@@ -70,8 +70,8 @@ rsel$dt <- 1
 vsel$dt <- 2
 cdata <- rbind(rsel, vsel)
 cdata$dt <- factor(cdata$dt,
-                   levels = c(1, 2),
-                   labels = c("Development data", "Validation data")
+  levels = c(1, 2),
+  labels = c("Development data", "Validation data")
 )
 label(cdata$age) <- "Age"
 label(cdata$size) <- "Size"
@@ -86,15 +86,15 @@ units(cdata$size) <- "cm"
 gtsummary::tbl_summary(
   data = cdata %>% select(-id),
   label = list(age ~ "Age (years)", size ~ "Size (cm)"),
-  by = "dt", 
+  by = "dt",
   type = all_continuous() ~ "continuous2",
   statistic = all_continuous() ~ c(
     "{mean} ({sd})",
     "{median} ({min}, {max})"
   ),
-) %>% 
-  gtsummary::as_kable_extra() %>% 
-  kableExtra::kable_styling("striped") 
+) %>%
+  gtsummary::as_kable_extra() %>%
+  kableExtra::kable_styling("striped")
 ```
 
 ## Develop a competing risks prediction model using the subdistribution hazard approach
@@ -141,17 +141,17 @@ mfit_vdata <- survfit(
 par(xaxs = "i", yaxs = "i", las = 1)
 oldpar <- par(mfrow = c(1, 2), mar = c(5, 5, 1, 1))
 plot(mfit_rdata,
-     col = 1, lwd = 2,
-     xlab = "Years since BC diagnosis",
-     ylab = "Cumulative incidence", bty = "n",
-     ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
+  col = 1, lwd = 2,
+  xlab = "Years since BC diagnosis",
+  ylab = "Cumulative incidence", bty = "n",
+  ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
 )
 title("Development data")
 plot(mfit_vdata,
-     col = 1, lwd = 2,
-     xlab = "Years since BC diagnosis",
-     ylab = "Cumulative incidence", bty = "n",
-     ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
+  col = 1, lwd = 2,
+  xlab = "Years since BC diagnosis",
+  ylab = "Cumulative incidence", bty = "n",
+  ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
 )
 title("Validation data")
 par(oldpar)
@@ -182,7 +182,7 @@ colnames(res_ci) <- rep(c(
   "Upper .95"
 ), 2)
 kable(res_ci,
-      row.names = TRUE
+  row.names = TRUE
 ) %>%
   kable_styling("striped", position = "center") %>%
   add_header_above(c(" " = 1, "Development data" = 3, "Validation data" = 3))
@@ -217,14 +217,14 @@ rdata$size3 <- rcs3_size
 # FG model
 dd <- datadist(rdata)
 options(datadist = "dd")
-fit_fg_rcs <- cph(Surv(Tstart, Tstop, status == 1) ~ 
-                    rcs(age, pos_knots_age) + rcs(size, pos_knots_size) +
-                    ncat + hr_status, 
-                  weights = weight.cens,
-                  x = T, 
-                  y = T, 
-                  surv = T, 
-                  data = rdata.w1
+fit_fg_rcs <- cph(Surv(Tstart, Tstop, status == 1) ~
+rcs(age, pos_knots_age) + rcs(size, pos_knots_size) +
+  ncat + hr_status,
+weights = weight.cens,
+x = T,
+y = T,
+surv = T,
+data = rdata.w1
 )
 P_fg_age_rcs <- Predict(fit_fg_rcs, "age")
 P_fg_size_rcs <- Predict(fit_fg_rcs, "size")
@@ -236,68 +236,76 @@ oldpar <- par(mfrow = c(1, 2), mar = c(5, 5, 1, 1))
 par(xaxs = "i", yaxs = "i", las = 1)
 
 # FG - age
-plot(P_fg_age_rcs$age, 
-     P_fg_age_rcs$yhat,
-     type = "l", 
-     lwd = 2, 
-     col = "blue", 
-     bty = "n",
+plot(P_fg_age_rcs$age,
+  P_fg_age_rcs$yhat,
+  type = "l",
+  lwd = 2,
+  col = "blue",
+  bty = "n",
   xlab = "Age at breast cancer diagnosis",
-  ylab = "log Relative Hazard", 
-  ylim = c(-2, 2), 
+  ylab = "log Relative Hazard",
+  ylim = c(-2, 2),
   xlim = c(65, 95)
 )
-polygon(c(P_fg_age_rcs$age, 
-          rev(P_fg_age_rcs$age)),
-  c(P_fg_age_rcs$lower, 
-    rev(P_fg_age_rcs$upper)),
-  col = "grey75",
-  border = FALSE
+polygon(c(
+  P_fg_age_rcs$age,
+  rev(P_fg_age_rcs$age)
+),
+c(
+  P_fg_age_rcs$lower,
+  rev(P_fg_age_rcs$upper)
+),
+col = "grey75",
+border = FALSE
 )
 par(new = TRUE)
-plot(P_fg_age_rcs$age, 
-     P_fg_age_rcs$yhat,
-     type = "l", 
-     lwd = 2, 
-     col = "blue", 
-     bty = "n",
-     xlab = "Age at breast cancer diagnosis", 
-     ylab = "log Relative Hazard",
-     ylim = c(-2, 2),
-     xlim = c(65, 95)
+plot(P_fg_age_rcs$age,
+  P_fg_age_rcs$yhat,
+  type = "l",
+  lwd = 2,
+  col = "blue",
+  bty = "n",
+  xlab = "Age at breast cancer diagnosis",
+  ylab = "log Relative Hazard",
+  ylim = c(-2, 2),
+  xlim = c(65, 95)
 )
 
 # FG - size
 par(xaxs = "i", yaxs = "i", las = 1)
-plot(P_fg_size_rcs$size, 
-     P_fg_size_rcs$yhat,
-     type = "l", 
-     lwd = 2, 
-     col = "blue", 
-     bty = "n",
-     xlab = "Size of breast cancer",
-     ylab = "log Relative Hazard", 
-     ylim = c(-2, 2),
-     xlim = c(0, 7)
+plot(P_fg_size_rcs$size,
+  P_fg_size_rcs$yhat,
+  type = "l",
+  lwd = 2,
+  col = "blue",
+  bty = "n",
+  xlab = "Size of breast cancer",
+  ylab = "log Relative Hazard",
+  ylim = c(-2, 2),
+  xlim = c(0, 7)
 )
-polygon(c(P_fg_size_rcs$size, 
-          rev(P_fg_size_rcs$size)),
-  c(P_fg_size_rcs$lower, 
-    rev(P_fg_size_rcs$upper)),
-  col = "grey75",
-  border = FALSE
+polygon(c(
+  P_fg_size_rcs$size,
+  rev(P_fg_size_rcs$size)
+),
+c(
+  P_fg_size_rcs$lower,
+  rev(P_fg_size_rcs$upper)
+),
+col = "grey75",
+border = FALSE
 )
 par(new = TRUE)
-plot(P_fg_size_rcs$size, 
-     P_fg_size_rcs$yhat,
-     type = "l", 
-     lwd = 2, 
-     col = "blue", 
-     bty = "n",
-     xlab = "Size of breast cancer", 
-     ylab = "log Relative Hazard",
-     ylim = c(-2, 2), 
-     xlim = c(0, 7)
+plot(P_fg_size_rcs$size,
+  P_fg_size_rcs$yhat,
+  type = "l",
+  lwd = 2,
+  col = "blue",
+  bty = "n",
+  xlab = "Size of breast cancer",
+  ylab = "log Relative Hazard",
+  ylim = c(-2, 2),
+  xlim = c(0, 7)
 )
 par(oldpar)
 options(datadist = NULL)
@@ -307,29 +315,31 @@ options(datadist = NULL)
 dd <- datadist(rdata, adjto.cat = "first")
 options(datadist = "dd")
 fit_fg <- cph(Surv(Tstart, Tstop, status == 1) ~ age + size +
-                ncat + hr_status,
-              weights = weight.cens,
-              x = T, 
-              y = T, 
-              surv = T, 
-              data = rdata.w1
+  ncat + hr_status,
+weights = weight.cens,
+x = T,
+y = T,
+surv = T,
+data = rdata.w1
 )
 options(datadist = NULL)
 ```
 
 ```{r, res_aic, fig.align='center',echo=FALSE}
-res_AIC <- matrix(c(AIC(fit_fg), 
-                    AIC(fit_fg_rcs)),
-                  byrow = T,
-                  ncol = 2, 
-                  nrow = 1,
-  dimnames = list(
-    c("Fine and Gray models"),
-    c(
-      "AIC without splines",
-      "AIC with splines"
-    )
+res_AIC <- matrix(c(
+  AIC(fit_fg),
+  AIC(fit_fg_rcs)
+),
+byrow = T,
+ncol = 2,
+nrow = 1,
+dimnames = list(
+  c("Fine and Gray models"),
+  c(
+    "AIC without splines",
+    "AIC with splines"
   )
+)
 )
 kable(res_AIC,
   row.names = TRUE
@@ -352,18 +362,20 @@ par(las = 1, xaxs = "i", yaxs = "i")
 oldpar <- par(mfrow = c(2, 2), mar = c(5, 6.1, 3.1, 1))
 sub_title <- c("Age", "Size", "Lymph node status", "HR status")
 for (i in 1:4) {
-  plot(zp_fg[i], 
-       resid = F, 
-       bty = "n", 
-       xlim = c(0, 5))
+  plot(zp_fg[i],
+    resid = F,
+    bty = "n",
+    xlim = c(0, 5)
+  )
   abline(0, 0, lty = 3)
   title(sub_title[i])
 }
-mtext("Fine and Gray", 
-      side = 3, 
-      line = -1, 
-      outer = TRUE, 
-      font = 2)
+mtext("Fine and Gray",
+  side = 3,
+  line = -1,
+  outer = TRUE,
+  font = 2
+)
 par(oldpar)
 
 kable(round(zp_fg$table, 3)) %>%
@@ -385,19 +397,21 @@ In R, there are multiple alternatives to fit a competing risks model using the s
 #### Model development using survival package and finegray() function
 ```{r, finegray, fig.align='center',warning=FALSE}
 
-rdata_fg <- finegray(Surv(time, status) ~ ., 
-                     etype = "rec",
-                     data = rdata)
+rdata_fg <- finegray(Surv(time, status) ~ .,
+  etype = "rec",
+  data = rdata
+)
 
-fgfit <- coxph(Surv(fgstart, fgstop, fgstatus) ~ 
-                 age + size + ncat + hr_status,
-               weight = fgwt, 
-               data = rdata_fg)
+fgfit <- coxph(Surv(fgstart, fgstop, fgstatus) ~
+age + size + ncat + hr_status,
+weight = fgwt,
+data = rdata_fg
+)
 ```
 
 #### Model development using mstate package and crprep() function
 ```{r, mstate, fig.align='center',warning=FALSE}
-# Expand data to prepare for fitting the model 
+# Expand data to prepare for fitting the model
 primary_event <- 1 # primary event is 1 (breast cancer recurrence)
 # set 2 to fit a model for non-recurrence mortality.
 rdata.w <- mstate::crprep(
@@ -415,12 +429,12 @@ options(datadist = "dd")
 options(prType = "html")
 
 fit_fg <- cph(Surv(Tstart, Tstop, status == 1) ~
-                age + size + ncat + hr_status, 
-                  weights = weight.cens,
-                  x = T, 
-                  y = T, 
-                  surv = T, 
-                  data = rdata.w1
+age + size + ncat + hr_status,
+weights = weight.cens,
+x = T,
+y = T,
+surv = T,
+data = rdata.w1
 )
 print(fit_fg)
 options(datadist = NULL)
@@ -436,22 +450,24 @@ options(datadist = NULL)
 primary_event <- 1 # primary event is 1 (breast cancer recurrence)
 # set 2 to fit a model for non-recurrence mortality.
 
-fit_fgr <- FGR(Hist(time, status_num) ~ 
-                 age + size +
-                 ncat + hr_status, 
-               cause = primary_event,
-               data = rdata)
+fit_fgr <- FGR(Hist(time, status_num) ~
+age + size +
+  ncat + hr_status,
+cause = primary_event,
+data = rdata
+)
 ```
 
 ```{r, comp_coeff, fig.align='center',warning=FALSE}
-res_coef <- cbind.data.frame( 
-                             "survival package" = fgfit$coefficients,
-                             "mstate + survival/rms packages" = 
-                               fit_fg$coefficients,
-                             "riskRegression package" = fit_fgr$crrFit$coef)
+res_coef <- cbind.data.frame(
+  "survival package" = fgfit$coefficients,
+  "mstate + survival/rms packages" =
+    fit_fg$coefficients,
+  "riskRegression package" = fit_fgr$crrFit$coef
+)
 k <- 4
 res_coef <- round(res_coef, k)
-kable(res_coef) %>% 
+kable(res_coef) %>%
   kable_styling("striped", position = "center")
 ```
 
