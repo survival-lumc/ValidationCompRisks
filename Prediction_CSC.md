@@ -36,6 +36,8 @@ models: a guide through modern methods - Cause specific hazard models
             -   [2.1.2.2 Numerical summaries of calibration using the
                 subdistribution hazard
                 approach](#2122-numerical-summaries-of-calibration-using-the-subdistribution-hazard-approach)
+        -   [2.1.2.3 Calibration plot using pseudo-observations (LOESS
+            smoothing)](#2123-calibration-plot-using-pseudo-observations-loess-smoothing)
         -   [2.1.3 Observed and Expected
             ratio](#213-observed-and-expected-ratio)
         -   [2.1.4 Calibration intercept and slope using pseudo
@@ -55,12 +57,11 @@ models: a guide through modern methods - Cause specific hazard models
 
 The steps taken in this file are:  
 1. To develop a competing risks prediction model using the cause
-specific hazards approach;  
-2. To assess the performance of the model in terms of calibration,
-discrimination and overall prediction error; We calculate the apparent
-(not the true internal) validation and the external validation;  
-3. To assess the potential clinical utility the model using decision
-curve analysis;
+specific hazards approach. 2. To assess the performance of the model in
+terms of calibration, discrimination and overall prediction error. We
+calculate the apparent (not the true internal) validation and the
+external validation. 3. To assess the potential clinical utility the
+model using decision curve analysis.
 
 ### Installing and loading packages and import data
 
@@ -292,29 +293,40 @@ vdata.w2 <- vdata.w %>% filter(failcode == 2)
 # Development set --------
 mfit_rdata <- survfit(
   Surv(Tstart, Tstop, status == 1) ~ 1,
-  data = rdata.w1, weights = weight.cens
+  data = rdata.w1, 
+  weights = weight.cens
 )
 mfit_vdata <- survfit(
   Surv(Tstart, Tstop, status == 1) ~ 1,
-  data = vdata.w1, weights = weight.cens
+  data = vdata.w1, 
+  weights = weight.cens
 )
 par(xaxs = "i", yaxs = "i", las = 1)
 oldpar <- par(mfrow = c(1, 2), mar = c(5, 5, 1, 1))
-plot(mfit_rdata,
+plot(
+  mfit_rdata,
   col = 1, lwd = 2,
   xlab = "Years since BC diagnosis",
   ylab = "Cumulative incidence recurrence", bty = "n",
-  ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
+  ylim = c(0, 0.25), 
+  xlim = c(0, 5), 
+  fun = "event", 
+  conf.int = TRUE
 )
 title("Development data")
-plot(mfit_vdata,
+plot(
+  mfit_vdata,
   col = 1, lwd = 2,
   xlab = "Years since BC diagnosis",
   ylab = "Cumulative incidence recurrence", bty = "n",
-  ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
+  ylim = c(0, 0.25), 
+  xlim = c(0, 5), 
+  fun = "event",
+  conf.int = TRUE
 )
 title("Validation data")
 par(oldpar)
+
 # Cumulative incidences
 smfit_rdata <- summary(mfit_rdata, times = c(1, 2, 3, 4, 5))
 smfit_vdata <- summary(mfit_vdata, times = c(1, 2, 3, 4, 5))
@@ -495,7 +507,7 @@ Upper .95
 </table>
 
 The 5-year cumulative incidence of breast cancer recurrence was 14% (95%
-CI: 11-16%), and 10% (95%CI: 8-12%)
+CI: 11-16%), and 10% (95%CI: 8-12%).
 
 ### 1.2 Check non-linearity of continuous predictors
 
@@ -515,25 +527,26 @@ Click to expand code
 
 ``` r
 # Models without splines
-fit_csh <- CSC(Hist(time, status_num) ~
-age + size +
-  ncat + hr_status,
-data = rdata,
-fitter = "cph"
+fit_csh <- CSC(
+  Hist(time, status_num) ~ age + size + ncat + hr_status,
+  data = rdata,
+  fitter = "cph"
 )
+
 fit_csc1 <- fit_csh$models$`Cause 1`
 fit_csc2 <- fit_csh$models$`Cause 2`
+
 # Models with splines
 dd <- datadist(rdata)
 options(datadist = "dd")
+
 # Recurrence
-fit_csc1_rcs <- cph(Surv(time, status_num == 1) ~
-rcs(age, 3) + rcs(size, 3) +
-  ncat + hr_status,
-x = T,
-y = T,
-surv = T,
-data = rdata
+fit_csc1_rcs <- cph(
+  Surv(time, status_num == 1) ~ rcs(age, 3) + rcs(size, 3) + ncat + hr_status,
+  x = T,
+  y = T,
+  surv = T,
+  data = rdata
 )
 # print(fit_csc1_rcs)
 # print(summary(fit_csc1_rcs))
@@ -544,13 +557,12 @@ options(datadist = NULL)
 # Non-recurrence mortality
 dd <- datadist(rdata)
 options(datadist = "dd")
-fit_csc2_rcs <- cph(Surv(time, status_num == 2) ~
-rcs(age, 3) + rcs(size, 3) +
-  ncat + hr_status,
-x = T,
-y = T,
-surv = T,
-data = rdata
+fit_csc2_rcs <- cph(
+  Surv(time, status_num == 2) ~ rcs(age, 3) + rcs(size, 3) + ncat + hr_status,
+  x = T,
+  y = T,
+  surv = T,
+  data = rdata
 )
 # print(fit_csc2_rcs)
 # print(summary(fit_csc2_rcs))
@@ -560,7 +572,8 @@ P_csc2_size_rcs <- Predict(fit_csc2_rcs, "size")
 options(datadist = NULL)
 oldpar <- par(mfrow = c(2, 2), mar = c(5, 5, 1, 1))
 par(xaxs = "i", yaxs = "i", las = 1)
-plot(P_csc1_age_rcs$age,
+plot(
+  P_csc1_age_rcs$age,
   P_csc1_age_rcs$yhat,
   type = "l",
   lwd = 2,
@@ -571,19 +584,15 @@ plot(P_csc1_age_rcs$age,
   ylim = c(-2, 2),
   xlim = c(65, 95)
 )
-polygon(c(
-  P_csc1_age_rcs$age,
-  rev(P_csc1_age_rcs$age)
-),
-c(
-  P_csc1_age_rcs$lower,
-  rev(P_csc1_age_rcs$upper)
-),
-col = "grey75",
-border = FALSE
+polygon(
+  c(P_csc1_age_rcs$age, rev(P_csc1_age_rcs$age)),
+  c(P_csc1_age_rcs$lower, rev(P_csc1_age_rcs$upper)),
+  col = "grey75",
+  border = FALSE
 )
 par(new = TRUE)
-plot(P_csc1_age_rcs$age,
+plot(
+  P_csc1_age_rcs$age,
   P_csc1_age_rcs$yhat,
   type = "l",
   lwd = 2,
@@ -597,7 +606,8 @@ plot(P_csc1_age_rcs$age,
 title("Recurrence")
 # CSC 1- size
 par(xaxs = "i", yaxs = "i", las = 1)
-plot(P_csc1_size_rcs$size,
+plot(
+  P_csc1_size_rcs$size,
   P_csc1_size_rcs$yhat,
   type = "l",
   lwd = 2,
@@ -608,19 +618,15 @@ plot(P_csc1_size_rcs$size,
   ylim = c(-2, 2),
   xlim = c(0, 7)
 )
-polygon(c(
-  P_csc1_size_rcs$size,
-  rev(P_csc1_size_rcs$size)
-),
-c(
-  P_csc1_size_rcs$lower,
-  rev(P_csc1_size_rcs$upper)
-),
-col = "grey75",
-border = FALSE
+polygon(
+  c(P_csc1_size_rcs$size, rev(P_csc1_size_rcs$size)),
+  c(P_csc1_size_rcs$lower, rev(P_csc1_size_rcs$upper)),
+  col = "grey75",
+  border = FALSE
 )
 par(new = TRUE)
-plot(P_csc1_size_rcs$size,
+plot(
+  P_csc1_size_rcs$size,
   P_csc1_size_rcs$yhat,
   type = "l",
   lwd = 2,
@@ -635,7 +641,8 @@ title("Recurrence")
 par(xaxs = "i", yaxs = "i", las = 1)
 options(datadist = NULL)
 # CSC 2- age
-plot(P_csc2_age_rcs$age,
+plot(
+  P_csc2_age_rcs$age,
   P_csc2_age_rcs$yhat,
   type = "l",
   lwd = 2,
@@ -646,19 +653,15 @@ plot(P_csc2_age_rcs$age,
   ylim = c(-2, 2),
   xlim = c(65, 95)
 )
-polygon(c(
-  P_csc2_age_rcs$age,
-  rev(P_csc2_age_rcs$age)
-),
-c(
-  P_csc2_age_rcs$lower,
-  rev(P_csc2_age_rcs$upper)
-),
-col = "grey75",
-border = FALSE
+polygon(
+  c(P_csc2_age_rcs$age, rev(P_csc2_age_rcs$age)),
+  c(P_csc2_age_rcs$lower, rev(P_csc2_age_rcs$upper)),
+  col = "grey75",
+  border = FALSE
 )
 par(new = TRUE)
-plot(P_csc2_age_rcs$age,
+plot(
+  P_csc2_age_rcs$age,
   P_csc2_age_rcs$yhat,
   type = "l",
   lwd = 2,
@@ -672,7 +675,8 @@ plot(P_csc2_age_rcs$age,
 title("Non recurrence mortality")
 # CSC 2 - size
 par(xaxs = "i", yaxs = "i", las = 1)
-plot(P_csc2_size_rcs$size,
+plot(
+  P_csc2_size_rcs$size,
   P_csc2_size_rcs$yhat,
   type = "l",
   lwd = 2,
@@ -683,19 +687,15 @@ plot(P_csc2_size_rcs$size,
   ylim = c(-2, 2),
   xlim = c(0, 7)
 )
-polygon(c(
-  P_csc2_size_rcs$size,
-  rev(P_csc2_size_rcs$size)
-),
-c(
-  P_csc2_size_rcs$lower,
-  rev(P_csc2_size_rcs$upper)
-),
-col = "grey75",
-border = FALSE
+polygon(
+  c(P_csc2_size_rcs$size, rev(P_csc2_size_rcs$size)),
+  c(P_csc2_size_rcs$lower, rev(P_csc2_size_rcs$upper)),
+  col = "grey75",
+  border = FALSE
 )
 par(new = TRUE)
-plot(P_csc2_size_rcs$size,
+plot(
+  P_csc2_size_rcs$size,
   P_csc2_size_rcs$yhat,
   type = "l",
   lwd = 2,
@@ -776,7 +776,8 @@ par(las = 1, xaxs = "i", yaxs = "i")
 oldpar <- par(mfrow = c(2, 2), mar = c(5, 6.1, 3.1, 1))
 sub_title <- c("Age", "Size", "Lymph node status", "HR status")
 for (i in 1:4) {
-  plot(zp_csc1[i],
+  plot(
+    zp_csc1[i],
     resid = F,
     bty = "n",
     xlim = c(0, 5)
@@ -784,12 +785,7 @@ for (i in 1:4) {
   abline(0, 0, lty = 3)
   title(sub_title[i])
 }
-mtext("Recurrence",
-  side = 3,
-  line = -1,
-  outer = TRUE,
-  font = 2
-)
+mtext("Recurrence", side = 3, line = -1, outer = TRUE, font = 2)
 par(oldpar)
 kable(round(zp_csc1$table, 3)) %>%
   kable_styling("striped", position = "center")
@@ -898,7 +894,8 @@ par(las = 1, xaxs = "i", yaxs = "i")
 oldpar <- par(mfrow = c(2, 2), mar = c(5, 6.1, 3.1, 1))
 sub_title <- c("Age", "Size", "Lymph node status", "HR status")
 for (i in 1:4) {
-  plot(zp_csc2[i],
+  plot(
+    zp_csc2[i],
     resid = F,
     bty = "n",
     xlim = c(0, 5)
@@ -906,7 +903,8 @@ for (i in 1:4) {
   abline(0, 0, lty = 3)
   title(sub_title[i])
 }
-mtext("Non-recurrence mortality",
+mtext(
+  "Non-recurrence mortality",
   side = 3,
   line = -1,
   outer = TRUE,
@@ -1238,14 +1236,16 @@ plot(vdata$age,
   xlab = "Age, years",
   ylab = "Estimated risk"
 )
-lines(lowess(vdata$age, vdata$pred),
+lines(
+  lowess(vdata$age, vdata$pred),
   col = "red",
   lwd = 2
 )
 
 # Size
 par(xaxs = "i", yaxs = "i", las = 1)
-plot(vdata$size,
+plot(
+  vdata$size,
   vdata$pred,
   bty = "n",
   xlim = c(0, 12),
@@ -1253,14 +1253,16 @@ plot(vdata$size,
   xlab = "Size of tumor",
   ylab = "Predicted risk"
 )
-lines(lowess(vdata$size, vdata$pred),
+lines(
+  lowess(vdata$size, vdata$pred),
   col = "red",
   lwd = 2
 )
 
 # HR status
 par(xaxs = "i", yaxs = "i", las = 1)
-plot(vdata$hr_status,
+plot(
+  vdata$hr_status,
   vdata$pred,
   ylim = c(0, .6),
   bty = "n",
@@ -1270,7 +1272,8 @@ plot(vdata$hr_status,
 
 # Nodal status
 par(xaxs = "i", yaxs = "i", las = 1)
-plot(vdata$ncat,
+plot(
+  vdata$ncat,
   vdata$pred,
   ylim = c(0, .6),
   bty = "n",
@@ -1295,33 +1298,26 @@ We assess calibration by:
 
 -   The calibration plot as a graphical representation of calibration
     using the pseudo observations and the subdistribution hazard
-    approach;
-
--   Numerical summaries of calibration:
-
-    -   The observed vs expected ratio (O/E ratio) ;
-
-    -   The squared bias, i.e., the average squared difference between
-        actual risks and risk predictions;
-
-    -   The integrated Calibration Index (ICI), i.e., the average
-        absolute difference between actual risks and risk predictions;
-
-    -   E50, E90 and Emax denote the median, 90th percentile and the
-        maximum of the absolute differences between actual risks and
-        risk predictions;
-
-    -   Calibration intercept/slope estimated using pseudo observations:
-
-        -   If on average the risk estimates equal the actual risks, the
-            calibration intercept will be zero. A negative calibration
-            intercept indicates that the risk estimates are on average
-            too high and a positive intercept indicates that the risk
-            estimates are on average too low.  
-        -   A calibration slope between 0 and 1 indicates overfitting of
-            the model, i.e., too extreme predictions, both on the low
-            and on the high end. A calibration slope >1 indicates
-            predictions do not show enough variation.
+    approach
+-   Numerical summaries of calibration:  
+-   The observed vs expected ratio (O/E ratio) ;  
+-   The squared bias, i.e., the average squared difference between
+    actual risks and risk predictions;
+-   The integrated Calibration Index (ICI), i.e., the average absolute
+    difference between actual risks and risk predictions;  
+-   E50, E90 and Emax denote the median, 90th percentile and the maximum
+    of the absolute differences between actual risks and risk
+    predictions;  
+-   Calibration intercept/slope estimated using pseudo observations:  
+-   If on average the risk estimates equal the actual risks, the
+    calibration intercept will be zero. A negative calibration intercept
+    indicates that the risk estimates are on average too high and a
+    positive intercept indicates that the risk estimates are on average
+    too low.  
+-   A calibration slope between 0 and 1 indicates overfitting of the
+    model, i.e., too extreme predictions, both on the low and on the
+    high end. A calibration slope >1 indicates predictions do not show
+    enough variation.
 
 #### 2.1.1 Calibration using pseudo observations
 
@@ -1343,7 +1339,6 @@ age + size +
 data = rdata,
 fitter = "cph"
 )
-
 
 # useful objects
 primary_event <- 1 # Set to 2 if cause 2 was of interest
@@ -1610,6 +1605,71 @@ Calibration measures - subdistribution
 
 Numerical calibration measures identified overestimation of the risk
 especially in the higher values of the estimated actual risk.
+
+#### 2.1.2.3 Calibration plot using pseudo-observations (LOESS smoothing)
+
+<details>
+<summary>
+Click to expand code
+</summary>
+
+``` r
+# Use pseudo-observations calculated by Score() (can alternatively use pseudo::pseudoci)
+pseudos <- data.frame(score_vdata$Calibration$plotframe)
+pseudos <- pseudos[order(pseudos$risk), ]
+
+# Use linear loess (weighted local regression with polynomial degree = 1) smoothing
+smooth_pseudos <- predict(
+  stats::loess(pseudovalue ~ risk, data = pseudos, degree = 1, span = 0.33), 
+  se = TRUE
+)
+
+# Calibration plot (reported in manuscript):
+
+# First, prepare histogram of estimated risks for x-axis
+spike_bounds <- c(-0.075, 0)
+bin_breaks <- seq(0, 0.6, length.out = 100 + 1)
+freqs <- table(cut(pred, breaks = bin_breaks))
+bins <- bin_breaks[-1]
+freqs_valid <- freqs[freqs > 0]
+freqs_rescaled <- spike_bounds[1] + (spike_bounds[2] - spike_bounds[1]) * 
+  (freqs_valid - min(freqs_valid)) / (max(freqs_valid) - min(freqs_valid))
+
+# Produce plot
+plot(
+  x = pseudos$risk, 
+  y = pseudos$pseudovalue,
+  xlim = c(0, 0.6), 
+  ylim = c(spike_bounds[1], 0.6),
+  yaxt = "n",
+  frame.plot = FALSE,
+  xlab = "Estimated risks",
+  ylab = "Observed outcome proportions", 
+  type = "n"
+)
+axis(2, seq(0, 0.6, by = 0.1), labels = seq(0, 0.6, by = 0.1))
+polygon(
+  x = c(pseudos$risk, rev(pseudos$risk)),
+  y = c(
+    pmax(smooth_pseudos$fit - qt(0.975, smooth_pseudos$df) * smooth_pseudos$se, 0),
+    rev(smooth_pseudos$fit + qt(0.975, smooth_pseudos$df) * smooth_pseudos$se)
+  ),
+  border = FALSE,
+  col = "lightgray"
+)
+abline(a = 0, b = 1, col = "gray")
+lines(x = pseudos$risk, y = smooth_pseudos$fit, lwd = 2)
+segments(
+  x0 = bins[freqs > 0], 
+  y0 = spike_bounds[1], 
+  x1 = bins[freqs > 0], 
+  y1 = freqs_rescaled
+)
+```
+
+</details>
+
+<img src="imgs/Prediction_CSC/loess_pseudo-1.png" width="672" />
 
 #### 2.1.3 Observed and Expected ratio
 
