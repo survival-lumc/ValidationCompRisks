@@ -103,6 +103,8 @@ gtsummary::tbl_summary(
 ### Cumulative incidence curves
 First, we draw the cumulative incidence curves of breast cancer recurrence.
 
+<details>
+  <summary>Click to expand code</summary>
 ```{r, cuminc, fig.align='center'}
 # Expand datasets -------------------------
 rdata.w <- crprep(
@@ -158,6 +160,10 @@ par(oldpar)
 # Cumulative incidences
 smfit_rdata <- summary(mfit_rdata, times = c(1, 2, 3, 4, 5))
 smfit_vdata <- summary(mfit_vdata, times = c(1, 2, 3, 4, 5))
+```
+</details>
+
+```{r, cuminc, fig.align='center', eval=TRUE}
 ```
 
 The R packages and functions `cmprsk::cuminc()` and `mstate::Cuminc()`are good and easy alternatives to estimate the cumulative incidence function. 
