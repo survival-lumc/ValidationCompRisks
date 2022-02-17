@@ -19,7 +19,8 @@ The following libraries are needed to achieve the outlined goals, the code chunk
 # Knitr options
 knitr::opts_chunk$set(
   fig.retina = 3,
-  fig.path = "imgs/Development_SDH/"
+  fig.path = "imgs/Development_SDH/",
+  echo=FALSE
 )
 ```
 
@@ -105,7 +106,7 @@ First, we draw the cumulative incidence curves of breast cancer recurrence.
 
 <details>
   <summary>Click to expand code</summary>
-```{r, cuminc, fig.align='center'}
+```{r, cuminc, fig.align='center', eval=FALSE, echo=TRUE}
 # Expand datasets -------------------------
 rdata.w <- crprep(
   Tstop = "time",
@@ -200,7 +201,9 @@ The 5-year cumulative incidence of breast cancer recurrence was 14% (95% CI: 11-
 
 Here we investigate the potential non-linear relation between continuous predictors (i.e. age and size) and the outcomes. We apply three-knot restricted cubic splines using `rms::rcs()` function (details are given in e.g. Frank Harrell's book 'Regression Model Strategies (second edition)', page 27.
 
-```{r,ff, warning=FALSE, fig.align='center'}
+<details>
+  <summary>Click to expand code</summary>
+```{r,ff, warning=FALSE, fig.align='center', eval=FALSE, echo=TRUE}
 
 # Defining knots of the restricted cubic splines ------------------
 # Extract knots position of the restricted cubic spline based on the
@@ -330,6 +333,10 @@ data = rdata.w1
 )
 options(datadist = NULL)
 ```
+</details>
+
+```{r,ff, fig.align='center', eval=TRUE}
+```
 
 ```{r, res_aic, fig.align='center',echo=FALSE}
 res_AIC <- matrix(c(
@@ -359,8 +366,9 @@ The AIC and the graphical check suggested a potential linear relation between th
 
 We now examine the fits further by checking the proportionality of the subdistribution hazards of the models.
 
-
-```{r,sph, message=FALSE, warning=FALSE,fig.align='center'}
+<details>
+  <summary>Click to expand code</summary>
+```{r,sph, message=FALSE, warning=FALSE,fig.align='center',eval=FALSE, echo=TRUE}
 zp_fg <- cox.zph(fit_fg, transform = "identity")
 
 par(las = 1, xaxs = "i", yaxs = "i")
@@ -387,6 +395,10 @@ par(oldpar)
 kable(round(zp_fg$table, 3)) %>%
   kable_styling("striped", position = "center")
 ```
+</details>
+
+```{r,sph, fig.align='center', eval=TRUE}
+```
 
 The statistical tests showed a potential violation of the proportional hazards assumption for size of breast cancer. For simplicity we ignore this violation in the remainder.
 
@@ -401,7 +413,10 @@ In R, there are multiple alternatives to fit a competing risks model using the s
 
 
 #### Model development using survival package and finegray() function
-```{r, finegray, fig.align='center',warning=FALSE}
+
+<details>
+  <summary>Click to expand code</summary>
+```{r, finegray, fig.align='center',warning=FALSE, eval=FALSE, echo=TRUE}
 
 rdata_fg <- finegray(Surv(time, status) ~ .,
   etype = "rec",
@@ -414,9 +429,16 @@ weight = fgwt,
 data = rdata_fg
 )
 ```
+</details>
+
+```{r, finegray, fig.align='center', eval=TRUE}
+```
 
 #### Model development using mstate package and crprep() function
-```{r, mstate, fig.align='center',warning=FALSE}
+
+<details>
+  <summary>Click to expand code</summary>
+```{r, mstate, fig.align='center',warning=FALSE, echo=TRUE,eval=FALSE}
 # Expand data to prepare for fitting the model
 primary_event <- 1 # primary event is 1 (breast cancer recurrence)
 # set 2 to fit a model for non-recurrence mortality.
@@ -445,10 +467,17 @@ data = rdata.w1
 print(fit_fg)
 options(datadist = NULL)
 ```
+</details>
+
+```{r, mstate, fig.align='center', eval=TRUE}
+```
+
 
 #### Model development using riskRegression package and FGR() function
 
-```{r, riskRegression, fig.align='center',warning=FALSE}
+<details>
+  <summary>Click to expand code</summary>
+```{r, riskRegression, fig.align='center',warning=FALSE, echo=TRUE, eval=FALSE}
 # We also fit the FG model using riskRegression::FGR()
 # because it is useful to evaluate some of the prediction performance
 # measures later
@@ -463,8 +492,15 @@ cause = primary_event,
 data = rdata
 )
 ```
+</details>
 
-```{r, comp_coeff, fig.align='center',warning=FALSE}
+```{r,riskRegression, fig.align='center', eval=TRUE}
+```
+
+#### Summary of the model coefficients
+Summary of the model coefficients using `survival`, `mstate` and  `survival` or `rms`, and  `riskRegression` packages
+
+```{r, comp_coeff, fig.align='center',warning=FALSE, echo=FALSE}
 res_coef <- cbind.data.frame(
   "survival package" = fgfit$coefficients,
   "mstate + survival/rms packages" =
