@@ -22,6 +22,8 @@ using the subdistribution hazard approach
             function](#model-development-using-mstate-package-and-crprep-function)
         -   [Model development using riskRegression package and FGR()
             function](#model-development-using-riskregression-package-and-fgr-function)
+        -   [Summary of the model
+            coefficients](#summary-of-the-model-coefficients)
 -   [Reproducibility ticket](#reproducibility-ticket)
 
 ### Installing and loading packages and import data
@@ -30,48 +32,6 @@ The following libraries are needed to achieve the outlined goals, the
 code chunk below will a) check whether you already have them installed,
 b) install them for you if not already present, and c) load the packages
 into the session.
-
-``` r
-# Use pacman to check whether packages are installed, if not load
-if (!require("pacman")) install.packages("pacman")
-library(pacman)
-
-pacman::p_load(
-  survival,
-  rms,
-  mstate,
-  pseudo,
-  pec,
-  riskRegression,
-  plotrix,
-  knitr,
-  splines,
-  kableExtra,
-  gtsummary,
-  boot,
-  tidyverse,
-  rsample,
-  gridExtra,
-  webshot,
-  riskRegression
-)
-```
-
-    ## package 'KMsurv' successfully unpacked and MD5 sums checked
-    ## package 'geepack' successfully unpacked and MD5 sums checked
-    ## package 'pseudo' successfully unpacked and MD5 sums checked
-    ## 
-    ## The downloaded binary packages are in
-    ##  C:\Users\dgiardiello\AppData\Local\Temp\Rtmp6Jhwa6\downloaded_packages
-
-``` r
-# Import data ------------------
-rdata <- readRDS(here::here("Data/rdata.rds"))
-vdata <- readRDS(here::here("Data/vdata.rds"))
-
-rdata$hr_status <- relevel(rdata$hr_status, ref = "ER and/or PR +")
-vdata$hr_status <- relevel(vdata$hr_status, ref = "ER and/or PR +")
-```
 
 We loaded the development data (rdata) and the validation data (vdata).
 More details about development and validation data are provided in the
@@ -284,11 +244,6 @@ plot(mfit_vdata,
   ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
 )
 title("Validation data")
-```
-
-<img src="imgs/Development_SDH/cuminc-1.png" width="672" style="display: block; margin: auto;" />
-
-``` r
 par(oldpar)
 # Cumulative incidences
 smfit_rdata <- summary(mfit_rdata, times = c(1, 2, 3, 4, 5))
@@ -297,67 +252,7 @@ smfit_vdata <- summary(mfit_vdata, times = c(1, 2, 3, 4, 5))
 
 </details>
 
-``` r
-# Expand datasets -------------------------
-rdata.w <- crprep(
-  Tstop = "time",
-  status = "status_num",
-  trans = c(1, 2),
-  id = "id",
-  keep = c("age", "size", "ncat", "hr_status"),
-  data = rdata
-)
-# Save extended data with weights for recurrence (failcode=1)
-# and non recurrence mortality (failcode=2)
-rdata.w1 <- rdata.w %>% filter(failcode == 1)
-rdata.w2 <- rdata.w %>% filter(failcode == 2)
-
-vdata.w <- crprep(
-  Tstop = "time",
-  status = "status_num",
-  trans = c(1, 2),
-  id = "id",
-  keep = c("age", "size", "ncat", "hr_status"),
-  data = vdata
-)
-vdata.w1 <- vdata.w %>% filter(failcode == 1)
-vdata.w2 <- vdata.w %>% filter(failcode == 2)
-
-# Development set --------
-mfit_rdata <- survfit(
-  Surv(Tstart, Tstop, status == 1) ~ 1,
-  data = rdata.w1, weights = weight.cens
-)
-mfit_vdata <- survfit(
-  Surv(Tstart, Tstop, status == 1) ~ 1,
-  data = vdata.w1, weights = weight.cens
-)
-par(xaxs = "i", yaxs = "i", las = 1)
-oldpar <- par(mfrow = c(1, 2), mar = c(5, 5, 1, 1))
-plot(mfit_rdata,
-  col = 1, lwd = 2,
-  xlab = "Years since BC diagnosis",
-  ylab = "Cumulative incidence", bty = "n",
-  ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
-)
-title("Development data")
-plot(mfit_vdata,
-  col = 1, lwd = 2,
-  xlab = "Years since BC diagnosis",
-  ylab = "Cumulative incidence", bty = "n",
-  ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
-)
-title("Validation data")
-```
-
 <img src="imgs/Development_SDH/cuminc-1.png" width="672" style="display: block; margin: auto;" />
-
-``` r
-par(oldpar)
-# Cumulative incidences
-smfit_rdata <- summary(mfit_rdata, times = c(1, 2, 3, 4, 5))
-smfit_vdata <- summary(mfit_vdata, times = c(1, 2, 3, 4, 5))
-```
 
 The R packages and functions `cmprsk::cuminc()` and
 `mstate::Cuminc()`are good and easy alternatives to estimate the
@@ -540,6 +435,11 @@ restricted cubic splines using `rms::rcs()` function (details are given
 in e.g. Frank Harrell’s book ‘Regression Model Strategies (second
 edition)’, page 27.
 
+<details>
+<summary>
+Click to expand code
+</summary>
+
 ``` r
 # Defining knots of the restricted cubic splines ------------------
 # Extract knots position of the restricted cubic spline based on the
@@ -652,11 +552,6 @@ plot(P_fg_size_rcs$size,
   ylim = c(-2, 2),
   xlim = c(0, 7)
 )
-```
-
-<img src="imgs/Development_SDH/ff-1.png" width="672" style="display: block; margin: auto;" />
-
-``` r
 par(oldpar)
 options(datadist = NULL)
 
@@ -674,6 +569,10 @@ data = rdata.w1
 )
 options(datadist = NULL)
 ```
+
+</details>
+
+<img src="imgs/Development_SDH/ff-1.png" width="672" style="display: block; margin: auto;" />
 
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
 <thead>
@@ -712,6 +611,11 @@ interest (breast cancer recurrence).
 We now examine the fits further by checking the proportionality of the
 subdistribution hazards of the models.
 
+<details>
+<summary>
+Click to expand code
+</summary>
+
 ``` r
 zp_fg <- cox.zph(fit_fg, transform = "identity")
 
@@ -734,17 +638,14 @@ mtext("Fine and Gray",
   outer = TRUE,
   font = 2
 )
-```
-
-<img src="imgs/Development_SDH/sph-1.png" width="672" style="display: block; margin: auto;" />
-
-``` r
 par(oldpar)
 
 kable(round(zp_fg$table, 3)) %>%
   kable_styling("striped", position = "center")
 ```
 
+</details>
+<img src="imgs/Development_SDH/sph-1.png" width="672" style="display: block; margin: auto;" />
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -853,6 +754,11 @@ competing risks model using the subdistribution hazard approach:
 
 #### Model development using survival package and finegray() function
 
+<details>
+<summary>
+Click to expand code
+</summary>
+
 ``` r
 rdata_fg <- finegray(Surv(time, status) ~ .,
   etype = "rec",
@@ -866,7 +772,14 @@ data = rdata_fg
 )
 ```
 
+</details>
+
 #### Model development using mstate package and crprep() function
+
+<details>
+<summary>
+Click to expand code
+</summary>
 
 ``` r
 # Expand data to prepare for fitting the model
@@ -895,7 +808,10 @@ surv = T,
 data = rdata.w1
 )
 print(fit_fg)
+options(datadist = NULL)
 ```
+
+</details>
 
  <strong>Cox Proportional Hazards Model</strong>
  
@@ -984,11 +900,12 @@ print(fit_fg)
 </tbody>
 </table>
 
-``` r
-options(datadist = NULL)
-```
-
 #### Model development using riskRegression package and FGR() function
+
+<details>
+<summary>
+Click to expand code
+</summary>
 
 ``` r
 # We also fit the FG model using riskRegression::FGR()
@@ -1006,18 +923,12 @@ data = rdata
 )
 ```
 
-``` r
-res_coef <- cbind.data.frame(
-  "survival package" = fgfit$coefficients,
-  "mstate + survival/rms packages" =
-    fit_fg$coefficients,
-  "riskRegression package" = fit_fgr$crrFit$coef
-)
-k <- 4
-res_coef <- round(res_coef, k)
-kable(res_coef) %>%
-  kable_styling("striped", position = "center")
-```
+</details>
+
+#### Summary of the model coefficients
+
+Summary of the model coefficients using `survival`, `mstate` and
+`survival` or `rms`, and `riskRegression` packages
 
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
 <thead>
