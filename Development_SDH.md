@@ -55,8 +55,16 @@ pacman::p_load(
   webshot,
   riskRegression
 )
+```
 
+    ## package 'KMsurv' successfully unpacked and MD5 sums checked
+    ## package 'geepack' successfully unpacked and MD5 sums checked
+    ## package 'pseudo' successfully unpacked and MD5 sums checked
+    ## 
+    ## The downloaded binary packages are in
+    ##  C:\Users\dgiardiello\AppData\Local\Temp\Rtmp6Jhwa6\downloaded_packages
 
+``` r
 # Import data ------------------
 rdata <- readRDS(here::here("Data/rdata.rds"))
 vdata <- readRDS(here::here("Data/vdata.rds"))
@@ -220,6 +228,11 @@ ER-/PR-
 First, we draw the cumulative incidence curves of breast cancer
 recurrence.
 
+<details>
+<summary>
+Click to expand code
+</summary>
+
 ``` r
 # Expand datasets -------------------------
 rdata.w <- crprep(
@@ -258,17 +271,81 @@ mfit_vdata <- survfit(
 par(xaxs = "i", yaxs = "i", las = 1)
 oldpar <- par(mfrow = c(1, 2), mar = c(5, 5, 1, 1))
 plot(mfit_rdata,
-     col = 1, lwd = 2,
-     xlab = "Years since BC diagnosis",
-     ylab = "Cumulative incidence", bty = "n",
-     ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
+  col = 1, lwd = 2,
+  xlab = "Years since BC diagnosis",
+  ylab = "Cumulative incidence", bty = "n",
+  ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
 )
 title("Development data")
 plot(mfit_vdata,
-     col = 1, lwd = 2,
-     xlab = "Years since BC diagnosis",
-     ylab = "Cumulative incidence", bty = "n",
-     ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
+  col = 1, lwd = 2,
+  xlab = "Years since BC diagnosis",
+  ylab = "Cumulative incidence", bty = "n",
+  ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
+)
+title("Validation data")
+```
+
+<img src="imgs/Development_SDH/cuminc-1.png" width="672" style="display: block; margin: auto;" />
+
+``` r
+par(oldpar)
+# Cumulative incidences
+smfit_rdata <- summary(mfit_rdata, times = c(1, 2, 3, 4, 5))
+smfit_vdata <- summary(mfit_vdata, times = c(1, 2, 3, 4, 5))
+```
+
+</details>
+
+``` r
+# Expand datasets -------------------------
+rdata.w <- crprep(
+  Tstop = "time",
+  status = "status_num",
+  trans = c(1, 2),
+  id = "id",
+  keep = c("age", "size", "ncat", "hr_status"),
+  data = rdata
+)
+# Save extended data with weights for recurrence (failcode=1)
+# and non recurrence mortality (failcode=2)
+rdata.w1 <- rdata.w %>% filter(failcode == 1)
+rdata.w2 <- rdata.w %>% filter(failcode == 2)
+
+vdata.w <- crprep(
+  Tstop = "time",
+  status = "status_num",
+  trans = c(1, 2),
+  id = "id",
+  keep = c("age", "size", "ncat", "hr_status"),
+  data = vdata
+)
+vdata.w1 <- vdata.w %>% filter(failcode == 1)
+vdata.w2 <- vdata.w %>% filter(failcode == 2)
+
+# Development set --------
+mfit_rdata <- survfit(
+  Surv(Tstart, Tstop, status == 1) ~ 1,
+  data = rdata.w1, weights = weight.cens
+)
+mfit_vdata <- survfit(
+  Surv(Tstart, Tstop, status == 1) ~ 1,
+  data = vdata.w1, weights = weight.cens
+)
+par(xaxs = "i", yaxs = "i", las = 1)
+oldpar <- par(mfrow = c(1, 2), mar = c(5, 5, 1, 1))
+plot(mfit_rdata,
+  col = 1, lwd = 2,
+  xlab = "Years since BC diagnosis",
+  ylab = "Cumulative incidence", bty = "n",
+  ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
+)
+title("Development data")
+plot(mfit_vdata,
+  col = 1, lwd = 2,
+  xlab = "Years since BC diagnosis",
+  ylab = "Cumulative incidence", bty = "n",
+  ylim = c(0, 0.25), xlim = c(0, 5), fun = "event", conf.int = TRUE
 )
 title("Validation data")
 ```
@@ -485,14 +562,14 @@ rdata$size3 <- rcs3_size
 # FG model
 dd <- datadist(rdata)
 options(datadist = "dd")
-fit_fg_rcs <- cph(Surv(Tstart, Tstop, status == 1) ~ 
-                    rcs(age, pos_knots_age) + rcs(size, pos_knots_size) +
-                    ncat + hr_status, 
-                  weights = weight.cens,
-                  x = T, 
-                  y = T, 
-                  surv = T, 
-                  data = rdata.w1
+fit_fg_rcs <- cph(Surv(Tstart, Tstop, status == 1) ~
+rcs(age, pos_knots_age) + rcs(size, pos_knots_size) +
+  ncat + hr_status,
+weights = weight.cens,
+x = T,
+y = T,
+surv = T,
+data = rdata.w1
 )
 P_fg_age_rcs <- Predict(fit_fg_rcs, "age")
 P_fg_size_rcs <- Predict(fit_fg_rcs, "size")
@@ -504,68 +581,76 @@ oldpar <- par(mfrow = c(1, 2), mar = c(5, 5, 1, 1))
 par(xaxs = "i", yaxs = "i", las = 1)
 
 # FG - age
-plot(P_fg_age_rcs$age, 
-     P_fg_age_rcs$yhat,
-     type = "l", 
-     lwd = 2, 
-     col = "blue", 
-     bty = "n",
+plot(P_fg_age_rcs$age,
+  P_fg_age_rcs$yhat,
+  type = "l",
+  lwd = 2,
+  col = "blue",
+  bty = "n",
   xlab = "Age at breast cancer diagnosis",
-  ylab = "log Relative Hazard", 
-  ylim = c(-2, 2), 
+  ylab = "log Relative Hazard",
+  ylim = c(-2, 2),
   xlim = c(65, 95)
 )
-polygon(c(P_fg_age_rcs$age, 
-          rev(P_fg_age_rcs$age)),
-  c(P_fg_age_rcs$lower, 
-    rev(P_fg_age_rcs$upper)),
-  col = "grey75",
-  border = FALSE
+polygon(c(
+  P_fg_age_rcs$age,
+  rev(P_fg_age_rcs$age)
+),
+c(
+  P_fg_age_rcs$lower,
+  rev(P_fg_age_rcs$upper)
+),
+col = "grey75",
+border = FALSE
 )
 par(new = TRUE)
-plot(P_fg_age_rcs$age, 
-     P_fg_age_rcs$yhat,
-     type = "l", 
-     lwd = 2, 
-     col = "blue", 
-     bty = "n",
-     xlab = "Age at breast cancer diagnosis", 
-     ylab = "log Relative Hazard",
-     ylim = c(-2, 2),
-     xlim = c(65, 95)
+plot(P_fg_age_rcs$age,
+  P_fg_age_rcs$yhat,
+  type = "l",
+  lwd = 2,
+  col = "blue",
+  bty = "n",
+  xlab = "Age at breast cancer diagnosis",
+  ylab = "log Relative Hazard",
+  ylim = c(-2, 2),
+  xlim = c(65, 95)
 )
 
 # FG - size
 par(xaxs = "i", yaxs = "i", las = 1)
-plot(P_fg_size_rcs$size, 
-     P_fg_size_rcs$yhat,
-     type = "l", 
-     lwd = 2, 
-     col = "blue", 
-     bty = "n",
-     xlab = "Size of breast cancer",
-     ylab = "log Relative Hazard", 
-     ylim = c(-2, 2),
-     xlim = c(0, 7)
+plot(P_fg_size_rcs$size,
+  P_fg_size_rcs$yhat,
+  type = "l",
+  lwd = 2,
+  col = "blue",
+  bty = "n",
+  xlab = "Size of breast cancer",
+  ylab = "log Relative Hazard",
+  ylim = c(-2, 2),
+  xlim = c(0, 7)
 )
-polygon(c(P_fg_size_rcs$size, 
-          rev(P_fg_size_rcs$size)),
-  c(P_fg_size_rcs$lower, 
-    rev(P_fg_size_rcs$upper)),
-  col = "grey75",
-  border = FALSE
+polygon(c(
+  P_fg_size_rcs$size,
+  rev(P_fg_size_rcs$size)
+),
+c(
+  P_fg_size_rcs$lower,
+  rev(P_fg_size_rcs$upper)
+),
+col = "grey75",
+border = FALSE
 )
 par(new = TRUE)
-plot(P_fg_size_rcs$size, 
-     P_fg_size_rcs$yhat,
-     type = "l", 
-     lwd = 2, 
-     col = "blue", 
-     bty = "n",
-     xlab = "Size of breast cancer", 
-     ylab = "log Relative Hazard",
-     ylim = c(-2, 2), 
-     xlim = c(0, 7)
+plot(P_fg_size_rcs$size,
+  P_fg_size_rcs$yhat,
+  type = "l",
+  lwd = 2,
+  col = "blue",
+  bty = "n",
+  xlab = "Size of breast cancer",
+  ylab = "log Relative Hazard",
+  ylim = c(-2, 2),
+  xlim = c(0, 7)
 )
 ```
 
@@ -580,12 +665,12 @@ options(datadist = NULL)
 dd <- datadist(rdata, adjto.cat = "first")
 options(datadist = "dd")
 fit_fg <- cph(Surv(Tstart, Tstop, status == 1) ~ age + size +
-                ncat + hr_status,
-              weights = weight.cens,
-              x = T, 
-              y = T, 
-              surv = T, 
-              data = rdata.w1
+  ncat + hr_status,
+weights = weight.cens,
+x = T,
+y = T,
+surv = T,
+data = rdata.w1
 )
 options(datadist = NULL)
 ```
@@ -635,18 +720,20 @@ par(las = 1, xaxs = "i", yaxs = "i")
 oldpar <- par(mfrow = c(2, 2), mar = c(5, 6.1, 3.1, 1))
 sub_title <- c("Age", "Size", "Lymph node status", "HR status")
 for (i in 1:4) {
-  plot(zp_fg[i], 
-       resid = F, 
-       bty = "n", 
-       xlim = c(0, 5))
+  plot(zp_fg[i],
+    resid = F,
+    bty = "n",
+    xlim = c(0, 5)
+  )
   abline(0, 0, lty = 3)
   title(sub_title[i])
 }
-mtext("Fine and Gray", 
-      side = 3, 
-      line = -1, 
-      outer = TRUE, 
-      font = 2)
+mtext("Fine and Gray",
+  side = 3,
+  line = -1,
+  outer = TRUE,
+  font = 2
+)
 ```
 
 <img src="imgs/Development_SDH/sph-1.png" width="672" style="display: block; margin: auto;" />
@@ -719,7 +806,7 @@ ncat
 </tr>
 <tr>
 <td style="text-align:left;">
-hr\_status
+hr_status
 </td>
 <td style="text-align:right;">
 0.127
@@ -767,20 +854,22 @@ competing risks model using the subdistribution hazard approach:
 #### Model development using survival package and finegray() function
 
 ``` r
-rdata_fg <- finegray(Surv(time, status) ~ ., 
-                     etype = "rec",
-                     data = rdata)
+rdata_fg <- finegray(Surv(time, status) ~ .,
+  etype = "rec",
+  data = rdata
+)
 
-fgfit <- coxph(Surv(fgstart, fgstop, fgstatus) ~ 
-                 age + size + ncat + hr_status,
-               weight = fgwt, 
-               data = rdata_fg)
+fgfit <- coxph(Surv(fgstart, fgstop, fgstatus) ~
+age + size + ncat + hr_status,
+weight = fgwt,
+data = rdata_fg
+)
 ```
 
 #### Model development using mstate package and crprep() function
 
 ``` r
-# Expand data to prepare for fitting the model 
+# Expand data to prepare for fitting the model
 primary_event <- 1 # primary event is 1 (breast cancer recurrence)
 # set 2 to fit a model for non-recurrence mortality.
 rdata.w <- mstate::crprep(
@@ -798,12 +887,12 @@ options(datadist = "dd")
 options(prType = "html")
 
 fit_fg <- cph(Surv(Tstart, Tstop, status == 1) ~
-                age + size + ncat + hr_status, 
-                  weights = weight.cens,
-                  x = T, 
-                  y = T, 
-                  surv = T, 
-                  data = rdata.w1
+age + size + ncat + hr_status,
+weights = weight.cens,
+x = T,
+y = T,
+surv = T,
+data = rdata.w1
 )
 print(fit_fg)
 ```
@@ -909,22 +998,24 @@ options(datadist = NULL)
 primary_event <- 1 # primary event is 1 (breast cancer recurrence)
 # set 2 to fit a model for non-recurrence mortality.
 
-fit_fgr <- FGR(Hist(time, status_num) ~ 
-                 age + size +
-                 ncat + hr_status, 
-               cause = primary_event,
-               data = rdata)
+fit_fgr <- FGR(Hist(time, status_num) ~
+age + size +
+  ncat + hr_status,
+cause = primary_event,
+data = rdata
+)
 ```
 
 ``` r
-res_coef <- cbind.data.frame( 
-                             "survival package" = fgfit$coefficients,
-                             "mstate + survival/rms packages" = 
-                               fit_fg$coefficients,
-                             "riskRegression package" = fit_fgr$crrFit$coef)
+res_coef <- cbind.data.frame(
+  "survival package" = fgfit$coefficients,
+  "mstate + survival/rms packages" =
+    fit_fg$coefficients,
+  "riskRegression package" = fit_fgr$crrFit$coef
+)
 k <- 4
 res_coef <- round(res_coef, k)
-kable(res_coef) %>% 
+kable(res_coef) %>%
   kable_styling("striped", position = "center")
 ```
 
@@ -989,7 +1080,7 @@ ncatpositive
 </tr>
 <tr>
 <td style="text-align:left;">
-hr\_statusER-/PR-
+hr_statusER-/PR-
 </td>
 <td style="text-align:right;">
 0.5860
@@ -1014,9 +1105,9 @@ develop a breast cancer recurrence.
 sessionInfo()
 ```
 
-    ## R version 4.0.5 (2021-03-31)
+    ## R version 4.1.2 (2021-11-01)
     ## Platform: x86_64-w64-mingw32/x64 (64-bit)
-    ## Running under: Windows 10 x64 (build 19043)
+    ## Running under: Windows 10 x64 (build 19044)
     ## 
     ## Matrix products: default
     ## 
@@ -1033,53 +1124,57 @@ sessionInfo()
     ## 
     ## other attached packages:
     ##  [1] webshot_0.5.2             gridExtra_2.3            
-    ##  [3] rsample_0.0.9             forcats_0.5.1            
-    ##  [5] stringr_1.4.0             dplyr_1.0.5              
-    ##  [7] purrr_0.3.4               readr_1.4.0              
-    ##  [9] tidyr_1.1.3               tibble_3.1.0             
-    ## [11] tidyverse_1.3.0           boot_1.3-27              
-    ## [13] gtsummary_1.3.7           kableExtra_1.3.4         
-    ## [15] knitr_1.31                plotrix_3.8-1            
-    ## [17] riskRegression_2020.12.08 pec_2020.11.17           
+    ##  [3] rsample_0.1.1             forcats_0.5.1            
+    ##  [5] stringr_1.4.0             dplyr_1.0.7              
+    ##  [7] purrr_0.3.4               readr_2.1.1              
+    ##  [9] tidyr_1.1.4               tibble_3.1.6             
+    ## [11] tidyverse_1.3.1           boot_1.3-28              
+    ## [13] gtsummary_1.5.0           kableExtra_1.3.4         
+    ## [15] knitr_1.36                plotrix_3.8-2            
+    ## [17] riskRegression_2021.10.10 pec_2021.10.11           
     ## [19] prodlim_2019.11.13        pseudo_1.4.3             
-    ## [21] geepack_1.3-2             KMsurv_0.1-5             
-    ## [23] mstate_0.3.1              rms_6.2-0                
-    ## [25] SparseM_1.81              Hmisc_4.5-0              
-    ## [27] ggplot2_3.3.3             Formula_1.2-4            
-    ## [29] lattice_0.20-41           survival_3.2-11          
+    ## [21] geepack_1.3.3             KMsurv_0.1-5             
+    ## [23] mstate_0.3.2              rms_6.2-0                
+    ## [25] SparseM_1.81              Hmisc_4.6-0              
+    ## [27] ggplot2_3.3.5             Formula_1.2-4            
+    ## [29] lattice_0.20-45           survival_3.2-13          
     ## [31] pacman_0.5.1             
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] TH.data_1.0-10      colorspace_2.0-0    ellipsis_0.3.1     
-    ##  [4] rprojroot_2.0.2     htmlTable_2.1.0     base64enc_0.1-3    
-    ##  [7] fs_1.5.0            rstudioapi_0.13     listenv_0.8.0      
-    ## [10] furrr_0.2.2         MatrixModels_0.5-0  lubridate_1.7.10   
-    ## [13] fansi_0.4.2         mvtnorm_1.1-1       xml2_1.3.2         
-    ## [16] codetools_0.2-18    jsonlite_1.7.2      gt_0.2.2           
-    ## [19] broom_0.7.6         cluster_2.1.1       dbplyr_2.1.1       
-    ## [22] png_0.1-7           compiler_4.0.5      httr_1.4.2         
-    ## [25] backports_1.2.1     assertthat_0.2.1    Matrix_1.3-2       
-    ## [28] cli_2.4.0           htmltools_0.5.1.1   quantreg_5.85      
-    ## [31] tools_4.0.5         gtable_0.3.0        glue_1.4.2         
-    ## [34] Rcpp_1.0.6          cellranger_1.1.0    vctrs_0.3.7        
-    ## [37] svglite_2.0.0       nlme_3.1-152        conquer_1.0.2      
-    ## [40] iterators_1.0.13    broom.helpers_1.2.1 xfun_0.22          
-    ## [43] globals_0.14.0      rvest_1.0.0         lifecycle_1.0.0    
-    ## [46] future_1.21.0       polspline_1.1.19    MASS_7.3-53.1      
-    ## [49] zoo_1.8-9           scales_1.1.1        hms_1.0.0          
-    ## [52] parallel_4.0.5      sandwich_3.0-0      RColorBrewer_1.1-2 
-    ## [55] yaml_2.2.1          rpart_4.1-15        latticeExtra_0.6-29
-    ## [58] stringi_1.5.3       highr_0.8           foreach_1.5.1      
-    ## [61] checkmate_2.0.0     lava_1.6.9          mets_1.2.8.1       
-    ## [64] rlang_0.4.10        pkgconfig_2.0.3     systemfonts_1.0.1  
-    ## [67] matrixStats_0.58.0  evaluate_0.14       htmlwidgets_1.5.3  
-    ## [70] cmprsk_2.2-10       tidyselect_1.1.0    here_1.0.1         
-    ## [73] parallelly_1.24.0   magrittr_2.0.1      R6_2.5.0           
-    ## [76] generics_0.1.0      multcomp_1.4-16     DBI_1.1.1          
-    ## [79] pillar_1.5.1        haven_2.3.1         foreign_0.8-81     
-    ## [82] withr_2.4.1         nnet_7.3-15         modelr_0.1.8       
-    ## [85] crayon_1.4.1        utf8_1.2.1          rmarkdown_2.7      
-    ## [88] timereg_1.9.8       jpeg_0.1-8.1        usethis_2.0.1      
-    ## [91] readxl_1.3.1        grid_4.0.5          data.table_1.14.0  
-    ## [94] reprex_2.0.0        digest_0.6.27       numDeriv_2016.8-1.1
-    ## [97] munsell_0.5.0       viridisLite_0.3.0
+    ##   [1] readxl_1.3.1         backports_1.3.0      systemfonts_1.0.3   
+    ##   [4] plyr_1.8.6           listenv_0.8.0        TH.data_1.1-0       
+    ##   [7] digest_0.6.29        foreach_1.5.1        htmltools_0.5.2     
+    ##  [10] fansi_0.5.0          magrittr_2.0.1       checkmate_2.0.0     
+    ##  [13] cluster_2.1.2        tzdb_0.2.0           recipes_0.1.17      
+    ##  [16] globals_0.14.0       modelr_0.1.8         mets_1.2.9          
+    ##  [19] gower_0.2.2          matrixStats_0.61.0   sandwich_3.0-1      
+    ##  [22] svglite_2.0.0        jpeg_0.1-9           colorspace_2.0-2    
+    ##  [25] rvest_1.0.2          haven_2.4.3          xfun_0.28           
+    ##  [28] crayon_1.4.2         jsonlite_1.7.2       zoo_1.8-9           
+    ##  [31] iterators_1.0.13     glue_1.5.1           gtable_0.3.0        
+    ##  [34] ipred_0.9-12         MatrixModels_0.5-0   future.apply_1.8.1  
+    ##  [37] scales_1.1.1         mvtnorm_1.1-3        DBI_1.1.1           
+    ##  [40] Rcpp_1.0.7           viridisLite_0.4.0    cmprsk_2.2-10       
+    ##  [43] htmlTable_2.3.0      foreign_0.8-81       stats4_4.1.2        
+    ##  [46] lava_1.6.10          htmlwidgets_1.5.4    httr_1.4.2          
+    ##  [49] RColorBrewer_1.1-2   ellipsis_0.3.2       pkgconfig_2.0.3     
+    ##  [52] nnet_7.3-16          dbplyr_2.1.1         here_1.0.1          
+    ##  [55] utf8_1.2.2           caret_6.0-90         tidyselect_1.1.1    
+    ##  [58] rlang_0.4.12         reshape2_1.4.4       munsell_0.5.0       
+    ##  [61] cellranger_1.1.0     tools_4.1.2          cli_3.1.0           
+    ##  [64] generics_0.1.1       broom_0.7.10         evaluate_0.14       
+    ##  [67] fastmap_1.1.0        yaml_2.2.1           ModelMetrics_1.2.2.2
+    ##  [70] fs_1.5.1             timereg_2.0.1        future_1.23.0       
+    ##  [73] nlme_3.1-153         quantreg_5.86        xml2_1.3.3          
+    ##  [76] compiler_4.1.2       rstudioapi_0.13      png_0.1-7           
+    ##  [79] gt_0.3.1             reprex_2.0.1         broom.helpers_1.5.0 
+    ##  [82] stringi_1.7.6        highr_0.9            Matrix_1.3-4        
+    ##  [85] vctrs_0.3.8          furrr_0.2.3          pillar_1.6.4        
+    ##  [88] lifecycle_1.0.1      data.table_1.14.2    conquer_1.2.1       
+    ##  [91] R6_2.5.1             latticeExtra_0.6-29  parallelly_1.29.0   
+    ##  [94] codetools_0.2-18     polspline_1.1.19     MASS_7.3-54         
+    ##  [97] assertthat_0.2.1     rprojroot_2.0.2      withr_2.4.3         
+    ## [100] multcomp_1.4-17      parallel_4.1.2       hms_1.1.1           
+    ## [103] grid_4.1.2           rpart_4.1-15         timeDate_3043.102   
+    ## [106] class_7.3-19         rmarkdown_2.11       pROC_1.18.0         
+    ## [109] numDeriv_2016.8-1.1  lubridate_1.8.0      base64enc_0.1-3
