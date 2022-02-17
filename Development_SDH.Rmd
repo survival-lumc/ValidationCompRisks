@@ -20,7 +20,7 @@ The following libraries are needed to achieve the outlined goals, the code chunk
 knitr::opts_chunk$set(
   fig.retina = 3,
   fig.path = "imgs/Development_SDH/",
-  echo=FALSE
+  echo = FALSE
 )
 ```
 
