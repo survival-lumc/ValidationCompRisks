@@ -13,7 +13,7 @@ output:
   
 The steps taken in this file are:   
 1. To develop a competing risks prediction model using the cause specific hazards approach.
-2. To assess the performance of the model in terms of calibration, discrimination and overall prediction error. We calculate the apparent (not the true internal) validation and the external validation.
+2. To assess the performance of the model in terms of calibration, discrimination and overall prediction error. We calculate the apparent (no internal validation) validation and the external validation.
 3. To assess the potential clinical utility the model using decision curve analysis.
 
 ### Installing and loading packages and import data
@@ -90,7 +90,7 @@ units(cdata$size) <- "cm"
 
 ```{r tab1_bis}
 gtsummary::tbl_summary(
-  data = cdata %>% select(-id),
+  data = cdata |> select(-id),
   label = list(age ~ "Age (years)", size ~ "Size (cm)"),
   by = "dt",
   type = all_continuous() ~ "continuous2",
@@ -98,8 +98,8 @@ gtsummary::tbl_summary(
     "{mean} ({sd})",
     "{median} ({min}, {max})"
   ),
-) %>%
-  gtsummary::as_kable_extra() %>%
+) |>
+  gtsummary::as_kable_extra() |>
   kableExtra::kable_styling("striped")
 ```
 
@@ -125,8 +125,8 @@ rdata.w <- crprep(
 )
 # Save extended data with weights for recurrence (failcode=1)
 # and non recurrence mortality (failcode=2)
-rdata.w1 <- rdata.w %>% filter(failcode == 1)
-rdata.w2 <- rdata.w %>% filter(failcode == 2)
+rdata.w1 <- rdata.w |> filter(failcode == 1)
+rdata.w2 <- rdata.w |> filter(failcode == 2)
 vdata.w <- crprep(
   Tstop = "time",
   status = "status_num",
@@ -135,8 +135,8 @@ vdata.w <- crprep(
   keep = c("age", "size", "ncat", "hr_status"),
   data = vdata
 )
-vdata.w1 <- vdata.w %>% filter(failcode == 1)
-vdata.w2 <- vdata.w %>% filter(failcode == 2)
+vdata.w1 <- vdata.w |> filter(failcode == 1)
+vdata.w2 <- vdata.w |> filter(failcode == 2)
 
 # Development set --------
 mfit_rdata <- survfit(
@@ -198,8 +198,8 @@ res_ci <- cbind(
 res_ci <- round(res_ci, 2)
 rownames(res_ci) <- c("1-year", "2-year", "3-year", "4-year", "5-year")
 colnames(res_ci) <- rep(c("Estimate", "Lower .95", "Upper .95"), 2)
-kable(res_ci, row.names = TRUE) %>%
-  kable_styling("striped", position = "center") %>%
+kable(res_ci, row.names = TRUE) |>
+  kable_styling("striped", position = "center") |>
   add_header_above(c(" " = 1, "Development data" = 3, "Validation data" = 3))
 ```
 
@@ -207,7 +207,7 @@ The 5-year cumulative incidence of breast cancer recurrence was 14% (95% CI: 11-
 
 ### 1.2 Check non-linearity of continuous predictors
 
-Here we investigate the potential non-linear relation between continuous predictors (i.e. age and size) and the outcomes. We apply three-knot restricted cubic splines using `rms::rcs()` function (details are given in e.g. Frank Harrell's book 'Regression Model Strategies (second edition)', page 27. We assess the potential non-linearity graphically (plotting the two continuous predictors against the log relative hazards (XB or linear predictor) of both event types. Also, we compare the models with and without splines based on the AIC.
+Here we investigate the potential non-linear relation between continuous predictors (i.e. age and size) and the outcomes. We apply three-knot restricted cubic splines using `rms::rcs()` function (details are given in e.g. Frank Harrell's book 'Regression Model Strategies (second edition)', page 27. We assess the potential non-linearity graphically (plotting the two continuous predictors against the log relative hazards (XB or linear predictor) of both event types. Also, we compare the models with and without splines based on the AIC using `stats::AIC()`.
 
 <details>
   <summary>Click to expand code</summary>
@@ -421,7 +421,7 @@ dimnames =
     )
   )
 )
-kable(res_AIC, row.names = TRUE) %>%
+kable(res_AIC, row.names = TRUE) |>
   kable_styling("striped", position = "center")
 ```
 
@@ -451,7 +451,7 @@ for (i in 1:4) {
 }
 mtext("Recurrence", side = 3, line = -1, outer = TRUE, font = 2)
 par(oldpar)
-kable(round(zp_csc1$table, 3)) %>%
+kable(round(zp_csc1$table, 3)) |>
   kable_styling("striped", position = "center")
 ```
 </details>
@@ -485,7 +485,7 @@ mtext(
   font = 2
 )
 par(oldpar)
-kable(round(zp_csc2$table, 3)) %>%
+kable(round(zp_csc2$table, 3)) |>
   kable_styling("striped", position = "center")
 ```
 </details>
@@ -533,7 +533,7 @@ print(fit_csc2_cph)
 options(datadist = NULL)
 ```
 
-The coefficients of the models indicated that larger tumor size, positive nodal status and negative hormone receptor status status were associated with higher risk to develop a breast cancer recurrence, while older patients and larger tumors are associated with higher risk of non recurrence mortality.
+The coefficients of the models indicated that larger tumor size, positive nodal status and negative hormone receptor status status were associated with higher risk to develop a breast cancer recurrence, while older patients and larger tumors are associated with higher risk of non recurrence mortality. The associations were considered statistically significant at the usual alpha = 0.05.  
 
 ### 1.5 Plot of predictors vs estimated risk at 5 years in the validation data
 
@@ -585,7 +585,7 @@ plot(
   xlim = c(0, 12),
   ylim = c(0, .6),
   xlab = "Size of tumor",
-  ylab = "Predicted risk"
+  ylab = "Estimated risk"
 )
 lines(
   lowess(vdata$size, vdata$pred),
@@ -601,7 +601,7 @@ plot(
   ylim = c(0, .6),
   bty = "n",
   xlab = "Receptor status",
-  ylab = "Predicted risk"
+  ylab = "Estimated risk"
 )
 
 # Nodal status
@@ -612,7 +612,7 @@ plot(
   ylim = c(0, .6),
   bty = "n",
   xlab = "Nodal status",
-  ylab = "Predicted risk"
+  ylab = "Estimated risk"
 )
 par(oldpar)
 ```
@@ -634,11 +634,11 @@ We assess calibration by:
  the pseudo observations and the subdistribution hazard approach
  - Numerical summaries of calibration:  
  - The observed vs expected ratio (O/E ratio) ;  
- - The squared bias, i.e., the average squared difference between actual risks and risk predictions;
- - The integrated Calibration Index (ICI), i.e., the average absolute difference between actual risks and risk predictions;  
- - E50, E90 and Emax denote the median, 90th percentile and the maximum of the absolute differences between actual risks and risk predictions;  
+ - The squared bias, i.e., the average squared difference between primary event indicators and risk predictions;
+ - The integrated Calibration Index (ICI), i.e., the average absolute difference between primary event indicators and risk predictions;  
+ - E50, E90 and Emax denote the median, 90th percentile and the maximum of the absolute differences between primary event indicators and risk predictions;  
  - Calibration intercept/slope estimated using pseudo observations:  
- - If on average the risk estimates equal the actual risks, the calibration intercept will be zero. A negative calibration intercept indicates that the risk estimates are on average too high and a positive intercept indicates that the risk estimates are on average too low.   
+ - If on average the risk estimates equal the primary event indicators, the calibration intercept will be zero. A negative calibration intercept indicates that the risk estimates are on average too high and a positive intercept indicates that the risk estimates are on average too low.   
  - A calibration slope between 0 and 1 indicates overfitting of the model, i.e., too extreme predictions, both on the low and on the high         end. A calibration slope >1 indicates predictions do not show enough variation.  
       
 #### 2.1.1 Calibration using pseudo observations
@@ -707,7 +707,7 @@ title("Calibration plot using pseudo observations")
 ```{r, cal, fig.align='center',warning=FALSE,message=FALSE,eval=TRUE,echo=FALSE}
 ```
 
-Calibration plot suggests that the prediction model seems to overestimate the actual risk, especially at the lower and higher values of the estimated risk.
+Calibration plot suggests that the prediction model seems to overestimate the observed outcome proportion of the primary event, especially at the lower and higher values of the estimated risk.
 
 ##### 2.1.1.2 Numerical summaries of calibration using pseudo observations
 
@@ -740,10 +740,10 @@ res_num <- rbind(
 )
 
 res_num <- round(res_num, k)
-kable(res_num) %>%
+kable(res_num) |>
   kable_styling("striped", position = "center")
 ```
-Numerical calibration measures identified overestimation of the risk especially in the higher values of the estimated actual risk.
+Numerical calibration measures identified overestimation of the risk especially in the higher values of the observed outcome proportion of the primary event.
 
 #### 2.1.2 Calibration using the subdistribution hazard approach
 Here we assess calibration using the subdistribution hazard approach (Austin et al.)
@@ -812,7 +812,7 @@ plot(
   xlim = c(0, 0.6),
   ylim = c(0, 0.6),
   xlab = "Predictions",
-  ylab = "Estimated actual risk",
+  ylab = "Observed outcome proportion",
   bty = "n"
 )
 abline(a = 0, b = 1, lty = "dashed", col = "red")
@@ -823,7 +823,7 @@ title("Calibration plot using subdistribution hazard approach")
 ```{r, plot_sd, fig.align='center',warning=FALSE,message=FALSE,echo=FALSE,eval=TRUE}
 ```
 
-Calibration plot suggests that the prediction model seems to overestimate the actual risk, especially at the lower and higher values of the estimated risk.
+Calibration plot suggests that the prediction model seems to overestimate the observed outcome proportion of the primary event, especially at the lower and higher values of the estimated risk.
 
 ##### 2.1.2.2 Numerical summaries of calibration using the subdistribution hazard approach
 Here we assess calibration using the subdistribution hazard approach (Austin et al.)
@@ -850,7 +850,7 @@ numsum_fgr <- c(
 #   col = "blue",
 #   lwd = 2,
 #   xlab = "Predictions",
-#   ylab = "Estimated actual risk",
+#   ylab = "Observed outcome proportion",
 #   bty = "n"
 # )
 # lines(x = dat_pseudo$Pred,
@@ -876,10 +876,10 @@ res_num <- rbind(
 )
 
 res_num <- round(res_num, k)
-kable(res_num) %>%
+kable(res_num) |>
   kable_styling("striped", position = "center")
 ```
-Numerical calibration measures identified overestimation of the risk especially in the higher values of the estimated actual risk.
+Numerical calibration measures identified overestimation of the risk especially in the higher values of the observed outcome proportion of the primary event.
 
 #### 2.1.2.3 Calibration plot using pseudo-observations (LOESS smoothing)
 
@@ -1003,7 +1003,7 @@ OE_summary <- round(OE_summary, k)
 ```{r, res_OE, echo=FALSE}
 # OE, rootmeansquared, E50, E90, Emax, int, slope,
 
-kable(OE_summary) %>%
+kable(OE_summary) |>
   kable_styling("striped", position = "center")
 ```
 
@@ -1121,7 +1121,7 @@ res_cal <- rbind(
 )
 
 res_cal <- round(res_cal, k)
-kable(res_cal) %>%
+kable(res_cal) |>
   kable_styling("striped", position = "center")
 ```
 
@@ -1195,10 +1195,10 @@ C_boot <- function(split) {
 
 # Run time-dependent AUC in the bootstrapped development and validation data
 # to calculate the non-parametric CI through percentile bootstrap
-rboot <- rboot %>% mutate(
+rboot <- rboot |> mutate(
   C_rboot = map_dbl(splits, C_boot),
 )
-vboot <- vboot %>% mutate(
+vboot <- vboot |> mutate(
   C_vboot = map_dbl(splits, C_boot),
 )
 
@@ -1270,8 +1270,8 @@ dimnames = list(
 )
 )
 res_discr_csh <- round(res_discr_csh, k)
-kable(res_discr_csh) %>%
-  kable_styling("striped", position = "center") %>%
+kable(res_discr_csh) |>
+  kable_styling("striped", position = "center") |>
   add_header_above(c(
     " " = 1,
     "Development data" = 3,
@@ -1465,7 +1465,7 @@ res_D <- rbind(
 )
 
 res_D <- round(res_D, k)
-kable(res_D) %>%
+kable(res_D) |>
   kable_styling("striped", position = "center")
 ```
 
@@ -1556,14 +1556,14 @@ score_boot <- function(split) {
 }
 
 # Development data
-rboot <- rboot %>% mutate(
+rboot <- rboot |> mutate(
   score = map(splits, score_boot),
   scaled_brier = map_dbl(score, function(x) {
     x$Brier$score[model == "csh_validation"]$IPA
   })
 )
 # Validation data
-vboot <- vboot %>% mutate(
+vboot <- vboot |> mutate(
   score = map(splits, score_boot),
   scaled_brier = map_dbl(score, function(x) {
     x$Brier$score[model == "csh_validation"]$IPA
@@ -1605,8 +1605,8 @@ dimnames =
   )
 )
 res_ov <- round(res_ov_csh, 2) # Digits
-kable(res_ov) %>%
-  kable_styling("striped", position = "center") %>%
+kable(res_ov) |>
+  kable_styling("striped", position = "center") |>
   add_header_above(c(
     " " = 1,
     "Development data" = 3,
