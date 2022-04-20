@@ -908,6 +908,7 @@ freqs_rescaled <- spike_bounds[1] + (spike_bounds[2] - spike_bounds[1]) *
   (freqs_valid - min(freqs_valid)) / (max(freqs_valid) - min(freqs_valid))
 
 # Produce plot
+par(xaxs = "i", yaxs = "i", las = 1)
 plot(
   x = pseudos$risk, 
   y = pseudos$pseudovalue,
