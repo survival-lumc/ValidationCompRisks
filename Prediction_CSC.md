@@ -59,7 +59,7 @@ The steps taken in this file are:
 1. To develop a competing risks prediction model using the cause
 specific hazards approach. 2. To assess the performance of the model in
 terms of calibration, discrimination and overall prediction error. We
-calculate the apparent (not the true internal) validation and the
+calculate the apparent (no internal validation) validation and the
 external validation. 3. To assess the potential clinical utility the
 model using decision curve analysis.
 
@@ -277,8 +277,8 @@ rdata.w <- crprep(
 )
 # Save extended data with weights for recurrence (failcode=1)
 # and non recurrence mortality (failcode=2)
-rdata.w1 <- rdata.w %>% filter(failcode == 1)
-rdata.w2 <- rdata.w %>% filter(failcode == 2)
+rdata.w1 <- rdata.w |> filter(failcode == 1)
+rdata.w2 <- rdata.w |> filter(failcode == 2)
 vdata.w <- crprep(
   Tstop = "time",
   status = "status_num",
@@ -287,8 +287,8 @@ vdata.w <- crprep(
   keep = c("age", "size", "ncat", "hr_status"),
   data = vdata
 )
-vdata.w1 <- vdata.w %>% filter(failcode == 1)
-vdata.w2 <- vdata.w %>% filter(failcode == 2)
+vdata.w1 <- vdata.w |> filter(failcode == 1)
+vdata.w2 <- vdata.w |> filter(failcode == 2)
 
 # Development set --------
 mfit_rdata <- survfit(
@@ -518,7 +518,7 @@ in e.g. Frank Harrell’s book ‘Regression Model Strategies (second
 edition)’, page 27. We assess the potential non-linearity graphically
 (plotting the two continuous predictors against the log relative hazards
 (XB or linear predictor) of both event types. Also, we compare the
-models with and without splines based on the AIC.
+models with and without splines based on the AIC using `stats::AIC()`.
 
 <details>
 <summary>
@@ -787,7 +787,7 @@ for (i in 1:4) {
 }
 mtext("Recurrence", side = 3, line = -1, outer = TRUE, font = 2)
 par(oldpar)
-kable(round(zp_csc1$table, 3)) %>%
+kable(round(zp_csc1$table, 3)) |>
   kable_styling("striped", position = "center")
 ```
 
@@ -911,7 +911,7 @@ mtext(
   font = 2
 )
 par(oldpar)
-kable(round(zp_csc2$table, 3)) %>%
+kable(round(zp_csc2$table, 3)) |>
   kable_styling("striped", position = "center")
 ```
 
@@ -1193,7 +1193,8 @@ The coefficients of the models indicated that larger tumor size,
 positive nodal status and negative hormone receptor status status were
 associated with higher risk to develop a breast cancer recurrence, while
 older patients and larger tumors are associated with higher risk of non
-recurrence mortality.
+recurrence mortality. The associations were considered statistically
+significant at the usual alpha = 0.05.
 
 ### 1.5 Plot of predictors vs estimated risk at 5 years in the validation data
 
@@ -1251,7 +1252,7 @@ plot(
   xlim = c(0, 12),
   ylim = c(0, .6),
   xlab = "Size of tumor",
-  ylab = "Predicted risk"
+  ylab = "Estimated risk"
 )
 lines(
   lowess(vdata$size, vdata$pred),
@@ -1267,7 +1268,7 @@ plot(
   ylim = c(0, .6),
   bty = "n",
   xlab = "Receptor status",
-  ylab = "Predicted risk"
+  ylab = "Estimated risk"
 )
 
 # Nodal status
@@ -1278,7 +1279,7 @@ plot(
   ylim = c(0, .6),
   bty = "n",
   xlab = "Nodal status",
-  ylab = "Predicted risk"
+  ylab = "Estimated risk"
 )
 par(oldpar)
 ```
@@ -1302,18 +1303,18 @@ We assess calibration by:
 -   Numerical summaries of calibration:  
 -   The observed vs expected ratio (O/E ratio) ;  
 -   The squared bias, i.e., the average squared difference between
-    actual risks and risk predictions;
+    primary event indicators and risk predictions;
 -   The integrated Calibration Index (ICI), i.e., the average absolute
-    difference between actual risks and risk predictions;  
+    difference between primary event indicators and risk predictions;  
 -   E50, E90 and Emax denote the median, 90th percentile and the maximum
-    of the absolute differences between actual risks and risk
-    predictions;  
+    of the absolute differences between primary event indicators and
+    risk predictions;  
 -   Calibration intercept/slope estimated using pseudo observations:  
--   If on average the risk estimates equal the actual risks, the
-    calibration intercept will be zero. A negative calibration intercept
-    indicates that the risk estimates are on average too high and a
-    positive intercept indicates that the risk estimates are on average
-    too low.  
+-   If on average the risk estimates equal the primary event indicators,
+    the calibration intercept will be zero. A negative calibration
+    intercept indicates that the risk estimates are on average too high
+    and a positive intercept indicates that the risk estimates are on
+    average too low.  
 -   A calibration slope between 0 and 1 indicates overfitting of the
     model, i.e., too extreme predictions, both on the low and on the
     high end. A calibration slope >1 indicates predictions do not show
@@ -1389,8 +1390,8 @@ title("Calibration plot using pseudo observations")
 <img src="imgs/Prediction_CSC/cal-1.png" width="672" style="display: block; margin: auto;" />
 
 Calibration plot suggests that the prediction model seems to
-overestimate the actual risk, especially at the lower and higher values
-of the estimated risk.
+overestimate the observed outcome proportion of the primary event,
+especially at the lower and higher values of the estimated risk.
 
 ##### 2.1.1.2 Numerical summaries of calibration using pseudo observations
 
@@ -1463,7 +1464,8 @@ Calibration measures - pseudo observations
 </table>
 
 Numerical calibration measures identified overestimation of the risk
-especially in the higher values of the estimated actual risk.
+especially in the higher values of the observed outcome proportion of
+the primary event.
 
 #### 2.1.2 Calibration using the subdistribution hazard approach
 
@@ -1537,7 +1539,7 @@ plot(
   xlim = c(0, 0.6),
   ylim = c(0, 0.6),
   xlab = "Predictions",
-  ylab = "Estimated actual risk",
+  ylab = "Observed outcome proportion",
   bty = "n"
 )
 abline(a = 0, b = 1, lty = "dashed", col = "red")
@@ -1549,8 +1551,8 @@ title("Calibration plot using subdistribution hazard approach")
 <img src="imgs/Prediction_CSC/plot_sd-1.png" width="672" style="display: block; margin: auto;" />
 
 Calibration plot suggests that the prediction model seems to
-overestimate the actual risk, especially at the lower and higher values
-of the estimated risk.
+overestimate the observed outcome proportion of the primary event,
+especially at the lower and higher values of the estimated risk.
 
 ##### 2.1.2.2 Numerical summaries of calibration using the subdistribution hazard approach
 
@@ -1604,7 +1606,8 @@ Calibration measures - subdistribution
 </table>
 
 Numerical calibration measures identified overestimation of the risk
-especially in the higher values of the estimated actual risk.
+especially in the higher values of the observed outcome proportion of
+the primary event.
 
 #### 2.1.2.3 Calibration plot using pseudo-observations (LOESS smoothing)
 
@@ -1977,10 +1980,10 @@ C_boot <- function(split) {
 
 # Run time-dependent AUC in the bootstrapped development and validation data
 # to calculate the non-parametric CI through percentile bootstrap
-rboot <- rboot %>% mutate(
+rboot <- rboot |> mutate(
   C_rboot = map_dbl(splits, C_boot),
 )
-vboot <- vboot %>% mutate(
+vboot <- vboot |> mutate(
   C_vboot = map_dbl(splits, C_boot),
 )
 
@@ -2659,16 +2662,18 @@ benefit of 0.014 choosing a threshold of 20%.
 sessionInfo()
 ```
 
-    ## R version 4.1.0 (2021-05-18)
+    ## R version 4.1.2 (2021-11-01)
     ## Platform: x86_64-w64-mingw32/x64 (64-bit)
-    ## Running under: Windows 10 x64 (build 18363)
+    ## Running under: Windows 10 x64 (build 19044)
     ## 
     ## Matrix products: default
     ## 
     ## locale:
-    ## [1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252   
-    ## [3] LC_MONETARY=Dutch_Netherlands.1252 LC_NUMERIC=C                      
-    ## [5] LC_TIME=Dutch_Netherlands.1252    
+    ## [1] LC_COLLATE=English_United States.1252 
+    ## [2] LC_CTYPE=English_United States.1252   
+    ## [3] LC_MONETARY=English_United States.1252
+    ## [4] LC_NUMERIC=C                          
+    ## [5] LC_TIME=English_United States.1252    
     ## 
     ## attached base packages:
     ## [1] splines   stats     graphics  grDevices utils     datasets  methods  
@@ -2678,55 +2683,55 @@ sessionInfo()
     ##  [1] webshot_0.5.2             gridExtra_2.3            
     ##  [3] rsample_0.1.1             forcats_0.5.1            
     ##  [5] stringr_1.4.0             dplyr_1.0.7              
-    ##  [7] purrr_0.3.4               readr_1.4.0              
-    ##  [9] tidyr_1.1.3               tibble_3.1.2             
+    ##  [7] purrr_0.3.4               readr_2.1.1              
+    ##  [9] tidyr_1.1.4               tibble_3.1.6             
     ## [11] tidyverse_1.3.1           boot_1.3-28              
     ## [13] gtsummary_1.5.0           kableExtra_1.3.4         
     ## [15] knitr_1.36                plotrix_3.8-2            
     ## [17] pec_2021.10.11            prodlim_2019.11.13       
-    ## [19] pseudo_1.4.3              geepack_1.3-2            
+    ## [19] pseudo_1.4.3              geepack_1.3.3            
     ## [21] KMsurv_0.1-5              mstate_0.3.2             
-    ## [23] riskRegression_2021.10.10 cmprsk_2.2-11            
+    ## [23] riskRegression_2021.10.10 cmprsk_2.2-10            
     ## [25] rms_6.2-0                 SparseM_1.81             
     ## [27] Hmisc_4.6-0               ggplot2_3.3.5            
-    ## [29] Formula_1.2-4             lattice_0.20-44          
-    ## [31] survival_3.2-11           pacman_0.5.1             
+    ## [29] Formula_1.2-4             lattice_0.20-45          
+    ## [31] survival_3.2-13           pacman_0.5.1             
     ## 
     ## loaded via a namespace (and not attached):
-    ##   [1] readxl_1.3.1         backports_1.2.1      systemfonts_1.0.3   
+    ##   [1] readxl_1.3.1         backports_1.3.0      systemfonts_1.0.3   
     ##   [4] plyr_1.8.6           listenv_0.8.0        TH.data_1.1-0       
-    ##   [7] digest_0.6.27        foreach_1.5.1        htmltools_0.5.2     
+    ##   [7] digest_0.6.29        foreach_1.5.1        htmltools_0.5.2     
     ##  [10] fansi_0.5.0          magrittr_2.0.1       checkmate_2.0.0     
-    ##  [13] cluster_2.1.2        recipes_0.1.17       globals_0.14.0      
-    ##  [16] modelr_0.1.8         mets_1.2.9           gower_0.2.2         
-    ##  [19] matrixStats_0.61.0   sandwich_3.0-1       svglite_2.0.0       
-    ##  [22] jpeg_0.1-9           colorspace_2.0-2     rvest_1.0.2         
-    ##  [25] haven_2.4.1          xfun_0.27            crayon_1.4.2        
-    ##  [28] jsonlite_1.7.2       zoo_1.8-9            iterators_1.0.13    
-    ##  [31] glue_1.4.2           gtable_0.3.0         ipred_0.9-12        
-    ##  [34] MatrixModels_0.5-0   future.apply_1.8.1   scales_1.1.1        
-    ##  [37] mvtnorm_1.1-3        DBI_1.1.1            Rcpp_1.0.7          
-    ##  [40] viridisLite_0.4.0    htmlTable_2.3.0      foreign_0.8-81      
-    ##  [43] stats4_4.1.0         lava_1.6.10          htmlwidgets_1.5.4   
-    ##  [46] httr_1.4.2           RColorBrewer_1.1-2   ellipsis_0.3.2      
-    ##  [49] pkgconfig_2.0.3      nnet_7.3-16          dbplyr_2.1.1        
-    ##  [52] here_1.0.1           utf8_1.2.1           caret_6.0-90        
-    ##  [55] tidyselect_1.1.1     rlang_0.4.11         reshape2_1.4.4      
-    ##  [58] munsell_0.5.0        cellranger_1.1.0     tools_4.1.0         
-    ##  [61] cli_3.0.0            generics_0.1.1       broom_0.7.11        
-    ##  [64] evaluate_0.14        fastmap_1.1.0        yaml_2.2.1          
-    ##  [67] ModelMetrics_1.2.2.2 fs_1.5.0             timereg_2.0.1       
-    ##  [70] future_1.23.0        nlme_3.1-153         quantreg_5.86       
-    ##  [73] xml2_1.3.2           compiler_4.1.0       rstudioapi_0.13     
-    ##  [76] png_0.1-7            gt_0.3.1             reprex_2.0.1        
-    ##  [79] broom.helpers_1.6.0  stringi_1.6.1        highr_0.9           
-    ##  [82] Matrix_1.3-4         vctrs_0.3.8          furrr_0.2.3         
-    ##  [85] pillar_1.6.4         lifecycle_1.0.1      data.table_1.14.2   
-    ##  [88] conquer_1.2.0        R6_2.5.1             latticeExtra_0.6-29 
-    ##  [91] parallelly_1.28.1    codetools_0.2-18     polspline_1.1.19    
-    ##  [94] MASS_7.3-54          assertthat_0.2.1     rprojroot_2.0.2     
-    ##  [97] withr_2.4.2          multcomp_1.4-17      parallel_4.1.0      
-    ## [100] hms_1.1.1            grid_4.1.0           rpart_4.1-15        
-    ## [103] timeDate_3043.102    class_7.3-19         rmarkdown_2.11      
-    ## [106] pROC_1.18.0          numDeriv_2016.8-1.1  lubridate_1.7.10    
-    ## [109] base64enc_0.1-3
+    ##  [13] cluster_2.1.2        tzdb_0.2.0           recipes_0.1.17      
+    ##  [16] globals_0.14.0       modelr_0.1.8         mets_1.2.9          
+    ##  [19] gower_0.2.2          matrixStats_0.61.0   sandwich_3.0-1      
+    ##  [22] svglite_2.0.0        jpeg_0.1-9           colorspace_2.0-2    
+    ##  [25] rvest_1.0.2          haven_2.4.3          xfun_0.28           
+    ##  [28] crayon_1.4.2         jsonlite_1.7.2       zoo_1.8-9           
+    ##  [31] iterators_1.0.13     glue_1.5.1           gtable_0.3.0        
+    ##  [34] ipred_0.9-12         MatrixModels_0.5-0   future.apply_1.8.1  
+    ##  [37] scales_1.1.1         mvtnorm_1.1-3        DBI_1.1.1           
+    ##  [40] Rcpp_1.0.7           viridisLite_0.4.0    htmlTable_2.3.0     
+    ##  [43] foreign_0.8-81       stats4_4.1.2         lava_1.6.10         
+    ##  [46] htmlwidgets_1.5.4    httr_1.4.2           RColorBrewer_1.1-2  
+    ##  [49] ellipsis_0.3.2       pkgconfig_2.0.3      nnet_7.3-16         
+    ##  [52] dbplyr_2.1.1         here_1.0.1           utf8_1.2.2          
+    ##  [55] caret_6.0-90         tidyselect_1.1.1     rlang_0.4.12        
+    ##  [58] reshape2_1.4.4       munsell_0.5.0        cellranger_1.1.0    
+    ##  [61] tools_4.1.2          cli_3.1.0            generics_0.1.1      
+    ##  [64] broom_0.7.10         evaluate_0.14        fastmap_1.1.0       
+    ##  [67] yaml_2.2.1           ModelMetrics_1.2.2.2 fs_1.5.1            
+    ##  [70] timereg_2.0.1        future_1.23.0        nlme_3.1-153        
+    ##  [73] quantreg_5.86        xml2_1.3.3           compiler_4.1.2      
+    ##  [76] rstudioapi_0.13      png_0.1-7            gt_0.3.1            
+    ##  [79] reprex_2.0.1         broom.helpers_1.5.0  stringi_1.7.6       
+    ##  [82] highr_0.9            Matrix_1.3-4         vctrs_0.3.8         
+    ##  [85] furrr_0.2.3          pillar_1.6.4         lifecycle_1.0.1     
+    ##  [88] data.table_1.14.2    conquer_1.2.1        R6_2.5.1            
+    ##  [91] latticeExtra_0.6-29  parallelly_1.29.0    codetools_0.2-18    
+    ##  [94] polspline_1.1.19     MASS_7.3-54          assertthat_0.2.1    
+    ##  [97] rprojroot_2.0.2      withr_2.4.3          multcomp_1.4-17     
+    ## [100] parallel_4.1.2       hms_1.1.1            grid_4.1.2          
+    ## [103] rpart_4.1-15         timeDate_3043.102    class_7.3-19        
+    ## [106] rmarkdown_2.11       pROC_1.18.0          numDeriv_2016.8-1.1 
+    ## [109] lubridate_1.8.0      base64enc_0.1-3
