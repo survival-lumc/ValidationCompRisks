@@ -2373,6 +2373,97 @@ intervals.
 Some confidence intervals are calculated using the bootstrap percentile
 method.
 
+<details>
+<summary>
+Click to expand code
+</summary>
+
+``` r
+# Models -------------------
+fit_csh <- CSC(Hist(time, status_num) ~
+age + size +
+  ncat + hr_status,
+data = rdata,
+fitter = "cph"
+)
+fit_csc1 <- fit_csh$models$`Cause 1`
+fit_csc2 <- fit_csh$models$`Cause 2`
+
+# Overall performance measures ----------------
+primary_event <- 1 # Set to 2 if cause 2 was of interest
+horizon <- 5 # Set time horizon for prediction (here 5 years)
+
+# Development data
+score_rdata <- Score(
+  list("csh_development" = fit_csh),
+  formula = Hist(time, status_num) ~ 1,
+  cens.model = "km",
+  data = rdata,
+  conf.int = TRUE,
+  times = horizon,
+  metrics = c("auc", "brier"),
+  summary = c("ipa"),
+  cause = primary_event,
+  plots = "calibration"
+)
+
+# Validation data
+score_vdata <- Score(
+  list("csh_validation" = fit_csh),
+  formula = Hist(time, status_num) ~ 1,
+  cens.model = "km",
+  data = vdata,
+  conf.int = TRUE,
+  times = horizon,
+  metrics = c("auc", "brier"),
+  summary = c("ipa"),
+  cause = primary_event,
+  plots = "calibration"
+)
+
+# Bootstrap ------
+# Functions to expand data and calculate Brier, IPA and AUC in bootstrap
+# samples.
+# For Brier and AUC, bootstrap should be computationally faster when
+# data has more than 2000 rows (see ?riskRegression::Score).
+# Our data has 1000 row so we will need only bootstrap to calculate
+# confidence intervals of the scaled Brier (IPA) since
+# it is not provided by riskRegression::Score() function.
+
+
+# Score functions in any bootstrap data
+score_boot <- function(split) {
+  Score(
+    list("csh_validation" = fit_csh),
+    formula = Hist(time, status_num) ~ 1,
+    cens.model = "km",
+    data = analysis(split),
+    conf.int = TRUE,
+    times = horizon,
+    metrics = c("auc", "brier"),
+    summary = c("ipa"),
+    cause = primary_event,
+    plots = "calibration"
+  )
+}
+
+# Development data
+rboot <- rboot |> mutate(
+  score = map(splits, score_boot),
+  scaled_brier = map_dbl(score, function(x) {
+    x$Brier$score[model == "csh_validation"]$IPA
+  })
+)
+# Validation data
+vboot <- vboot |> mutate(
+  score = map(splits, score_boot),
+  scaled_brier = map_dbl(score, function(x) {
+    x$Brier$score[model == "csh_validation"]$IPA
+  })
+)
+```
+
+</details>
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
 <thead>
 <tr>

@@ -1458,6 +1458,9 @@ res_vdata <- royston_R2D_cmprsk(
 ```
 </details>
 
+```{r, royston_R2D, warning=FALSE,echo=FALSE, eval=TRUE}
+```
+
 ```{r, res_D_R2D, fig.align='center',echo=FALSE}
 k <- 2
 res_D <- rbind(
@@ -1486,7 +1489,9 @@ rboot <- bootstraps(rdata, times = B)
 vboot <- bootstraps(vdata, times = B)
 ```
 
-```{r, overall, warning=FALSE}
+<details>
+  <summary>Click to expand code</summary>
+```{r, overall, warning=FALSE,  fig.align='center', message=FALSE, echo=TRUE}
 
 # Models -------------------
 fit_csh <- CSC(Hist(time, status_num) ~
@@ -1570,6 +1575,10 @@ vboot <- vboot |> mutate(
     x$Brier$score[model == "csh_validation"]$IPA
   })
 )
+```
+</details>
+
+```{r, overall, warning=FALSE,echo=FALSE, eval=TRUE}
 ```
 
 ```{r, res_ov, fig.align='center',echo=FALSE}
