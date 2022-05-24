@@ -1,6 +1,6 @@
 # Validation of prediction models in presence of competing risks: a guide through modern methods
 
-R Code repository for the manuscript 'Validation of prediction models in presence of competing risks: a guide through modern methods' (in press at the BMJ).
+R Code repository for the manuscript ['Validation of prediction models in presence of competing risks: a guide through modern methods'](https://www.bmj.com/content/377/bmj-2021-069249) published in BMJ.
 
 The repository contains the following code:
 
