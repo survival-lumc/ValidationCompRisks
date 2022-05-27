@@ -650,7 +650,7 @@ ICI, E50, E90, Emax and root squared bias using pseudo value approach.
 
 <details>
   <summary>Click to expand code</summary>
-```{r, cal, fig.align='center',warning=FALSE,message=FALSE,eval=FALSE,echo=TRUE}
+```{r, cal, fig.align='center',warning=FALSE,message=FALSE,eval=FALSE,echo=TRUE, fig.width=5, fig.height=5}
 # Models ----------
 fit_csh <- CSC(Hist(time, status_num) ~
 age + size +
@@ -704,7 +704,7 @@ title("Calibration plot using pseudo observations")
 ```
 </details>
 
-```{r, cal, fig.align='center',warning=FALSE,message=FALSE,eval=TRUE,echo=FALSE}
+```{r, cal, fig.align='center',warning=FALSE,message=FALSE,eval=TRUE,echo=FALSE, fig.width=5, fig.height=5}
 ```
 
 Calibration plot suggests that the prediction model seems to overestimate the observed outcome proportion of the primary event, especially at the lower and higher values of the estimated risk.
@@ -752,7 +752,7 @@ Here we assess calibration using the subdistribution hazard approach (Austin et 
 
 <details>
   <summary>Click to expand code</summary>
-```{r, plot_sd, fig.align='center',warning=FALSE,message=FALSE,eval=FALSE,echo=TRUE}
+```{r, plot_sd, fig.align='center',warning=FALSE,message=FALSE,eval=FALSE,echo=TRUE, fig.width=5, fig.height=5}
 # Models ----------
 fit_csh <- CSC(Hist(time, status_num) ~
 age + size +
@@ -820,7 +820,7 @@ title("Calibration plot using subdistribution hazard approach")
 ```
 </details>
 
-```{r, plot_sd, fig.align='center',warning=FALSE,message=FALSE,echo=FALSE,eval=TRUE}
+```{r, plot_sd, fig.align='center',warning=FALSE,message=FALSE,echo=FALSE,eval=TRUE, fig.width=5, fig.height=5}
 ```
 
 Calibration plot suggests that the prediction model seems to overestimate the observed outcome proportion of the primary event, especially at the lower and higher values of the estimated risk.
@@ -885,7 +885,7 @@ Numerical calibration measures identified overestimation of the risk especially 
 
 <details>
   <summary>Click to expand code</summary>
-```{r loess_pseudo, echo=TRUE, eval=FALSE}
+```{r loess_pseudo, echo=TRUE, eval=FALSE, fig.width=5, fig.height=5, fig.align='center'}
 # Use pseudo-observations calculated by Score() (can alternatively use pseudo::pseudoci)
 pseudos <- data.frame(score_vdata$Calibration$plotframe)
 pseudos <- pseudos[order(pseudos$risk), ]
@@ -941,7 +941,7 @@ segments(
 ```
 </details>
 
-```{r loess_pseudo, echo=FALSE, eval=TRUE}
+```{r loess_pseudo, echo=FALSE, eval=TRUE, fig.width=5, fig.height=5, fig.align='center'}
 ```
 
 
