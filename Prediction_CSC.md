@@ -1387,7 +1387,7 @@ title("Calibration plot using pseudo observations")
 
 </details>
 
-<img src="imgs/Prediction_CSC/cal-1.png" width="672" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_CSC/cal-1.png" width="480" style="display: block; margin: auto;" />
 
 Calibration plot suggests that the prediction model seems to
 overestimate the observed outcome proportion of the primary event,
@@ -1548,7 +1548,7 @@ title("Calibration plot using subdistribution hazard approach")
 
 </details>
 
-<img src="imgs/Prediction_CSC/plot_sd-1.png" width="672" style="display: block; margin: auto;" />
+<img src="imgs/Prediction_CSC/plot_sd-1.png" width="480" style="display: block; margin: auto;" />
 
 Calibration plot suggests that the prediction model seems to
 overestimate the observed outcome proportion of the primary event,
@@ -1673,7 +1673,7 @@ segments(
 
 </details>
 
-<img src="imgs/Prediction_CSC/loess_pseudo-1.png" width="672" />
+<img src="imgs/Prediction_CSC/loess_pseudo-1.png" width="480" style="display: block; margin: auto;" />
 
 #### 2.1.3 Observed and Expected ratio
 
