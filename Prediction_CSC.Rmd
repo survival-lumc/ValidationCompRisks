@@ -816,7 +816,8 @@ plot(
   bty = "n"
 )
 abline(a = 0, b = 1, lty = "dashed", col = "red")
-title("Calibration plot using subdistribution hazard approach")
+title("Calibration plot using subdistribution hazard approach", 
+      cex.main = .90)
 ```
 </details>
 
@@ -828,7 +829,9 @@ Calibration plot suggests that the prediction model seems to overestimate the ob
 ##### 2.1.2.2 Numerical summaries of calibration using the subdistribution hazard approach
 Here we assess calibration using the subdistribution hazard approach (Austin et al.)
 
-```{r, num_cal_sd, fig.align='center',warning=FALSE,message=FALSE}
+<details>
+  <summary>Click to expand code</summary>
+```{r, num_cal_sd, fig.align='center',warning=FALSE,message=FALSE,eval=FALSE, echo=TRUE}
 # Numerical summary measures
 diff_fgr <- dat_fgr$pred - dat_fgr$obs
 
@@ -838,38 +841,13 @@ numsum_fgr <- c(
   "Emax" = max(abs(diff_fgr)),
   "Root squared bias" = sqrt(mean(diff_fgr^2))
 )
+```
+</details>
 
-# Plot calibration plots from both methods together
-# par(xaxs = "i", yaxs = "i", las = 1)
-# plot(
-#   x = dat_fgr$pred,
-#   y = dat_fgr$obs,
-#   type = "l",
-#   xlim = c(0, 0.6),
-#   ylim = c(0, 0.6),
-#   col = "blue",
-#   lwd = 2,
-#   xlab = "Predictions",
-#   ylab = "Observed outcome proportion",
-#   bty = "n"
-# )
-# lines(x = dat_pseudo$Pred,
-#       y = dat_pseudo$Obs,
-#       col = "lightblue",
-#       lwd = 2)
-# abline(a = 0, b = 1, lty = "dashed", col = "red")
-# legend(
-#   x = 0,
-#   y = 0.6,
-#   legend = c("Subdistribution", "Pseudo-observations"),
-#   col = c("blue", "lightblue"),
-#   lty = rep(1, 2),
-#   lwd = rep(2, 2),
-#   bty = "n"
-# )
+```{r, num_cal_sd, fig.align='center',warning=FALSE,message=FALSE,echo=FALSE,eval=TRUE, fig.width=5, fig.height=5}
 ```
 
-```{r, res_cal_sd, fig.align='center',warning=FALSE,message=FALSE,echo=FALSE}
+```{r, num_cal_sd_out, fig.align='center',warning=FALSE,message=FALSE,echo=FALSE}
 k <- 4
 res_num <- rbind(
   "Calibration measures - subdistribution " = numsum_fgr
