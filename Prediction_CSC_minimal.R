@@ -230,8 +230,8 @@ OE <- aj$obs / mean(pred)
 # For the confidence interval we use method proposed in Debray et al. (2017) doi:10.1136/bmj.i6460
 OE_summary <- c(
   "OE" = OE,
-  "lower" = exp(log(OE - qnorm(0.975) * aj$se / aj$obs)),
-  "upper" = exp(log(OE + qnorm(0.975) * aj$se / aj$obs))
+  "lower" = exp(log(OE) - qnorm(0.975) * aj$se / aj$obs),
+  "upper" = exp(log(OE) + qnorm(0.975) * aj$se / aj$obs)
 )
 OE_summary
 
