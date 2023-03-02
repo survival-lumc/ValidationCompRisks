@@ -1780,8 +1780,8 @@ k <- 2
 alpha <- 0.05
 OE_summary <- cbind(
   "OE" = OE,
-  "Lower .95" = exp(log(OE - qnorm(1 - alpha / 2) * aj$se / aj$obs)),
-  "Upper .95" = exp(log(OE + qnorm(1 - alpha / 2) * aj$se / aj$obs))
+  "Lower .95" = exp(log(OE) - qnorm(1 - alpha / 2) * aj$se / aj$obs),
+  "Upper .95" = exp(log(OE) + qnorm(1 - alpha / 2) * aj$se / aj$obs)
 )
 
 OE_summary <- round(OE_summary, k)
@@ -1808,10 +1808,10 @@ Upper .95
 0.81
 </td>
 <td style="text-align:right;">
-0.62
+0.67
 </td>
 <td style="text-align:right;">
-0.99
+0.97
 </td>
 </tr>
 </tbody>
@@ -2811,7 +2811,7 @@ sessionInfo()
 
     ## R version 4.2.1 (2022-06-23 ucrt)
     ## Platform: x86_64-w64-mingw32/x64 (64-bit)
-    ## Running under: Windows 10 x64 (build 22000)
+    ## Running under: Windows 10 x64 (build 22621)
     ## 
     ## Matrix products: default
     ## 
